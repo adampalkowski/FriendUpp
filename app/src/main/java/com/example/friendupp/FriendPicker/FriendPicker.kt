@@ -50,6 +50,7 @@ val user1 = User(
     activitiesCreated = 10,
     usersReached = 100,
     tags = arrayListOf(Category.SOCIAL.label,Category.CREATIVE.label)
+        , accountCreateTime = ""
 )
 
 val user2 = User(
@@ -68,6 +69,7 @@ val user2 = User(
     activitiesCreated = 5,
     usersReached = 50,
     tags = arrayListOf(Category.CREATIVE.label,Category.FoodAndDrink.label)
+,         accountCreateTime = ""
 )
 
 val user3 = User(
@@ -86,6 +88,7 @@ val user3 = User(
     activitiesCreated = 2,
     usersReached = 20,
     tags = arrayListOf(Category.ARTS.label, Category.ComputerGames.label)
+    , accountCreateTime = ""
 )
 
 @Composable

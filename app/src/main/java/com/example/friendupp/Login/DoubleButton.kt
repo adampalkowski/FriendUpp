@@ -2,6 +2,7 @@ package com.example.friendupp.Login
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,12 +22,12 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DoubleButton(text:String,image:Int,textColor:Color){
+fun DoubleButton(text:String,image:Int,textColor:Color,onClick:()->Unit){
     Box(
         modifier = Modifier
             .wrapContentWidth()
             .padding(vertical = 8.dp)
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 12.dp).clickable(onClick=onClick)
     ) {
         Box(
             modifier = Modifier

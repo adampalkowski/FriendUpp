@@ -1,11 +1,12 @@
 package com.example.friendupp.di
 
+import com.example.friendupp.model.OneTapResponse
 import com.example.friendupp.model.Response
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 
-typealias OneTapSignInResponse = Response<BeginSignInResult>
+typealias OneTapSignInResponse = OneTapResponse<BeginSignInResult>
 typealias SignInWithGoogleResponse = Response<Boolean>
 
 interface AuthRepository {
@@ -14,7 +15,7 @@ interface AuthRepository {
 
     suspend fun signin(email:String, password :String):  Response<FirebaseUser>
 
-    suspend fun signup(name:String,email:String,password: String): Response<FirebaseUser>
+    suspend fun signup(name:String,email:String,password: String): Response<FirebaseUser?>
 
     fun logout()
     fun deleteAuth()

@@ -19,6 +19,7 @@ interface UserRepository {
 
     suspend fun updateUser(id: String,firstAndLastName:String,description:String): Flow<Response<Void?>>
     suspend fun addUsernameToUser(id:String,username:String): Flow<Response<Void?>>
+    suspend fun setUserTags(id:String,tags:List<String>): Flow<Response<Void?>>
     suspend fun changeUserProfilePicture(user_id:String,picture_url:String): Flow<Response<Void?>>
     suspend fun addProfilePictureToStorage(user_id:String,imageUri: Uri): Flow<Response<String>>
     suspend fun addImageFromGalleryToStorage(id:String,imageUri: Uri): Flow<Response<String>>

@@ -25,6 +25,8 @@ import com.example.friendupp.Drawer.drawerGraph
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.di.AuthViewModel
+import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
@@ -181,21 +183,23 @@ fun NavigationComponent(navController: NavHostController = rememberAnimatedNavCo
             })
 
             val activityViewModel: ActivityViewModel = hiltViewModel()
+            val userViewModel : UserViewModel = hiltViewModel()
+            val authViewModel : AuthViewModel = hiltViewModel()
+
             val currentActivity = remember { mutableStateOf(Activity()) }
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
-            activityViewModel.getActivitiesForUser(UserData.user!!.id)
-            AnimatedNavHost(navController, startDestination = "Main") {
-                loginGraph(navController)
+            AnimatedNavHost(navController, startDestination = "Welcome") {
+                loginGraph(navController,userViewModel, authViewModel = authViewModel)
                 mainGraph(navController, openDrawer = {
                     coroutineScope.launch {
                         scaffoldState.drawerState.open()
                     }
                 },activityViewModel)
                 chatGraph(navController)
-                profileGraph(navController)
+                profileGraph(navController, outputDirectory =outputDirectory , executor =executor)
                 createGraph(navController,currentActivity, outputDirectory =outputDirectory , executor =executor,activityViewModel=activityViewModel)
-                settingsGraph(navController)
+                settingsGraph(navController,authViewModel,userViewModel)
                 drawerGraph(navController)
                 groupGraph(navController)
                 cameraGraph(navController, outputDirectory =outputDirectory , executor =executor )

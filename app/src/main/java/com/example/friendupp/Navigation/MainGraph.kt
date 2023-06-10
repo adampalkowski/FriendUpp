@@ -26,6 +26,7 @@ import com.google.accompanist.navigation.animation.navigation
 fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Unit,activityViewModel:ActivityViewModel) {
     navigation(startDestination = "Home", route = "Main") {
         val homeViewModel= HomeViewModel()
+        activityViewModel.getActivitiesForUser(UserData.user!!.id)
 
         composable(
             "Home",

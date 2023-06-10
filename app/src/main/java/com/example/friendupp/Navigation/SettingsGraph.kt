@@ -10,11 +10,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Settings.*
+import com.example.friendupp.di.AuthViewModel
+import com.example.friendupp.di.UserViewModel
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.settingsGraph(navController: NavController) {
+fun NavGraphBuilder.settingsGraph(navController: NavController,authViewModel:AuthViewModel,userViewModel: UserViewModel) {
     navigation(startDestination = "Settings", route = "SettingsGraph") {
         composable(
             "Settings",
@@ -93,6 +95,12 @@ fun NavGraphBuilder.settingsGraph(navController: NavController) {
                     is SettingsEvents.FAQ->{navController.navigate("Settings/FAQ")}
                     is SettingsEvents.ChangePassword->{navController.navigate("Settings/Password")}
                     is SettingsEvents.UpdateEmail->{navController.navigate("Settings/Email")}
+                    is SettingsEvents.LogOut->{
+                    /*log user out*/
+                        authViewModel.logout()
+                        userViewModel.resetUserValidation()
+                        navController.navigate("Login")
+                    }
                     else ->{}
                 }
 

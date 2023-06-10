@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
             activitiesCreated = 10,
             usersReached = 100,
             tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
+            , accountCreateTime = ""
         )
 
 

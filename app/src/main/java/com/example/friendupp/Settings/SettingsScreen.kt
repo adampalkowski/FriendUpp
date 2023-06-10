@@ -171,7 +171,6 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                     scope.launch {
                         confirmAction.value = SettingsEvents.LogOut
                         sheetState.show()
-
                     }
 
                 })

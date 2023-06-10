@@ -314,6 +314,16 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun setUserTags(id:String,tags: List<String>): Flow<Response<Void?>> =
+        flow {
+        try {
+            emit(Response.Loading)
+            val update = usersRef.document(id).update("tags",tags).await1()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("update tags excpetion", Exception())))
+        }
+    }
     override suspend fun changeUserProfilePicture(
         user_id: String,
         picture_url: String

@@ -49,8 +49,10 @@ class UserViewModel @Inject constructor(
 
     private val _isUserDeletedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isUserDeletedState: State<Response<Void?>> = _isUserDeletedState
-    private val _isUserUpdated = mutableStateOf<Response<Void?>>(Response.Success(null))
-    val isUserUpdated: State<Response<Void?>> = _isUserUpdated
+    private val _isUserTagsAdded = mutableStateOf<Response<Void?>?>(null)
+    val isUserTagsAdded: State<Response<Void?>?> = _isUserTagsAdded
+    private val _isUserUpdated = mutableStateOf<Response<Void?>?>(null)
+    val isUserUpdated: State<Response<Void?>?> = _isUserUpdated
 
 
     private val _isInviteAddedState = mutableStateOf<Response<Void?>>(Response.Success(null))
@@ -126,6 +128,9 @@ class UserViewModel @Inject constructor(
                 _isChatCollectionAddedToUsersState.value = response
             }
         }
+    }
+    fun resetUserValidation(){
+        _userValidation.value = Response.Loading
     }
     fun getActivityUsers(id: String) {
         viewModelScope.launch {
@@ -401,7 +406,9 @@ class UserViewModel @Inject constructor(
             repo.getUser(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        //get user from database and check if
                         val user: User = response.data
+                        Log.d("LOGINGRAPHDEBUG",user.toString())
                         //emails don't match
                         //TODO SHOW CORRECT EXCEPTION
                         if (user.email != firebaseUser.email) {
@@ -412,7 +419,8 @@ class UserViewModel @Inject constructor(
                                 )
                             )
                         }
-                        if (user.username == null) {
+                        if (user.username == null || user.username.toString().isEmpty()) {
+                            //this needs a username to be set aswell but for safety set it right now without username
                             UserData.user = user
                             Log.d("TAG", "succes")
                             _userValidation.value = Response.Success(false)
@@ -428,7 +436,7 @@ class UserViewModel @Inject constructor(
                         //issue with retreiving user from database
                         _userValidation.value = Response.Failure(
                             SocialException(
-                                "validate error issue with retreiving user from database",
+                                "User not in database",
                                 Exception()
                             )
                         )
@@ -449,13 +457,23 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
+    fun setUserTags(id:String,tags:List<String>){
+        viewModelScope.launch {
+            repo.setUserTags(id,tags).collect { response ->
+                _isUserTagsAdded.value = response
+            }
+        }
+    }
     fun addActivityToUser(id: String, user: User) {
         viewModelScope.launch {
             repo.addActivityToUser(id, user).collect { response ->
 
             }
         }
+    }
+
+    fun resetIsUsernameAdded() {
+        _isUsernameAddedFlow.value=Response.Loading
     }
 
 }

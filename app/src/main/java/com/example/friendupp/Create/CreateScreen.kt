@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -145,9 +146,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                 DateAndTime(hour=hour,minute=minute,
                     dateState = dateState,
                     onProgressBlocked = {
-                        if(it){
-                            progressBlocked=true
-                        }
+
                     })
 
             }
@@ -166,6 +165,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                     )
                 },
                 createClicked = {
+                    Log.d("CREATESCREENEVENTS","CREATE")
                     onEvent(
                         CreateEvents.Create(
                             description = descriptionState.text,
@@ -289,22 +289,20 @@ fun CreateButton(text: String, createClicked: () -> Unit = {},
 
     )
 
-    Card(modifier = Modifier, onClick ={if (!disabled){createClicked}}, shape = RoundedCornerShape(8.dp)) {
-        Box(
-            modifier = Modifier.background(cardColor),
-            contentAlignment = Alignment.Center
-        ) {
+    Card(modifier = modifier, onClick ={
+        if (!disabled){createClicked()} }, shape = RoundedCornerShape(8.dp), colors = CardDefaults.cardColors(containerColor = cardColor, contentColor = cardColor)) {
+
             Text(
-                modifier = Modifier.padding(vertical = 12.dp, horizontal = 48.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 48.dp),
                 text = text,
                 style = TextStyle(
                     fontFamily = Lexend,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = Color.White
-                )
+                ),    textAlign = TextAlign.Center // Center aligns the text
+
             )
-        }
     }
 }
 

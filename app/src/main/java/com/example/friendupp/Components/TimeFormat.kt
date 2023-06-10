@@ -1,9 +1,6 @@
 package com.example.friendupp.Components
 
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.Month
-import java.time.Year
+import java.time.*
 import java.time.format.DateTimeFormatter
 
 fun connectTimeAndDate(year: Int,month: Int,day:Int,hour:Int,minute:Int):String{
@@ -23,4 +20,10 @@ fun connectTimeAndDate(year: Int,month: Int,day:Int,hour:Int,minute:Int):String{
     val formattedDateTime = dateTime.format(formatter)
 
     return formattedDateTime
+}
+
+fun getCurrentDateTime(): String {
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    return currentDateTime.format(formatter)
 }

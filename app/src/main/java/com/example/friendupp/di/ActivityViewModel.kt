@@ -58,8 +58,8 @@ class ActivityViewModel @Inject constructor(
     private val _moreclosestActivitiesListStateError = mutableStateOf<Response<Void?>?>(null)
     val moreclosestActivitiesListStateError: State<Response<Void?>?> = _moreclosestActivitiesListStateError
 
-    private val _activitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
-    val activitiesListState: State<Response<List<Activity>>> = _activitiesListState
+    private val _activitiesListState = mutableStateOf<Response<List<Activity>>?>(null)
+    val activitiesListState: State<Response<List<Activity>>?> = _activitiesListState
 
     private val _moreActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val moreActivitiesListState: State<Response<List<Activity>>> = _moreActivitiesListState
@@ -348,6 +348,7 @@ class ActivityViewModel @Inject constructor(
 
     }
     fun getActivitiesForUser(id: String?) {
+        _activitiesListState.value=Response.Loading
         Log.d("getActivitiesForUser", " getActivitiesForUser")
         if (id == null) {
             _activitiesListState.value = Response.Failure(

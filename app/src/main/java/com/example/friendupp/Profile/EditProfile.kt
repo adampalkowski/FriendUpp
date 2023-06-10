@@ -56,6 +56,7 @@ val user = User(
     activitiesCreated = 10,
     usersReached = 100,
     tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
+    , accountCreateTime = ""
 )
 
 
@@ -69,7 +70,8 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit, onClick: () -> Unit) {
    Column(modifier = modifier
        .fillMaxSize()
        .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenHeading(title = "Edit profile", backButton = true, backIcon = com.example.friendupp.R.drawable.ic_back) {
+            ScreenHeading(title = "Edit profile", backButton = true,
+                backIcon = com.example.friendupp.R.drawable.ic_back, onBack = {goBack()}) {
                 Row(Modifier,verticalAlignment = Alignment.CenterVertically){
                     ButtonAdd(icon = R.drawable.ic_email, onClick = {})
                     Spacer(modifier = Modifier

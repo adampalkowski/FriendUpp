@@ -1,7 +1,12 @@
 package com.example.friendupp.Login
 
+import android.app.Activity.RESULT_OK
+import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,25 +27,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.PasswordEditText
+import com.example.friendupp.Navigation.SignInWithGoogle
 import com.example.friendupp.R
+import com.example.friendupp.di.AuthViewModel
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
 
+sealed class LoginEvents{
+    object Register:LoginEvents()
+    class Login(val email:String,val password:String):LoginEvents()
+    object LoginWithGoogle:LoginEvents()
+    object LoginWithFB:LoginEvents()
+    object GoBack:LoginEvents()
+    object GoToHome:LoginEvents()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen (modifier: Modifier,goBack:()->Unit,onLogin:()->Unit){
+fun LoginScreen (modifier: Modifier,onEvent:(LoginEvents)->Unit,authViewModel:AuthViewModel){
 
     val focusRequester = remember { FocusRequester() }
 
     BackHandler(true) {
-        goBack()
+        onEvent(LoginEvents.GoBack)
     }
-    Column(modifier = modifier
-        .fillMaxWidth()
+    Column(modifier = modifier.fillMaxSize()
         .background(SocialTheme.colors.uiBackground)
         .verticalScroll(rememberScrollState())
         .padding(top = 64.dp) , horizontalAlignment = Alignment.CenterHorizontally) {
+
 
         Text(
             text ="Agent login", style = TextStyle(
@@ -85,7 +101,7 @@ fun LoginScreen (modifier: Modifier,goBack:()->Unit,onLogin:()->Unit){
             }
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Card(modifier = Modifier, onClick = onLogin, shape = RoundedCornerShape(8.dp)) {
+        Card(modifier = Modifier, onClick = { onEvent(LoginEvents.Login(emailState.text,passwordState.text)) }, shape = RoundedCornerShape(8.dp)) {
             Box(modifier = Modifier.background(SocialTheme.colors.textInteractive), contentAlignment = Alignment.Center){
                 Text(modifier=modifier.padding(vertical = 12.dp, horizontal = 120.dp),text = "Sign in", style = TextStyle(
                     fontFamily = Lexend,
@@ -120,20 +136,31 @@ fun LoginScreen (modifier: Modifier,goBack:()->Unit,onLogin:()->Unit){
         
         Spacer(modifier = Modifier.height(48.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            DoubleButton("Google",image= R.drawable.google,textColor=Color(0xFFD9503F))
-            DoubleButton("Facebook",image= R.drawable.fb,textColor=Color(0xFF3F71B5))
+            DoubleButton("Google",image= R.drawable.google,textColor=Color(0xFFD9503F),onClick={onEvent(LoginEvents.LoginWithGoogle)})
+            DoubleButton("Facebook",image= R.drawable.fb,textColor=Color(0xFF3F71B5), onClick = {})
         }
 
 
 
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text ="Don'", style = TextStyle(
-                fontFamily = Lexend,
-                fontWeight = FontWeight.Light,
-                fontSize = 12.sp,
-                color = Color.Black.copy(0.5f)
-            ))
-        Spacer(modifier = Modifier.weight(1f))
+        Row(Modifier.clickable(onClick = {onEvent(LoginEvents.Register)})) {
+            Text(
+                text ="Don't have an account?", style = TextStyle(
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.Light,
+                    fontSize = 12.sp,
+                    color = Color.Black.copy(0.5f)
+                ))
+            Text(
+                text ="Sign up", style = TextStyle(
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    color = Color.Black.copy(0.5f)
+                ))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
     }
 }
