@@ -238,7 +238,7 @@ fun CameraView(
             }else{
                 CameraTopBarDisplay(onEvent={topbarevent->
                     when(topbarevent){
-                        is CameraEvent.Delete->{onImageCaptured(null)}
+                        is CameraEvent.Delete->{onEvent(CameraEvent.DeletePhoto)}
                         else->{}
                     }
                 })
@@ -286,7 +286,7 @@ fun CameraView(
                 CameraBottomBarDisplay(onEvent={bottombarevent->
                     when(bottombarevent){
                         is CameraEvent.Delete->{
-                            onImageCaptured(null)
+                            onEvent(CameraEvent.DeletePhoto)
                         }
                         is CameraEvent.Flip->{
                             if (lensFacing == CameraSelector.LENS_FACING_BACK) {
@@ -420,7 +420,6 @@ fun CameraBottomBarDisplay(onEvent: (CameraEvent) -> Unit) {
         })
         Spacer(modifier = Modifier.width(48.dp))
         AcceptButton(){
-
             onEvent(CameraEvent.AcceptPhoto)
 
         }

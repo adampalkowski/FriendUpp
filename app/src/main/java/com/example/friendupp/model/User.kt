@@ -18,7 +18,7 @@ data class User(
     var activities:ArrayList<String>,
     val activitiesCreated:Int,
     val usersReached:Int,
-    val tags:ArrayList<Category>,
+    val tags:ArrayList<String>,
 ) : Serializable {
     constructor() : this(
         name = "",

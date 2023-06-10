@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -16,17 +17,23 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.friendupp.Categories.Category
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
+import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 import com.google.android.gms.location.*
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
-
     private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
 
     private lateinit var photoUri: Uri
@@ -44,10 +51,26 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        UserData.user=User(
+            name = "John Doe",
+            username = "johndoe",
+            email = "johndoe@example.com",
+            id = "123456789",
+            pictureUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBOn9shF9kc5vPqgA30DXU0prx5-aYyh28Rw&usqp=CAU",
+            biography = "Hello, I'm John Doe!",
+            location = "New York",
+            blocked_ids = ArrayList(),
+            friends_ids = HashMap(),
+            invited_ids = ArrayList(),
+            user_requests = ArrayList(),
+            activities = ArrayList(),
+            activitiesCreated = 10,
+            usersReached = 100,
+            tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
+        )
 
 
         requestCameraPermission()
-
 
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()

@@ -49,7 +49,7 @@ val user1 = User(
     activities = ArrayList(),
     activitiesCreated = 10,
     usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL,Category.CREATIVE)
+    tags = arrayListOf(Category.SOCIAL.label,Category.CREATIVE.label)
 )
 
 val user2 = User(
@@ -67,7 +67,7 @@ val user2 = User(
     activities = ArrayList(),
     activitiesCreated = 5,
     usersReached = 50,
-    tags = arrayListOf(Category.CREATIVE,Category.FoodAndDrink)
+    tags = arrayListOf(Category.CREATIVE.label,Category.FoodAndDrink.label)
 )
 
 val user3 = User(
@@ -85,7 +85,7 @@ val user3 = User(
     activities = ArrayList(),
     activitiesCreated = 2,
     usersReached = 20,
-    tags = arrayListOf(Category.ARTS, Category.ComputerGames)
+    tags = arrayListOf(Category.ARTS.label, Category.ComputerGames.label)
 )
 
 @Composable
@@ -170,7 +170,7 @@ fun FriendPickerScreen(
             .padding(bottom = 24.dp, end = 24.dp)
             .align(Alignment.BottomEnd), contentAlignment = Alignment.Center){
             CreateButton("Create", createClicked = {createActivity()
-            })
+            }, disabled = false)
         }
     }
 

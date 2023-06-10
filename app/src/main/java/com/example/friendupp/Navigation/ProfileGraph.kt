@@ -30,7 +30,7 @@ val user = User(
     activities = ArrayList(),
     activitiesCreated = 10,
     usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL, Category.CREATIVE)
+    tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
 )
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.profileGraph(navController: NavController) {

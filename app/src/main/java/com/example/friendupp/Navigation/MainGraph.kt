@@ -17,11 +17,13 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.MapScreen
 import com.example.friendupp.Search.SearchScreen
+import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Unit) {
+fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Unit,activityViewModel:ActivityViewModel) {
     navigation(startDestination = "Home", route = "Main") {
         val homeViewModel= HomeViewModel()
 
@@ -113,6 +115,8 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
             }
         ) {
 
+
+
             HomeScreen(modifier = Modifier, onEvent = { event->
                 when(event){
                     is HomeEvents.OpenDrawer->{openDrawer()}
@@ -122,7 +126,7 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
                         navController.navigate("ActivityPreview")
                     }
                 }
-            })
+            },activityViewModel=activityViewModel)
 
         }
         composable(

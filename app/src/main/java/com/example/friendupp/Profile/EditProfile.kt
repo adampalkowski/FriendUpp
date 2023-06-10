@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +30,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ButtonAdd
-import com.example.friendupp.Components.FilterComponent
+import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.*
@@ -54,7 +55,7 @@ val user = User(
     activities = ArrayList(),
     activitiesCreated = 10,
     usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL, Category.CREATIVE)
+    tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
 )
 
 
@@ -87,7 +88,7 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit, onClick: () -> Unit) {
 
 
 
-            CreateButton("Confirm changes")
+            CreateButton("Confirm changes", disabled = false)
             Spacer(modifier = Modifier.height(120.dp)) }
 
 
@@ -97,7 +98,9 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit, onClick: () -> Unit) {
 fun ActivityPreferences() {
     Column() {
         CreateHeading(text = "Activity preferences", icon = R.drawable.ic_tag,tip=false, description = "")
-        FilterComponent()
+        FilterList(    tags= SnapshotStateList(),
+        onSelected={},
+        onDeSelected={})
     }
 }
 

@@ -12,12 +12,15 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.friendupp.Components.Calendar.HorizontalDatePicker
+import com.example.friendupp.Components.Calendar.HorizontalDateState2
+import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.ui.theme.SocialTheme
 
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarComponent(onDatePicked:(Int)->Unit) {
+fun CalendarComponent(state: HorizontalDateState2 = rememberHorizontalDatePickerState2()) {
+
     Box(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp))
     {
             Card(
@@ -29,7 +32,7 @@ fun CalendarComponent(onDatePicked:(Int)->Unit) {
                 modifier = Modifier.fillMaxWidth(),
 
                 ) {
-                HorizontalDatePicker(onDatePicked)
+                HorizontalDatePicker(state)
 
             }
 

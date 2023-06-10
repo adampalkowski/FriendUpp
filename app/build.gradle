@@ -58,8 +58,9 @@ android {
 
 dependencies {
     implementation "com.google.dagger:hilt-android:2.44"
+    kapt "com.google.dagger:hilt-compiler:2.44.2"
     implementation 'com.google.android.gms:play-services-auth:20.5.0'
-    kapt "com.google.dagger:hilt-compiler:2.44"
+
     implementation "androidx.hilt:hilt-navigation-compose:$hilt_navigation_compose_version"
 
     //geohash
@@ -129,4 +130,7 @@ dependencies {
 
 
 
+}
+kapt {
+    correctErrorTypes true
 }

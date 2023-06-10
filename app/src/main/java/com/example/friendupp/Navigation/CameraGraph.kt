@@ -26,7 +26,7 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
                                 executor: Executor,) {
     navigation(startDestination = "Camera", route = "CameraGraph") {
 
-        composable( "Camera/{from}",    arguments = listOf(navArgument("from") { type = NavType.StringType }),
+        composable( "Camera",
             enterTransition = {
                 when (initialState.destination.route) {
                     "Create" ->

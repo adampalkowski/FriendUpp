@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.model.Activity
@@ -74,7 +75,7 @@ class ActivityViewModel @Inject constructor(
     private val _activityState = mutableStateOf<Response<Activity>>(Response.Loading)
     val activityState: State<Response<Activity>> = _activityState
 
-    private val _isActivityAddedState = mutableStateOf<Response<Void?>?>(Response.Success(null))
+    private val _isActivityAddedState = mutableStateOf<Response<Void?>?>(null)
     val isActivityAddedState: State<Response<Void?>?> = _isActivityAddedState
 
     private val _addImageToActivityState = MutableStateFlow<Response<String>?>(null)
@@ -119,7 +120,7 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                            val time_left: String = calculateTimeLeft(
+                           /*val time_left: String = calculateTimeLeft(
                                 it.date,
                                 it.start_time,
                                 deleteActivity = { event ->
@@ -130,7 +131,7 @@ class ActivityViewModel @Inject constructor(
                                     }
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left
+                            it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -158,7 +159,7 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                            val time_left: String = calculateTimeLeft(
+                           /* val time_left: String = calculateTimeLeft(
                                 it.date,
                                 it.start_time,
                                 deleteActivity = { event ->
@@ -169,7 +170,7 @@ class ActivityViewModel @Inject constructor(
                                     }
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left
+                            it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestMoreFilteredActivitiesListState.value =
@@ -197,7 +198,7 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                            val time_left: String = calculateTimeLeft(
+                           /* val time_left: String = calculateTimeLeft(
                                 it.date,
                                 it.start_time,
                                 deleteActivity = { event ->
@@ -208,7 +209,7 @@ class ActivityViewModel @Inject constructor(
                                     }
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left
+                            it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestFilteredActivitiesListState.value =
@@ -244,7 +245,7 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActivities",it.toString())
                             list_without_removed_activites.add(it)
-                            val time_left: String = calculateTimeLeft(
+                           /* val time_left: String = calculateTimeLeft(
                                 it.date,
                                 it.start_time,
                                 deleteActivity = { event ->
@@ -255,7 +256,7 @@ class ActivityViewModel @Inject constructor(
                                     }
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left
+                            it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _moreclosestActivitiesListState.value =
@@ -280,13 +281,13 @@ class ActivityViewModel @Inject constructor(
                 when (response) {
                     is Response.Success -> {
                         if(response.data!=null){
-                            val time_left: String = calculateTimeLeft(
+                           /* val time_left: String = calculateTimeLeft(
                                 response.data.date,
                                 response.data.start_time,
                                 deleteActivity = { event ->
                                     deleteActivity(response.data.id)
                                 })
-                            response.data.time_left = time_left
+                            response.data.time_left = time_left*/
                             _activityState.value = response
                         }
                         }   else->{}
@@ -313,7 +314,7 @@ class ActivityViewModel @Inject constructor(
                     when (response) {
                         is Response.Success -> {
                             response.data.forEach {
-                                list_without_removed_activites.add(it)
+                                /*list_without_removed_activites.add(it)
                                 val time_left: String = calculateTimeLeft(
                                     it.date,
                                     it.start_time,
@@ -325,7 +326,7 @@ class ActivityViewModel @Inject constructor(
                                         }
                                         list_without_removed_activites.remove(it)
                                     })
-                                it.time_left = time_left
+                                it.time_left = time_left*/
 
 
                                 _moreActivitiesListState.value =
@@ -363,8 +364,10 @@ class ActivityViewModel @Inject constructor(
                         is Response.Success -> {
                             response.data.forEach {
                                 list_without_removed_activites.add(it)
-                                val time_left: String = calculateTimeLeft(
-                                    it.date,
+                                /*todo if it.date is not a date there is error what then*/
+
+                            /*    val time_left: String = calculateTimeLeft(
+                                    LocalTime.now().toString(),
                                     it.start_time,
                                     deleteActivity = { event ->
                                         Log.d("getActivitiesForUser", "delete activity")
@@ -374,7 +377,7 @@ class ActivityViewModel @Inject constructor(
                                         }
                                         list_without_removed_activites.remove(it)
                                     })
-                                it.time_left = time_left
+                                it.time_left = time_left*/
 
                                 Log.d("getActivitiesForUser","list"+list_without_removed_activites.toString())
                                 _activitiesListState.value =
@@ -407,10 +410,39 @@ class ActivityViewModel @Inject constructor(
 
     fun addActivity(activity: Activity) {
         viewModelScope.launch {
-            activity.end_time = addTimes(activity.start_time, activity.time_length)
-            repo.addActivity(activity).collect { response ->
-                _isActivityAddedState.value = response
+            val activityImage = activity.image
+            if(activityImage.isNullOrEmpty()){
+                repo.addActivity(activity).collect { responseAddActivity ->
+                    _isActivityAddedState.value = responseAddActivity
+                }
+
+            }else{
+                repo.addImageFromGalleryToStorage(activity.id, activity.image.toUri()).collect{ response ->
+                    _isImageAddedToStorageState.value=response
+                    when(response){
+                        is Response.Success->{
+                            val new_url:String=response.data
+                            val final_activity=activity.copy(image = new_url)
+
+                            repo.addActivity(final_activity).collect { responseAddActivity ->
+                                _isActivityAddedState.value = responseAddActivity
+                            }
+
+                        }
+                        is Response.Loading->{
+
+                        }
+                        is Response.Failure->{
+                            _addImageToActivityState.value=Response.Failure(e = SocialException(
+                                "image not found in directory",
+                                Exception()))
+                        }
+                    }
+
+                }
             }
+
+
         }
     }
     fun updateActivityInvites(activity_id: String,invites:ArrayList<String>) {
@@ -535,62 +567,9 @@ class ActivityViewModel @Inject constructor(
             }
         }
     }
-    fun compareDates(date1: String, date2: String, deleteActivity: () -> Unit): Long {
-        val format = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
-        val d1 = format.parse(date1)
-        val d2 = format.parse(date2)
-        val diffInMilliseconds = d2.time - d1.time
-        if (diffInMilliseconds < 0) {
-            deleteActivity()
-        }
-
-        return TimeUnit.DAYS.convert(diffInMilliseconds, TimeUnit.MILLISECONDS)
-    }
-
-    fun calculateTimeLeft(
-        date: String,
-        time_start: String,
-        deleteActivity: (ActivityEvent) -> Unit
-    ): String {
-//time
-        LocalTime.now().toString()
-
-        val difference = compareDates(
-            LocalDate.now().toString(),
-            date,
-            deleteActivity = { deleteActivity(ActivityEvent.DeleteActivity) })
-        if (difference.toString().equals("0")) {
-
-            return compareTimes(
-                LocalTime.now().toString(),
-                time_start,
-                deleteActivity = { deleteActivity(ActivityEvent.DeleteActivity) })
-        } else {
-            return "$difference days"
-        }
-
-    }
-
-    fun compareTimes(time1: String, time2: String, deleteActivity: () -> Unit): String {
-        val format = SimpleDateFormat("HH:mm", Locale.ENGLISH)
-        val t1 = format.parse(time1)
-        val t2 = format.parse(time2)
-        val diffInMilliseconds = t2.time - t1.time
-        val hours = TimeUnit.HOURS.convert(diffInMilliseconds, TimeUnit.MILLISECONDS)
-        val minutes = TimeUnit.MINUTES.convert(diffInMilliseconds, TimeUnit.MILLISECONDS) -
-                TimeUnit.HOURS.convert(diffInMilliseconds, TimeUnit.MILLISECONDS) * 60
-        if (minutes < 0 || hours < 0) {
-            deleteActivity()
-        }
 
 
-        if (hours > 0) {
-            return "$hours hours $minutes minutes"
-        } else {
-            return "$minutes minutes"
 
-        }
-    }
     fun setParticipantImage(activity_id: String, user_id:String,uri: Uri) {
         viewModelScope.launch {
             _addImageToActivityState.value= Response.Loading

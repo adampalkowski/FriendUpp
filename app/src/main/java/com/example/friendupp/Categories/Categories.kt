@@ -26,19 +26,38 @@ enum class Category(val label: String, val icon: Int, val subCategories: List<Su
         SubCategory.TENNIS,
         SubCategory.BASKETBALL,
         SubCategory.VOLLEYBALL,
-        SubCategory.RUNNING
+        SubCategory.CYCLING,
+        SubCategory.RUNNING,
+        SubCategory.GOLF,
+        SubCategory.GYMNASTICS,
+        SubCategory.GYM_WORKOUT,
+        SubCategory.ICEHOKEY,
+        SubCategory.MARTIALARTS,
+        SubCategory.POOL,
+        SubCategory.YOGA,
+        SubCategory.WINTERSPORTS,
+        SubCategory.SKATEBOARDING,
+        SubCategory.SKIING
+
     ));
 
     sealed class SubCategory(val label: String, val icon: Int) {
         object TENNIS : SubCategory("Tennis", R.drawable.ic_tennis)
-        object FOOTBALL : SubCategory("Football", R.drawable.ic_football)
+        object FOOTBALL : SubCategory("Football(Soccer)", R.drawable.ic_football)
         object POOL : SubCategory("Pool", R.drawable.ic_pool)
-        object BASKETBALL : SubCategory("Basketball", R.drawable.ic_volleyball)
-        object GYM_WORKOUT : SubCategory("Basketball", R.drawable.ic_volleyball)
-        object PILATES : SubCategory("Basketball", R.drawable.ic_volleyball)
-        object RUNNING : SubCategory("Basketball", R.drawable.ic_volleyball)
-        object YOGA : SubCategory("Basketball", R.drawable.ic_volleyball)
+        object BASKETBALL : SubCategory("Basketball", R.drawable.ic_basketball)
+        object GYM_WORKOUT : SubCategory("Gym", R.drawable.ic_gym)
+        object CYCLING : SubCategory("Cycling", R.drawable.ic_cycling)
+        object RUNNING : SubCategory("Running", R.drawable.ic_running)
+        object YOGA : SubCategory("Yoga", R.drawable.ic_yoga)
         object VOLLEYBALL : SubCategory("Volleyball", R.drawable.ic_volleyball)
+        object GYMNASTICS : SubCategory("Gymnastics", R.drawable.ic_gymnastics)
+        object MARTIALARTS : SubCategory("Martial Arts", R.drawable.ic_martial_arts)
+        object GOLF : SubCategory("Golf", R.drawable.ic_golf)
+        object SKIING : SubCategory("Skiing", R.drawable.ic_skiing)
+        object SKATEBOARDING : SubCategory("Skateboarding", R.drawable.ic_skateboard)
+        object ICEHOKEY : SubCategory("Ice Hockey", R.drawable.ic_martial_arts)
+        object WINTERSPORTS : SubCategory("Winter sports", R.drawable.ic_winter)
 
     }
 }

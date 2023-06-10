@@ -24,6 +24,7 @@ import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.example.friendupp.Home.buttonsRow
+import com.example.friendupp.Profile.TagDivider
 import com.example.friendupp.model.Activity
 
 
@@ -130,11 +131,10 @@ fun activityItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
-
+                .padding(top = 0.dp)
         ) {
             Column() {
-                TimeIndicator(time = activity.start_time)
+                TimeIndicator(time = activity.start_time,tags=activity.tags)
 
                 if(activity.image!=null){
                     Spacer(modifier = Modifier.height(6.dp))
@@ -172,7 +172,7 @@ fun activityItem(
 
 
 @Composable
-fun TimeIndicator(time: String, color: Color = Color(0xFFA0A0A0)) {
+fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = Color(0xFFA0A0A0)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -191,15 +191,7 @@ fun TimeIndicator(time: String, color: Color = Color(0xFFA0A0A0)) {
             )
         )
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = {}) {
-            Icon(
-                modifier=Modifier.size(20.dp),
-                painter = painterResource(id = R.drawable.ic_expand),
-                contentDescription = null,
-                tint =SocialTheme.colors.uiBorder.copy(0.5f)
-            )
-        }
-
+        TagDivider(tags=tags)
         Spacer(modifier = Modifier.width(12.dp))
     }
 }

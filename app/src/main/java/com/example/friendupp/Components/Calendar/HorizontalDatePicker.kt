@@ -126,9 +126,8 @@ fun rememberHorizontalDatePickerState2(  initialCalendar: Calendar = Calendar.ge
 
 
 @Composable
-fun HorizontalDatePicker(onDatePicked:(Int)->Unit,state: HorizontalDateState2 = rememberHorizontalDatePickerState2()) {
+fun HorizontalDatePicker(state: HorizontalDateState2 = rememberHorizontalDatePickerState2()) {
     val locale = Locale.ENGLISH
-
     //month year
         Column() {
             MonthYearPicker(
@@ -142,15 +141,13 @@ fun HorizontalDatePicker(onDatePicked:(Int)->Unit,state: HorizontalDateState2 = 
                 yearIncreased = {state.increaseYear() },
                 yearDecreased = { state.decreaseYear() })
             //LOCALE SET TO ENGLISH
-
-
             Spacer(modifier = Modifier.height(6.dp))
             DayPicker( selectedDay = state.selectedDay,
                 year = state.selectedYear,
                 month = state.selectedMonth,
                 locale = locale,
-                onDayClick = { day -> state.setSelectedDay(day)
-                    onDatePicked(day)
+                onDayClick = { day ->
+                    state.setSelectedDay(day)
                 }
             )
             Spacer(modifier = Modifier.height(6.dp))

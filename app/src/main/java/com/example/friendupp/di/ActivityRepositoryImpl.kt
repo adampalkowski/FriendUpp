@@ -399,9 +399,7 @@ class ActivityRepositoryImpl @Inject constructor(
     }
     override suspend fun addActivity(activity: Activity) :Flow<Response<Void?>> = flow {
         try {
-            emit(Response.Loading)
-            val activityId=activity.id
-            val addition = activitiesRef.document(activityId).set(activity).await()
+            val addition =activitiesRef.document(activity.id).set(activity).await1()
             emit(Response.Success(addition))
 
         }catch (e:Exception){
@@ -689,7 +687,8 @@ class ActivityRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getActivitiesForUser(id: String): Flow<Response<List<Activity>>> =callbackFlow {
-        val snapshotListener = activitiesRef.whereArrayContains("invited_users",id)
+
+        val snapshotListener = activitiesRef.   whereArrayContains("invited_users",id)
             .orderBy("creation_time", Query.Direction.DESCENDING).limit(5).get().addOnCompleteListener { task->
                 if (task.isSuccessful) {
                     val documents = task.result?.documents

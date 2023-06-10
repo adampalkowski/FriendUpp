@@ -32,6 +32,7 @@ import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ButtonAdd
 
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Components.getExpandedTags
 import com.example.friendupp.R
 import com.example.friendupp.model.Activity
 
@@ -147,19 +148,30 @@ fun ProfileInfo(name:String,username:String,profilePictureUrl:String,location:St
 }
 
 @Composable
-fun TagDivider(tags:ArrayList<com.example.friendupp.Categories.Category> = arrayListOf(Category.SPORTS,Category.ComputerGames)){
+fun TagDivider(tags:ArrayList<String> = arrayListOf(Category.SPORTS.label,Category.ComputerGames.label)){
+    val expandedTags = remember { mutableStateListOf<Category>( ) }
+    // Whenever the selectedTags list changes, update the expandedTags list accordingly
+    DisposableEffect(tags) {
+        expandedTags.clear()
+        expandedTags.addAll(getExpandedTags(tags))
+        onDispose { }
+    }
+
+
+
     LazyRow (modifier= Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically){
-        items(tags){
+        items(expandedTags){
 
             Spacer(modifier = Modifier
                 .width(24.dp)
-                .height(1.dp)
+                .height(0.5.dp)
                 .background(SocialTheme.colors.uiBorder))
             Tag(icon=it.icon, label=it.label)
         }
         item {
             Spacer(modifier = Modifier
-                .height(1.dp).fillMaxWidth()
+                .height(0.5.dp)
+                .fillMaxWidth()
                 .background(SocialTheme.colors.uiBorder))
         }
 
@@ -168,9 +180,10 @@ fun TagDivider(tags:ArrayList<com.example.friendupp.Categories.Category> = array
 @Composable
 fun Tag(icon:Int,label:String){
     Row() {
-        Icon(painter = painterResource(id = icon), contentDescription =null,tint=SocialTheme.colors.textPrimary.copy(0.7f) )
+        Icon(painter = painterResource(id = icon), contentDescription =null,tint=SocialTheme.colors.textPrimary.copy(0.5f) )
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text =label, style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary.copy(0.7f) )
+        Text(text =label, style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+            ,color=SocialTheme.colors.textPrimary.copy(0.5f) )
     }
 }
 
@@ -299,45 +312,7 @@ fun ProfilePickerItem(label: String, icon: Int, selected: Boolean, onItemSelecte
 
     }
 }
-val activity = Activity(
-    image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdWGlV7yT3SV_JMbf1brUQdhWwOMA3Tx6lmg&usqp=CAU",
-    id = "activity123",
-    title = "Hiking Adventure",
-    date = "2023-06-10",
-    start_time = "09:00 AM",
-    time_length = "3 hours",
-    creator_id = "user123",
-    description = "Join us for an exciting hiking adventure in the mountains!",
-    creator_username = "john_doe",
-    creator_name = "John Doe",
-    creator_profile_picture = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRON6j1rnxsQqaSa9cbOv-v_s3tUowQWnsk6Q&usqp=CAU"
-    ,    time_left = "2 days",
-    end_time = "12:00 PM",
-    geoHash = null,
-    lat = null,
-    lng = null,
-    custom_location = "Mountain Peak",
-    minUserCount = 2,
-    maxUserCount = 10,
-    disableChat = false,
-    likes = 5,
-    invited_users = arrayListOf("user456", "user789"),
-    participants_profile_pictures = hashMapOf("user456" to "https://example.com/profile_picture2.jpg", "user789" to "https://example.com/profile_picture3.jpg"),
-    participants_usernames = hashMapOf("user456" to "jane_smith", "user789" to "alice_johnson"),
-    creation_time = "2023-06-08 14:00",
-    location = "Mountain Range",
-    pictures = hashMapOf("pic1" to "https://example.com/pic1.jpg", "pic2" to "https://example.com/pic2.jpg"),
-    enableActivitySharing = true,
-    disablePictures = false,
-    disableNotification = false,
-    privateChat = false,
-    public = true,
-    participants_ids = arrayListOf("user456", "user789"),
-    awaitConfirmation = false,
-    requests = arrayListOf(),
-    reports = 0,
-    tags = arrayListOf(Category.CREATIVE,Category.SOCIAL)
-)
+
 @Composable
 fun ProfileCalendar(modifier:Modifier){
 
@@ -347,16 +322,7 @@ fun ProfileCalendar(modifier:Modifier){
             .fillMaxWidth()
             .background(SocialTheme.colors.uiBorder.copy(0.1f))
         ){
-        activityItem(
-            activity=activity,
-            onClick = {
-            }, onExpand ={}
-        )
-        activityItem(
-            activity=activity,
-            onClick = {
-            }, onExpand ={}
-        )
+
     }
 }
 
@@ -369,11 +335,7 @@ fun ProfileHistory(modifier:Modifier){
             .background(SocialTheme.colors.uiBorder.copy(0.2f))
            ){
 
-        activityItem(
-            activity=activity,
-            onClick = {
-            }, onExpand ={}
-        )
+
 
     }
 }

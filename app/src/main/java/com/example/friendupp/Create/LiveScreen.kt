@@ -13,10 +13,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.friendupp.Components.NameEditText
-import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Components.*
+import com.example.friendupp.Login.EmailState
+import com.example.friendupp.Login.PasswordState
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
+import java.util.*
 
 
 sealed class LiveScreenEvents{
@@ -31,6 +33,16 @@ sealed class LiveScreenEvents{
 
 @Composable
 fun LiveScreen(onEvent:(LiveScreenEvents)->Unit){
+
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+    calendar.add(Calendar.HOUR_OF_DAY, 2) // Add one hour
+    val endhour = calendar.get(Calendar.HOUR_OF_DAY)
+    val endminute = calendar.get(Calendar.MINUTE)
+
+
+
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         ScreenHeading(title = "Go live", backButton = true, onBack = {
             onEvent(LiveScreenEvents.GoBack)
@@ -38,12 +50,12 @@ fun LiveScreen(onEvent:(LiveScreenEvents)->Unit){
 
         Spacer(modifier = Modifier.height(24.dp))
         CreateHeading("Time", icon = com.example.friendupp.R.drawable.ic_time)
-        TimePicker(startTime = "12:39", endTime ="17:30", lockStartTime = true)
+
         NoteComponent()
         LocationComponent()
 
         Spacer(modifier = Modifier.weight(1f))
-        CreateButton(modifier = Modifier.padding(horizontal = 24.dp), text = "Go live")
+        CreateButton(modifier = Modifier.padding(horizontal = 24.dp), text = "Go live", disabled = false)
         Spacer(modifier = Modifier.height(64.dp))
     }
 }

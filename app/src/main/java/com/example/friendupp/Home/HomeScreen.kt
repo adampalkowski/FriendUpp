@@ -1,5 +1,7 @@
 package com.example.friendupp.Home
 
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -10,11 +12,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,111 +39,39 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Categories.Category
+import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.CalendarComponent
-import com.example.friendupp.Components.FilterComponent
+import com.example.friendupp.Components.FilterList
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
 import kotlinx.coroutines.launch
 import com.example.friendupp.R
+import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Response
 
 import java.net.CookieHandler
 
 sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
     object CreateLive : HomeEvents()
-    class ExpandActivity (val activityData: Activity): HomeEvents()
+    class ExpandActivity(val activityData: Activity) : HomeEvents()
 }
-val activity1 = Activity(
-    image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdWGlV7yT3SV_JMbf1brUQdhWwOMA3Tx6lmg&usqp=CAU",
-    id = "activity123",
-    title = "Hiking Adventure",
-    date = "2023-06-10",
-    start_time = "09:00 AM",
-    time_length = "3 hours",
-    creator_id = "user123",
-    description = "Join us for an exciting hiking adventure in the mountains!",
-    creator_username = "john_doe",
-    creator_name = "John Doe",
-creator_profile_picture = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRON6j1rnxsQqaSa9cbOv-v_s3tUowQWnsk6Q&usqp=CAU"
-    ,    time_left = "2 days",
-    end_time = "12:00 PM",
-    geoHash = null,
-    lat = null,
-    lng = null,
-    custom_location = "Mountain Peak",
-    minUserCount = 2,
-    maxUserCount = 10,
-    disableChat = false,
-    likes = 5,
-    invited_users = arrayListOf("user456", "user789"),
-    participants_profile_pictures = hashMapOf("user456" to "https://example.com/profile_picture2.jpg", "user789" to "https://example.com/profile_picture3.jpg"),
-    participants_usernames = hashMapOf("user456" to "jane_smith", "user789" to "alice_johnson"),
-    creation_time = "2023-06-08 14:00",
-    location = "Mountain Range",
-    pictures = hashMapOf("pic1" to "https://example.com/pic1.jpg", "pic2" to "https://example.com/pic2.jpg"),
-    enableActivitySharing = true,
-    disablePictures = false,
-    disableNotification = false,
-    privateChat = false,
-    public = true,
-    participants_ids = arrayListOf("user456", "user789"),
-    awaitConfirmation = false,
-    requests = arrayListOf(),
-    reports = 0,
-    tags = arrayListOf(Category.CREATIVE,Category.SOCIAL)
-)
-
-val activity2 = Activity(
-    image = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQH-bYA8tqPmnCdzOmDv4PhxQFotxYOtNJXXQ&usqp=CAU",
-    id = "activity456",
-    title = "Yoga in the Park",
-    date = "2023-06-12",
-    start_time = "06:30 PM",
-    time_length = "1 hour",
-    creator_id = "user789",
-    description = "Join us for a relaxing yoga session in the park!",
-    creator_username = "alice_johnson",
-    creator_name = "Alice Johnson",
-    creator_profile_picture = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7MLEbVQLj5NQuoCP0xdY64OGKZgtxTnJ2P0OF9ZVTKBr7luYDMmN1enX5ZKBRxd6jXGg&usqp=CAU",
-    time_left = "4 days",
-    end_time = "07:30 PM",
-    geoHash = null,
-    lat = null,
-    lng = null,
-    custom_location = "Central Park",
-    minUserCount = 5,
-    maxUserCount = 20,
-    disableChat = false,
-    likes = 10,
-    invited_users = arrayListOf("user123", "user456"),
-    participants_profile_pictures = hashMapOf("user123" to "https://example.com/profile_picture1.jpg", "user456" to "https://example.com/profile_picture2.jpg"),
-    participants_usernames = hashMapOf("user123" to "john_doe", "user456" to "jane_smith"),
-    creation_time = "2023-06-09 09:30",
-    location = "Park",
-    pictures = hashMapOf("pic1" to "https://example.com/pic1.jpg", "pic2" to "https://example.com/pic2.jpg"),
-    enableActivitySharing = true,
-    disablePictures = false,
-    disableNotification = false,
-    privateChat = false,
-    public = true,
-    participants_ids = arrayListOf("user456", "user789"),
-    awaitConfirmation = false,
-    requests = arrayListOf(),
-    reports = 0,
-    tags = arrayListOf(Category.CREATIVE,Category.SOCIAL)
-)
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, onEvent: (HomeEvents) -> Unit) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    onEvent: (HomeEvents) -> Unit,
+    activityViewModel: ActivityViewModel,
+) {
     var calendarView by rememberSaveable {
         mutableStateOf(false)
     }
     var filterView by rememberSaveable {
         mutableStateOf(false)
     }
-
+    val activities = remember { mutableStateListOf<Activity>() }
 
     Column() {
         TopBar(modifier = Modifier, onClick = {
@@ -153,37 +86,59 @@ fun HomeScreen(modifier: Modifier = Modifier, onEvent: (HomeEvents) -> Unit) {
                 calendarView = !calendarView
             }
         }, calendarView, filterView, openDrawer = { onEvent(HomeEvents.OpenDrawer) })
-        Column(
+
+        LazyColumn(
             modifier
-                .verticalScroll(rememberScrollState())
                 .weight(1f)
         ) {
 
-
-            AnimatedVisibility(visible = calendarView) {
-                CalendarComponent(onDatePicked = {})
+            item {
+                AnimatedVisibility(visible = calendarView) {
+                    val state = rememberHorizontalDatePickerState2()
+                    CalendarComponent(state)
+                }
             }
-            AnimatedVisibility(visible = filterView) {
-                FilterComponent()
+            item {
+                AnimatedVisibility(visible = filterView) {
+                    FilterList(tags = SnapshotStateList(), onSelected = {}, onDeSelected = {})
+                }
             }
 
-            OptionPicker(onEvent = onEvent)
-            activityItem(
-                activity1,
-                onClick = {
-                }, onExpand ={onEvent(HomeEvents.ExpandActivity(it))}
-            )
-            activityItem(
-                activity2,
-                onClick = {
-                }, onExpand ={onEvent(HomeEvents.ExpandActivity(it))}
-            )
-            activityItem(
-                activity2,
-                onClick = {
-                }, onExpand ={onEvent(HomeEvents.ExpandActivity(it))}
-            )
-            Spacer(modifier = Modifier.height(64.dp))
+            item {
+                OptionPicker(onEvent = onEvent)
+            }
+
+
+            items(activities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onExpand = { onEvent(HomeEvents.ExpandActivity(it)) }
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+
+            }
+        }
+    }
+    activityViewModel.activitiesListState.value.let { response ->
+        when (response) {
+            is Response.Success -> {
+                activities.clear()
+                activities.addAll(response.data)
+            }
+            is Response.Failure -> {
+
+                Toast.makeText(LocalContext.current, "FAiled", Toast.LENGTH_SHORT).show()
+
+            }
+            is Response.Loading -> {
+                Toast.makeText(LocalContext.current, "LOAding", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -254,7 +209,7 @@ fun LiveUserItem(imageUrl: String, text: String = "") {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateLive(imageUrl: String,onClick: () -> Unit) {
+fun CreateLive(imageUrl: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(CircleShape)
@@ -313,7 +268,7 @@ fun TopBar(
     onClick: () -> Unit,
     openFilter: () -> Unit,
     calendarClicked: Boolean,
-    filterClicked: Boolean, openDrawer: () -> Unit
+    filterClicked: Boolean, openDrawer: () -> Unit,
 ) {
     Column() {
         Box(
@@ -575,7 +530,8 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit) {
                 .height(1.dp)
                 .background(dividerColor)
         )
-        CreateLive(onClick={onEvent(HomeEvents.CreateLive)},
+        CreateLive(
+            onClick = { onEvent(HomeEvents.CreateLive) },
             imageUrl = "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80"
         )
         Spacer(
@@ -834,36 +790,46 @@ fun eButtonSimple(
     onClick: () -> Unit = {},
     iconColor: Color = SocialTheme.colors.iconPrimary,
     selected: Boolean = false,
-    iconFilled: Int = R.drawable.ic_bookmark_filled
+    iconFilled: Int = R.drawable.ic_bookmark_filled,
 ) {
-    val backColor = if(selected){ Color.Green }else{SocialTheme.colors.uiBorder.copy(0.1f)}
-    val iconColor = if(selected){Color.White}else{SocialTheme.colors.iconPrimary}
+    val backColor = if (selected) {
+        Color.Green
+    } else {
+        SocialTheme.colors.uiBorder.copy(0.1f)
+    }
+    val iconColor = if (selected) {
+        Color.White
+    } else {
+        SocialTheme.colors.iconPrimary
+    }
 
     Box(
-        modifier = Modifier.size(40.dp)
-            .clip(CircleShape).background(backColor)
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(backColor)
             .clickable(onClick = onClick), contentAlignment = Alignment.Center
     ) {
 
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                tint = iconColor
-            )
-            /* AnimatedVisibility(visible = selected, enter = scaleIn() , exit = scaleOut()) {
-                 Icon(
-                     painter = painterResource(id = iconFilled),
-                     contentDescription = null,
-                     tint = iconColor
-                 )
-             }
-             AnimatedVisibility(visible =!selected, enter = scaleIn() , exit = scaleOut()) {
-                 Icon(
-                     painter = painterResource(id = icon),
-                     contentDescription = null,
-                     tint = iconColor
-                 )
-             }*/
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            tint = iconColor
+        )
+        /* AnimatedVisibility(visible = selected, enter = scaleIn() , exit = scaleOut()) {
+             Icon(
+                 painter = painterResource(id = iconFilled),
+                 contentDescription = null,
+                 tint = iconColor
+             )
+         }
+         AnimatedVisibility(visible =!selected, enter = scaleIn() , exit = scaleOut()) {
+             Icon(
+                 painter = painterResource(id = icon),
+                 contentDescription = null,
+                 tint = iconColor
+             )
+         }*/
 
 
     }
@@ -872,7 +838,7 @@ fun eButtonSimple(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun eButtonSimpleBlue(onClick: () -> Unit, icon: Int,modifier: Modifier=Modifier) {
+fun eButtonSimpleBlue(onClick: () -> Unit, icon: Int, modifier: Modifier = Modifier) {
     val interactionSource = MutableInteractionSource()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
