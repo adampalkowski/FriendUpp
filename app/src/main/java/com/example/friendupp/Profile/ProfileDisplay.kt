@@ -31,12 +31,16 @@ import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
 import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
 import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
 
 sealed class ProfileDisplayEvents {
     object GoToSearch : ProfileDisplayEvents()
+    class InviteUser(val user_id :String): ProfileDisplayEvents()
+    class GoToChat(val chat_id :String): ProfileDisplayEvents()
+    class RemoveFriend(val user_id :String): ProfileDisplayEvents()
     object GoBack : ProfileDisplayEvents()
     object GoToSettings : ProfileDisplayEvents()
     object GoToEditProfile : ProfileDisplayEvents()
@@ -46,17 +50,34 @@ sealed class ProfileDisplayEvents {
     object GetProfileLink : ProfileDisplayEvents()
 }
 
+enum class UserOption {
+    FRIEND,
+    INVITED,
+    BLOCKED,
+    UNKNOWN
+}
 
 @Composable
 fun ProfileDisplayScreen(
     modifier: Modifier,
     onEvent: (ProfileDisplayEvents) -> Unit,
     user: User,
-    onClick: () -> Unit,
 ) {
     var displaySettings by remember {
         mutableStateOf(false)
     }
+    // check if is Friend
+    var userOption = if(user.friends_ids.containsKey(UserData.user!!.id)){UserOption.FRIEND}
+    else if(UserData.user!!.invited_ids.contains(user.id)){
+        UserOption.INVITED
+    }
+    else{
+        UserOption.UNKNOWN
+    }
+
+    var isBlocked =UserData.user!!.blocked_ids.contains(user.id)
+    userOption= if(isBlocked){UserOption.BLOCKED}else{userOption}
+
     BackHandler(true) {
         onEvent(ProfileDisplayEvents.GoBack)
     }
@@ -74,20 +95,24 @@ fun ProfileDisplayScreen(
                         })
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                ProfileInfoDisplay(
-                    name = user.name ?:"",
-                    username = user.username?:"",
-                    profilePictureUrl = user.pictureUrl?:"",
-                    location = user.location,
-                    description = user.biography
-                )
-                TagDivider(user.tags)
-                ProfileStats(
-                    modifier = Modifier.fillMaxWidth(),
-                    user.activitiesCreated,
-                    user.friends_ids.size,
-                    user.usersReached
-                )
+
+                    ProfileInfoDisplay(
+                        name = user.name ?:"",
+                        username = user.username?:"",
+                        profilePictureUrl = user.pictureUrl?:"",
+                        location = user.location,
+                        description = user.biography
+                    )
+                    TagDivider(user.tags)
+                    ProfileStats(
+                        modifier = Modifier.fillMaxWidth(),
+                        user.activitiesCreated,
+                        user.friends_ids.size,
+                        user.usersReached
+                    )
+                    ProfileDisplayOptions(userOption,
+                    onEvent=onEvent, user_id = user.id)
+
 
             }
         }
@@ -97,9 +122,45 @@ fun ProfileDisplayScreen(
 
     AnimatedVisibility(visible = displaySettings) {
         Dialog(onDismissRequest = { displaySettings=false }) {
-            ProfileDisplaySettingContent(onCancel={displaySettings=false})
+            ProfileDisplaySettingContent(onCancel={displaySettings=false},onRemoveFriend={
+                onEvent(ProfileDisplayEvents.RemoveFriend(user.id))
+            })
         }
     }
+
+}
+
+@Composable
+fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents) -> Unit,user_id:String) {
+    when(userOption){
+        UserOption.UNKNOWN->{
+            ProfileOptionItem(R.drawable.ic_add,"Invite user", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+
+        }
+        UserOption.FRIEND->{
+            ProfileOptionItem(R.drawable.ic_chat_300,"Chat", onClick = {
+                val chat_id=UserData.user!!.friends_ids.get(user_id)
+                if(chat_id!=null){
+                    onEvent(ProfileDisplayEvents.GoToChat(chat_id=chat_id))
+                }else{
+
+
+                }
+
+
+            })
+
+        }
+        UserOption.BLOCKED->{
+            ProfileOptionItem(R.drawable.ic_block,"Unblock", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+
+        }
+        UserOption.INVITED->{
+            ProfileOptionItem(R.drawable.ic_delete,"Remove invite", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+        }
+
+    }
+
 
 }
 
@@ -181,10 +242,10 @@ fun ProfileInfoDisplay(name:String,username:String,profilePictureUrl:String,loca
 
 
 @Composable
-fun ProfileDisplaySettingContent(onCancel: () -> Unit={}) {
+fun ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={}) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
         ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary)
-        ProfileDisplaySettingsItem(label="Remove",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error)
+        ProfileDisplaySettingsItem(label="Remove friend",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
         ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error)
         ProfileDisplaySettingsItem(label="Cancel" , turnOffIcon = true, textColor = SocialTheme.colors.textPrimary.copy(0.5f), onClick = onCancel)
     }

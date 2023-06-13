@@ -22,12 +22,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.friendupp.*
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Drawer.drawerGraph
+import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.AuthViewModel
+import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Chat
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -36,28 +39,46 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executor
 
-fun customShape() =  object : Shape {
+fun customShape() = object : Shape {
     override fun createOutline(
         size: androidx.compose.ui.geometry.Size,
         layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-        density: Density
+        density: Density,
     ): Outline {
-        return Outline.Rectangle(Rect(0f,0f,size.width/1.5f /* width */, size.height /* height */))
+        return Outline.Rectangle(
+            Rect(
+                0f,
+                0f,
+                size.width / 1.5f /* width */,
+                size.height /* height */
+            )
+        )
     }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun NavigationComponent(navController: NavHostController = rememberAnimatedNavController(), outputDirectory: File,
-                        executor: Executor) {
+fun NavigationComponent(
+    navController: NavHostController = rememberAnimatedNavController(),
+    outputDirectory: File,
+    executor: Executor,
+    userViewModel: UserViewModel,
+    chatViewModel: ChatViewModel,
+    authViewModel: AuthViewModel,
+    homeViewModel:HomeViewModel
+) {
 
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     val bottomDestinations = listOf("Home", "Chat", "Map", "Profile")
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val activityViewModel: ActivityViewModel = hiltViewModel()
 
 
-  Scaffold(
+    val currentActivity = remember { mutableStateOf(Activity()) }
+    val currentChat = remember { mutableStateOf<Chat?>(null) }
+
+    Scaffold(
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(alpha = 0.3f),
         drawerShape = customShape(),
@@ -174,7 +195,7 @@ fun NavigationComponent(navController: NavHostController = rememberAnimatedNavCo
                 .fillMaxSize()
         ) {
 
-            val backHandler = BackHandler(onBack = {
+           BackHandler(onBack = {
                 if (scaffoldState.drawerState.isOpen) {
                     coroutineScope.launch {
                         scaffoldState.drawerState.close()
@@ -182,27 +203,37 @@ fun NavigationComponent(navController: NavHostController = rememberAnimatedNavCo
                 }
             })
 
-            val activityViewModel: ActivityViewModel = hiltViewModel()
-            val userViewModel : UserViewModel = hiltViewModel()
-            val authViewModel : AuthViewModel = hiltViewModel()
 
-            val currentActivity = remember { mutableStateOf(Activity()) }
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
             AnimatedNavHost(navController, startDestination = "Welcome") {
-                loginGraph(navController,userViewModel, authViewModel = authViewModel)
+                loginGraph(navController, userViewModel, authViewModel = authViewModel)
                 mainGraph(navController, openDrawer = {
                     coroutineScope.launch {
                         scaffoldState.drawerState.open()
                     }
-                },activityViewModel)
-                chatGraph(navController)
-                profileGraph(navController, outputDirectory =outputDirectory , executor =executor)
-                createGraph(navController,currentActivity, outputDirectory =outputDirectory , executor =executor,activityViewModel=activityViewModel)
-                settingsGraph(navController,authViewModel,userViewModel)
+                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel)
+                chatGraph(navController, chatViewModel, currentChat)
+                profileGraph(
+                    navController,
+                    outputDirectory = outputDirectory,
+                    executor = executor,
+                    userViewModel=userViewModel,
+                    chatViewModel=chatViewModel
+                )
+                createGraph(
+                    navController,
+                    currentActivity,
+                    outputDirectory = outputDirectory,
+                    executor = executor,
+                    activityViewModel = activityViewModel,
+                    chatViewModel = chatViewModel,
+                    userViewModel = userViewModel,
+                )
+                settingsGraph(navController, authViewModel, userViewModel)
                 drawerGraph(navController)
-                groupGraph(navController)
-                cameraGraph(navController, outputDirectory =outputDirectory , executor =executor )
+                groupGraph(navController,chatViewModel)
+                cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
             }
         }
 

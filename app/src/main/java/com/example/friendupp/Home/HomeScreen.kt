@@ -1,10 +1,9 @@
 package com.example.friendupp.Home
 
+import android.util.Log
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -14,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
@@ -57,6 +58,9 @@ sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
     object CreateLive : HomeEvents()
     class ExpandActivity(val activityData: Activity) : HomeEvents()
+    class JoinActivity(val id: String) : HomeEvents()
+    class LeaveActivity(val id: String) : HomeEvents()
+    class OpenChat(val id: String) : HomeEvents()
 }
 
 @Composable
@@ -86,25 +90,24 @@ fun HomeScreen(
                 calendarView = !calendarView
             }
         }, calendarView, filterView, openDrawer = { onEvent(HomeEvents.OpenDrawer) })
-
+        val lazyListState = rememberLazyListState()
         LazyColumn(
             modifier
-                .weight(1f)
+              ,
+            state = lazyListState
         ) {
 
-            item {
-                AnimatedVisibility(visible = calendarView) {
-                    val state = rememberHorizontalDatePickerState2()
-                    CalendarComponent(state)
-                }
-            }
-            item {
-                AnimatedVisibility(visible = filterView) {
-                    FilterList(tags = SnapshotStateList(), onSelected = {}, onDeSelected = {})
-                }
-            }
 
             item {
+                AnimatedVisibility(visible = calendarView, enter = slideInVertically(animationSpec = tween(800)), exit = slideOutVertically(animationSpec = tween(0)) ) {
+                    val state = rememberHorizontalDatePickerState2()
+                    CalendarComponent(state)
+
+                }
+                AnimatedVisibility(visible = filterView, enter = slideInVertically(animationSpec = tween(800)), exit = slideOutVertically(animationSpec = tween(0)) ) {
+                    FilterList(tags = SnapshotStateList(), onSelected = {}, onDeSelected = {})
+
+                }
                 OptionPicker(onEvent = onEvent)
             }
 
@@ -115,7 +118,17 @@ fun HomeScreen(
                     onClick = {
                         // Handle click event
                     },
-                    onExpand = { onEvent(HomeEvents.ExpandActivity(it)) }
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+
+                                onEvent(HomeEvents.ExpandActivity(event.activity))
+                            }
+                            is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                            is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                        }
+                   }
                 )
             }
 
@@ -674,13 +687,14 @@ fun ActionButton(option: Option, isSelected: Boolean, onClick: () -> Unit) {
 
 
 @Composable
-fun buttonsRow(modifier: Modifier) {
+fun buttonsRow(modifier: Modifier,
+               onEvent:(ActivityEvents)->Unit,id:String,joined:Boolean=false) {
     var bookmarked by remember { mutableStateOf(false) }
     val bookmarkColor: Color by animateColorAsState(
         if (bookmarked) Color(0xFF00CCDF) else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
-    var switch by remember { mutableStateOf(false) }
+    var switch by remember { mutableStateOf(joined) }
     val alpha: Float by animateFloatAsState(
         if (switch) 1f else 0f,
         animationSpec = tween(1000, easing = LinearEasing)
@@ -708,6 +722,7 @@ fun buttonsRow(modifier: Modifier) {
                 .background(color = bgColor)
         )
         eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
+            onEvent(ActivityEvents.Join(id))
             switch = !switch
         }, iconColor = iconColor, selected = switch, iconFilled = R.drawable.ic_check_filled)
         Spacer(
@@ -722,7 +737,7 @@ fun buttonsRow(modifier: Modifier) {
                 )
                 .background(color = bgColor)
         )
-        eButtonSimple(icon = R.drawable.ic_chat_300, onClick = {})
+        eButtonSimple(icon = R.drawable.ic_chat_300, onClick = {onEvent(ActivityEvents.OpenChat(id))})
         Spacer(
             modifier = Modifier
                 .width(12.dp)

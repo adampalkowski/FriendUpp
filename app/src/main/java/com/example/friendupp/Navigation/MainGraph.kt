@@ -1,5 +1,6 @@
 package com.example.friendupp.Navigation
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -16,16 +17,31 @@ import com.example.friendupp.Home.HomeScreen
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.MapScreen
+import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Chat
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Unit,activityViewModel:ActivityViewModel) {
+fun NavGraphBuilder.mainGraph(
+    navController: NavController,
+    openDrawer: () -> Unit,
+    activityViewModel: ActivityViewModel,
+    userViewModel: UserViewModel,chatViewModel:ChatViewModel,
+    homeViewModel:HomeViewModel
+
+) {
     navigation(startDestination = "Home", route = "Main") {
-        val homeViewModel= HomeViewModel()
+
         activityViewModel.getActivitiesForUser(UserData.user!!.id)
 
         composable(
@@ -117,17 +133,38 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
         ) {
 
 
+            HomeScreen(modifier = Modifier, onEvent = { event ->
+                when (event) {
+                    is HomeEvents.OpenDrawer -> {
+                        openDrawer()
+                    }
+                    is HomeEvents.CreateLive -> {
+                        navController.navigate("CreateLive")
+                    }
+                    is HomeEvents.JoinActivity -> {
+                        activityViewModel.likeActivity(
+                            event.id,
+                            UserData.user!!
+                        )
 
-            HomeScreen(modifier = Modifier, onEvent = { event->
-                when(event){
-                    is HomeEvents.OpenDrawer->{openDrawer()}
-                    is HomeEvents.CreateLive->{navController.navigate("CreateLive")}
-                    is HomeEvents.ExpandActivity->{
+                    }
+                    is HomeEvents.OpenChat -> {
+                        navController.navigate("ChatItem/"+event.id)
+
+                    }
+                    is HomeEvents.LeaveActivity -> {
+                        activityViewModel?.unlikeActivity(
+                            event.id,
+                            UserData.user!!.id
+                        )
+                    }
+                    is HomeEvents.ExpandActivity -> {
+                        Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW")
                         homeViewModel.setExpandedActivity(event.activityData)
                         navController.navigate("ActivityPreview")
                     }
                 }
-            },activityViewModel=activityViewModel)
+            }, activityViewModel = activityViewModel)
 
         }
         composable(
@@ -218,12 +255,13 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
             }
         ) {
 
-                ActivityPreview(onEvent = {event->
-                    when(event){
-                        is ActivityPreviewEvents.GoBack->{      navController.navigate("Home")
-                        }
+            ActivityPreview(onEvent = { event ->
+                when (event) {
+                    is ActivityPreviewEvents.GoBack -> {
+                        navController.navigate("Home")
                     }
-                },homeViewModel=homeViewModel)
+                }
+            }, homeViewModel = homeViewModel)
         }
 
 
@@ -317,17 +355,17 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
             DisposableEffect(Unit) {
                 mapViewModel.checkLocationPermission(
                     permissionDenied = {
-                        Toast.makeText(context,"denied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "denied", Toast.LENGTH_SHORT).show()
                     },
                     permissionGranted = {
-                        Toast.makeText(context,"grant", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "grant", Toast.LENGTH_SHORT).show()
 
                         mapViewModel.startLocationUpdates()
                     }
                 )
 
                 onDispose {
-                    Toast.makeText(context,"dispose", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "dispose", Toast.LENGTH_SHORT).show()
                     mapViewModel.stopLocationUpdates()
                 }
             }
@@ -380,13 +418,75 @@ fun NavGraphBuilder.mainGraph(navController: NavController, openDrawer: () -> Un
                 }
             }
         ) {
+            //flow for user search
+            val userFlow = userViewModel.userState.collectAsState()
 
-            SearchScreen(goBack = {
+            //RESET USER VALUE
+            userViewModel.resetUserValue()
 
-                navController.popBackStack()
 
+            SearchScreen(onEvent = { event ->
+                when (event) {
+                    is SearchEvents.GoBack -> {
+                        navController.popBackStack()
+                    }
+                    is SearchEvents.SearchForUser -> {
+                        userViewModel.getUserByUsername(event.username)
+                    }
+                    is SearchEvents.OnInviteAccepted -> {
+                        val uuid: UUID = UUID.randomUUID()
+                        val id:String = uuid.toString()
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val current = LocalDateTime.now().format(formatter)
+                        userViewModel.acceptInvite(UserData.user!!,event.user , Chat(current,
+                            owner_id =event.user.id,
+                            id =id,
+                            name =null,
+                            imageUrl =null,
+                            recent_message =null,
+                            recent_message_time =current,
+                            type ="duo",
+                            members = arrayListOf(UserData.user!!.id,event.user.id),
+                            user_one_username =UserData.user!!.username,
+                            user_two_username =event.user.username,
+                            user_one_profile_pic = UserData.user!!.pictureUrl,
+                            user_two_profile_pic = event.user.pictureUrl,
+                            highlited_message = "",
+                            description="",
+                             numberOfUsers=2,
+                            numberOfActivities=0,
 
-            })
+                        )
+                        )
+
+                    }
+                }
+            },userViewModel=userViewModel)
+
+            /*
+            CHECK IF USER EXISTS in search, if succes navigate to profile with user
+            * */
+            userFlow.value.let {
+                when (it) {
+                    is Response.Success -> {
+                        if(it.data!=null){
+                            Log.d("SEARCHSCREENDEBUG","search cseren scuesss")
+
+                            navController.navigate("ProfileDisplay/"+it.data.id.toString())
+                        }
+
+                    }
+                    is Response.Failure -> {
+                        Toast.makeText(
+                            LocalContext.current,
+                            "Failed to find user with given username", Toast.LENGTH_LONG
+                        ).show()
+
+                    }
+                    else -> {}
+
+                }
+            }
         }
 
 

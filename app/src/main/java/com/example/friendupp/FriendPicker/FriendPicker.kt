@@ -33,7 +33,11 @@ import androidx.compose.runtime.setValue
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
+import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
+
 val user1 = User(
     name = "John Doe",
     username = "johndoe",
@@ -93,17 +97,18 @@ val user3 = User(
 
 @Composable
 fun FriendPickerScreen(
-    modifier: Modifier, goBack: () -> Unit, selectedUsers: List<String>,
+    modifier: Modifier,userViewModel: UserViewModel, goBack: () -> Unit, selectedUsers: List<String>,
     onUserSelected: (String) -> Unit,
     onUserDeselected: (String) -> Unit,
     createActivity: () -> Unit
 ) {
-
-    val users = arrayListOf<User>(user1,user2,user3)
-
+    val friends_flow = userViewModel.friendState.collectAsState()
+    val more_friends_flow = userViewModel.friendMoreState.collectAsState()
+    val users = rememberSaveable { mutableStateOf(listOf<User>()) }
     val IconTint = SocialTheme.colors.textPrimary.copy(0.8f)
 
     var grayColor = SocialTheme.colors.uiBorder.copy(0.3f)
+    val usersExist = remember { mutableStateOf(false) }
 
     var allFriends by remember { mutableStateOf(false) }
     BackHandler(true) {
@@ -156,15 +161,52 @@ fun FriendPickerScreen(
                 }
 
             }
+            //todo paginate the friends and groups
+            friends_flow.value.let {
+                when (it) {
+                    is Response.Success -> {
+                        items(it.data) {user->
+                            FriendPickerItem(id=user.id,username = user.username?:"", onClick = {
+                            },
+                                imageUrl =user.pictureUrl?:"",
+                                onUserSelected = onUserSelected, onUserDeselected = onUserDeselected)
+                        }
 
-            items(users){user->
-                FriendPickerItem(username = user.username?:"", onClick = {
-                },
-                    imageUrl =user.pictureUrl?:"",
-                    onUserSelected = onUserSelected, onUserDeselected = onUserDeselected)
+                        usersExist.value=true
+                    }
+
+                    is Response.Loading -> {}
+                    is Response.Failure -> {}
+                }
             }
+            more_friends_flow.value.let {
+                when (it) {
+                    is Response.Success -> {
+                        items(it.data) {user->
+                            FriendPickerItem(id=user.id,username = user.username?:"", onClick = {
+                            },
+                                imageUrl =user.pictureUrl?:"",
+                                onUserSelected = onUserSelected, onUserDeselected = onUserDeselected)
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(48.dp))
+                        }
+
+                    }
+                    is Response.Loading -> {}
+                    is Response.Failure -> {}
+                }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+            item {
+                LaunchedEffect(true) {
+                    if (usersExist.value) {
+                        userViewModel?.getMoreFriends(UserData.user!!.id)
+                    }
+                }
             }
         }
 

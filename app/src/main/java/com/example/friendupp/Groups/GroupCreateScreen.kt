@@ -17,8 +17,5 @@ fun GroupsCreateScreen(modifier: Modifier=Modifier,onEvent:(GroupCreateEvents)->
 
         }
 
-
-
-
     }
 }

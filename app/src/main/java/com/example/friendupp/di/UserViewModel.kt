@@ -27,8 +27,14 @@ class UserViewModel @Inject constructor(
     private val _userValidation = MutableStateFlow<Response<Boolean>>(Response.Loading)
     val userValidation: StateFlow<Response<Boolean>> = _userValidation
 
-    private val _userState = MutableStateFlow<Response<User?>>(Response.Success(null))
-    val userState: StateFlow<Response<User?>> = _userState
+    private val _currentUserState = MutableStateFlow<Response<User?>?>(null)
+    val currentUserState: StateFlow<Response<User?>?> = _currentUserState
+
+
+    private val _userState = MutableStateFlow<Response<User?>?>(null)
+    val userState: StateFlow<Response<User?>?> = _userState
+
+
 
 
     private val _friendState = MutableStateFlow<Response<ArrayList<User>>>(Response.Loading)
@@ -322,7 +328,9 @@ class UserViewModel @Inject constructor(
 
 
     fun resetUserValue() {
-        _userState.value = Response.Success(null)
+        viewModelScope.launch {
+            _userState.value =null
+        }
     }
 
     fun setCurrentUser(user: User) {
@@ -408,6 +416,7 @@ class UserViewModel @Inject constructor(
                     is Response.Success -> {
                         //get user from database and check if
                         val user: User = response.data
+                        _currentUserState.value=response
                         Log.d("LOGINGRAPHDEBUG",user.toString())
                         //emails don't match
                         //TODO SHOW CORRECT EXCEPTION

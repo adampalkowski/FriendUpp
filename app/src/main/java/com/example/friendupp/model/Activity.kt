@@ -6,7 +6,7 @@ import com.google.firebase.firestore.GeoPoint
 
 
 data class Activity(
-    val image: String?,
+    var image: String?,
     val id: String,
     val title: String,
     val start_time: String,

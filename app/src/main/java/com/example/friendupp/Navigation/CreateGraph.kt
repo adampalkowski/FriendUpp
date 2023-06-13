@@ -20,14 +20,22 @@ import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Create.*
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.di.AuthViewModel
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.firebase.geofire.GeoFireUtils
+import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.firestore.GeoPoint
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.collections.ArrayList
@@ -36,7 +44,8 @@ import kotlin.collections.ArrayList
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.createGraph(
     navController: NavController, currentActivity: MutableState<Activity>, outputDirectory: File,
-    executor: Executor, activityViewModel: ActivityViewModel,
+    executor: Executor, activityViewModel: ActivityViewModel,chatViewModel:ChatViewModel,userViewModel:UserViewModel,
+
 ) {
 
     navigation(startDestination = "FriendPicker", route = "CreateGraph") {
@@ -211,9 +220,12 @@ fun NavGraphBuilder.createGraph(
 
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
-
+            Log.d("CHATDEBUG","GETFRIENDSCALLED")
+            userViewModel.getFriends(UserData.user!!.id)
+            chatViewModel.getGroups(UserData.user!!.id)
             FriendPickerScreen(
                 modifier = Modifier,
+                userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
                 selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
@@ -223,24 +235,41 @@ fun NavGraphBuilder.createGraph(
                     if (user != null) {
                         //Add current user to invited list
                         selectedUsers.add(user.id)
-
-
                         currentActivity.value = currentActivity.value.copy(
                             invited_users = ArrayList(selectedUsers),
                             creator_profile_picture = user.pictureUrl?:"",
                             creator_name = user.name?:"",
                             creator_username = user.username?:"",
                             creator_id = user.id,
-
                             )
                         Log.d("CreateGraphActivity", currentActivity.toString())
                         val uuid: UUID = UUID.randomUUID()
                         val id: String = uuid.toString()
                         currentActivity.value = currentActivity.value.copy(id = id)
-                        createActivity(
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val current = LocalDateTime.now().format(formatter)
+                        currentActivity.value = currentActivity.value.copy(creation_time = current)
+                       if(currentActivity.value.location!=null){
+
+                           val lat= currentActivity.value.location!!.latitude
+                           val lng=  currentActivity.value.location!!.longitude
+                           //Create geohash
+                           val hash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
+                           val geohash: MutableMap<String, Any> = mutableMapOf(
+                               "geohash" to hash,
+                               "lat" to lat,
+                               "lng" to lng
+                           )
+
+                           currentActivity.value = currentActivity.value.copy(geoHash = geohash)
+                       }
+
+                        createGroup(
                             currentActivity.value,
                             activityViewModel = activityViewModel,
-                            context
+                            context,
+                            chatViewModel = chatViewModel,
+                            group_picture = currentActivity.value.image?:""
                         )
                     }else{
                         Toast.makeText(context,"Failed to read current user, please re-login",Toast.LENGTH_LONG).show()
@@ -533,7 +562,6 @@ fun createActivity(
 ) {
 
     activityViewModel.addActivity(currentActivity)
-
     activityViewModel.isActivityAddedState.value.let {
         when (it) {
             is Response<Void?>? -> {
@@ -553,8 +581,52 @@ fun createActivity(
 
                 Log.d("ActivityTesting", "DIFF")
 
-
             }
         }
     }
+}
+fun createGroup(
+    currentActivity: Activity,
+    activityViewModel: ActivityViewModel,
+    context: Context,
+    chatViewModel:ChatViewModel,
+    group_picture:String
+) {
+    val members= arrayListOf(UserData.user!!.id)
+    members.addAll(currentActivity.invited_users)
+
+    val chat = Chat(
+        create_date = currentActivity.creation_time,
+        owner_id = currentActivity.id,
+        id = currentActivity.id,
+        name = currentActivity.title,
+        imageUrl = UserData.user!!.pictureUrl!!,
+        recent_message = "say hi!",
+        recent_message_time = currentActivity.creation_time,
+        type = "activity",
+        members =members ,
+        user_one_username = null,
+        user_two_username = null,
+        user_one_profile_pic = null,
+        user_two_profile_pic = null,
+        highlited_message = "",
+        description="",
+        numberOfUsers=1,
+        numberOfActivities=1
+    )
+    chatViewModel.addChatCollection(chat,group_picture, onFinished = {picture->
+        if(picture.isEmpty()){
+            createActivity(currentActivity,activityViewModel,context)
+        }else{
+
+            currentActivity.image = picture
+            createActivity(currentActivity,activityViewModel,context)
+
+        }
+
+
+    })
+
+
+
 }

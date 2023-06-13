@@ -1,14 +1,17 @@
 package com.example.friendupp.ChatUi
 
-import android.widget.EditText
+import android.net.Uri
+import android.util.Log
+import android.view.ViewTreeObserver
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -16,19 +19,19 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalTextInputService
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,63 +44,327 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Home.eButtonSimple
 import com.example.friendupp.Home.eButtonSimpleBlue
-import com.example.friendupp.ui.theme.Lexend
+import com.example.friendupp.Login.TextFieldState
+import com.example.friendupp.Profile.NameState
+import com.example.friendupp.Profile.NameStateSaver
 import com.example.friendupp.R
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.model.Chat
+import com.example.friendupp.model.ChatMessage
+import com.example.friendupp.model.Response
+import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
-import kotlinx.coroutines.delay
+import com.google.android.gms.maps.model.LatLng
 
 
 sealed class ChatEvents {
     object GoBack : ChatEvents()
+    class GetMoreMessages(val chat_id:String) : ChatEvents()
+    class SendMessage (val chat_id:String,val message:String): ChatEvents()
     object OpenChatSettings : ChatEvents()
-    object Reply : ChatEvents()
+    class Reply(val message:ChatMessage) : ChatEvents()
     object Report : ChatEvents()
-    object Delete : ChatEvents()
-    object Copy : ChatEvents()
+    class Delete (val id :String): ChatEvents()
+    class Copy (val text:String): ChatEvents()
     object Share : ChatEvents()
 }
 
 
 @Composable
-fun ChatContent(modifier: Modifier, onEvent: (ChatEvents) -> Unit) {
-    val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+fun ChatContent(
+    modifier: Modifier,
+    onEvent: (ChatEvents) -> Unit,
+    chatViewModel: ChatViewModel,
+) {
+    var chat = remember{ mutableStateOf<Chat?>(null) }
+    loadChat(chatViewModel,chat)
+    var data = remember{ mutableStateListOf<ChatMessage>()}
+    var data_new = remember{ mutableStateListOf<ChatMessage>()}
+    var frist_data = remember{ mutableStateListOf<ChatMessage>()}
+    val valueExist = remember { mutableStateOf(false) }
+    loadMessages(frist_data,data,data_new,chatViewModel, valueExist = valueExist)
+
     BackHandler(true) {
         onEvent(ChatEvents.GoBack)
     }
+    val replyMessage = remember { mutableStateOf<ChatMessage?>(null) }
+    val permission_flow = chatViewModel.granted_permission.collectAsState()
+    val location_flow = chatViewModel.location.collectAsState()
+    val isImageAddedToStorage by chatViewModel.isImageAddedToStorageFlow.collectAsState()
 
-    Column(Modifier.background(SocialTheme.colors.uiBackground)) {
-        TopChatBar(
-            title = "Adam",
-            image = "https://developer.android.com/static/images/jetpack/compose/graphics-sourceimagesmall.jpg",
-            chatEvents = onEvent
-        )
-        Box(Modifier.weight(1f)){
-            Column(Modifier.zIndex(5f)) {
-                LazyColumn(
-                    modifier.weight(1f),
-                    reverseLayout = true,
-                ) {
+    if (chat.value!=null){
+        var chat_name = chat.value!!.name.toString()
+        if (chat.value!!.type.equals("duo")){
+            if(chat.value!!.user_one_username==UserData.user!!.username){
+                chat_name=chat.value!!.user_two_username.toString()
+            }else{
+                chat_name=chat.value!!.user_one_username.toString()
 
-                    items(5) {
-                        ChatButtonItemLeft(
-                            icon = R.drawable.ic_location,
-                            "Shared location",
-                            onClick = {})
-
-                        ChatItemLeft(modifier=Modifier,"How was your day ???/ ",
-                            onLongClick={}, onEvent = onEvent)
-                        ChatItemRight("WHERE  are ywe hoing ouy ??",onEvent=onEvent)
-                    }
-
-                }
-                BottomChatBar(modifier = Modifier)
             }
+        }
+        var chat_image = chat.value!!.imageUrl.toString()
+        if (chat.value!!.type.equals("duo")){
+            if(chat.value!!.user_one_profile_pic==UserData.user!!.pictureUrl){
+                chat_image=chat.value!!.user_two_profile_pic.toString()
+            }else{
+                chat_image=chat.value!!.user_one_profile_pic.toString()
+
+            }
+        }
+
+        Column(Modifier.background(SocialTheme.colors.uiBackground)) {
+            TopChatBar(
+                title = chat_name,
+                image = chat_image,
+                chatEvents = onEvent
+            )
+            ChatMessages(
+                modifier.weight(1f),
+                onEvent = { event->
+                    Log.d("CHATDEBUG","EVENT")
+
+                    when(event){
+                        is ChatEvents.Reply->{
+                            Log.d("CHATDEBUG","REPLY")
+                            replyMessage.value=event.message
+                        }
+                        else->{ onEvent(event) }
+                    }
+                },
+                data,
+                data_new,
+                frist_data,
+                valueExist = valueExist.value,
+                chat_id = chat.value!!.id.toString()
+            )
+            BottomChatBar(modifier = Modifier,onEvent=onEvent,replyMessage=replyMessage,chat.value!!.id.toString())
+        }
+    }
+
+
+    var uri by remember { mutableStateOf<Uri?>(null) }
+    val uriReceived by chatViewModel.uriReceived
+    chatViewModel.uri.observe(LocalLifecycleOwner.current) { newUri ->
+        Log.d("ImageFromGallery", "image passed" + uri.toString())
+        uri = newUri
+    }
+    //handle image loading animatipn
+    var showLoading by remember { mutableStateOf(false) }
+    val flowimageaddition = chatViewModel?.isImageAddedToStorageAndFirebaseState?.collectAsState()
+    flowimageaddition?.value.let {
+        when (it) {
+            is Response.Success -> {
+                showLoading = false
+
+            }
+            is Response.Failure -> {}
+            is Response.Loading -> {
+                showLoading = true
+            }
+            else -> {}
+        }
+    }
+
+
+    isImageAddedToStorage.let { response ->
+        Log.d("ImagePicker", response.toString())
+        when (response) {
+            is Response.Success -> {}
+            is Response.Loading -> {}
+            is Response.Failure -> {
+                Log.d("ImagePicker", "failure")
+                Toast.makeText(LocalContext.current, "Failed to send the image", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            else -> {}
+        }
+    }
+
+
+
+
+}
+
+fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMessage>, dataNew: MutableList<ChatMessage>,chatViewModel:ChatViewModel,valueExist: MutableState<Boolean>) {
+    chatViewModel.firstMessagesState.value.let {
+        when (it) {
+            is Response.Success -> {
+                fristData.clear()
+                fristData.addAll(it.data)
+                valueExist.value = true
+            }
+            is Response.Loading -> {}
+            is Response.Failure -> {}
+            else -> {}
+        }
+    }
+    chatViewModel.messagesState.value.let {
+        when (it) {
+            is Response.Success -> {
+                data.clear()
+                data.addAll(it.data)
+            }
+            is Response.Loading -> {}
+            is Response.Failure -> {}
+            else -> {}
+        }
+    }
+    chatViewModel.moreMessagesState.value.let {
+        when (it) {
+            is Response.Success -> {
+                dataNew.clear()
+                dataNew.addAll(it.data)
+            }
+            is Response.Loading -> {}
+            is Response.Failure -> {}
+            else -> {}
+        }
+    }
+}
+
+@Composable
+fun loadChat(chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
+    val chatState = chatViewModel.chatCollectionState.collectAsState()
+    when (val result = chatState.value) {
+        is Response.Loading -> {
+            // Display a circular loading indicator
+            androidx.compose.material.CircularProgressIndicator()
+        }
+        is Response.Success -> {
+            chat.value=result.data
+
+        }
+        is Response.Failure -> {
+
+
+        }
+    }
+}
+
+@Composable
+fun ChatMessages(
+    modifier:Modifier,
+    onEvent: (ChatEvents) -> Unit,
+    data: MutableList<ChatMessage>,
+    new_data: MutableList<ChatMessage>,
+    first_data: MutableList<ChatMessage>,
+    valueExist: Boolean,
+    chat_id: String
+) {
+
+    val lazyListState = rememberLazyListState()
+
+    // Trigger the "Get more messages" event when scrolled to the bottom
+    LaunchedEffect(lazyListState) {
+        val totalItems = data.size + new_data.size + first_data.size
+        val visibleItems = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+        if (visibleItems >= totalItems - 1 && valueExist) {
+            Log.d("CHATDEBUG", "GET MORE MESSAGES CALLED")
+            onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
+        }
+    }
+        var lastMessageSenderID: String? = null
+        LazyColumn(modifier,
+            reverseLayout = true,
+            state = lazyListState
+        ) {
+            items(data) { message ->
+                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
+                ChatBox(
+                    message,
+                    onLongPress = {
+                    },
+                    highlite_message = false,
+                    displayPicture = {},
+                    highlightMessage = {  },
+                    openDialog = {
+                    },
+                    onEvent = onEvent,
+                    shouldGroup = shouldGroup,
+                )
+
+                lastMessageSenderID = message.sender_id
+            }
+            items(first_data) { message ->
+                val shouldGroup =  lastMessageSenderID == message.sender_id || lastMessageSenderID==null
+                ChatBox(
+                    message,
+                    onLongPress = {
+                    },
+                    highlite_message = false,
+                    displayPicture = {},
+                    highlightMessage = {  },
+                    openDialog = {
+                    },
+                    onEvent =onEvent,
+                    shouldGroup = shouldGroup,
+                )
+
+                lastMessageSenderID = message.sender_id
+            }
+            items(new_data) { message ->
+                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
+                ChatBox(
+                    message,
+                    onLongPress = {
+                    },
+                    highlite_message = false,
+                    displayPicture = {},
+                    highlightMessage = {  },
+                    openDialog = {
+                    },
+                    onEvent = onEvent,
+                    shouldGroup = shouldGroup,
+                )
+
+                lastMessageSenderID = message.sender_id
+            }
+
+
 
         }
 
+}
 
+
+@Composable
+fun ChatBox(
+    chat: ChatMessage,
+    highlite_message: Boolean,
+    onLongPress: () -> Unit,
+    onEvent: (ChatEvents) -> Unit,
+    openDialog: () -> Unit,
+    displayPicture: (String) -> Unit,
+    highlightMessage: (String) -> Unit,
+    shouldGroup: Boolean = false,
+) {
+    var padding = if (shouldGroup) {
+        0.dp
+    } else {
+        12.dp
     }
 
+    if (chat.sender_id == UserData.user!!.id) {
+        Spacer(modifier = Modifier.height(padding))
+
+        ChatItemRight(
+            text_type = chat.message_type,
+            text = chat.text,
+            timeSent = chat.sent_time, highlite_message = highlite_message, onEvent = onEvent,
+            chat=chat
+        )
+    } else {
+        Spacer(modifier = Modifier.height(padding))
+
+        ChatItemLeft(
+            text_type = chat.message_type,
+            text = chat.text,
+            timeSent = chat.sent_time, highlite_message = highlite_message, onEvent = onEvent,
+            chat=chat
+        )
+
+    }
 
 }
 
@@ -105,8 +372,7 @@ fun ChatContent(modifier: Modifier, onEvent: (ChatEvents) -> Unit) {
 @Composable
 fun ChatButtonItemLeft(icon: Int, label: String, onClick: () -> Unit) {
     val bgColor = SocialTheme.colors.uiBorder.copy(0.2f)
-    val color =SocialTheme.colors.textPrimary.copy(0.8f)
-
+    val color = SocialTheme.colors.textPrimary.copy(0.8f)
 
 
 
@@ -125,10 +391,13 @@ fun ChatButtonItemLeft(icon: Int, label: String, onClick: () -> Unit) {
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
 
-        Icon(painter = painterResource(id = icon), contentDescription =null,tint=color)
+        Icon(painter = painterResource(id = icon), contentDescription = null, tint = color)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text = label, style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold
-            , fontSize = 14.sp ),color=color)
+        Text(
+            text = label, style = TextStyle(
+                fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 14.sp
+            ), color = color
+        )
 
     }
 }
@@ -136,26 +405,44 @@ fun ChatButtonItemLeft(icon: Int, label: String, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun ChatItemLeft(modifier: Modifier=Modifier,text: String,timeSent: String="12:12",onLongClick:()->Unit={},onEvent:(ChatEvents)->Unit) {
-    var  clicked by remember {
+fun ChatItemLeft(
+    text_type: String,
+    text: String,
+    timeSent: String = "12:12",
+    highlite_message: Boolean,
+    onEvent: (ChatEvents) -> Unit,chat:ChatMessage
+) {
+    var clicked by remember {
         mutableStateOf(false)
     }
     var selected by remember {
         mutableStateOf(false)
     }
 
-    var elevation = if(selected){4.dp}else{0.dp}
+    var elevation = if (selected) {
+        4.dp
+    } else {
+        0.dp
+    }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 1.dp)
             .padding(horizontal = 12.dp)
     ) {
         AnimatedVisibility(visible = clicked) {
-            Text(modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center
-                , style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Normal)
-                , text = timeSent,color=SocialTheme.colors.iconPrimary)
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal
+                ),
+                text = timeSent,
+                color = SocialTheme.colors.iconPrimary
+            )
             Spacer(modifier = Modifier.height(4.dp))
         }
 
@@ -171,60 +458,75 @@ fun ChatItemLeft(modifier: Modifier=Modifier,text: String,timeSent: String="12:1
         }*/
 
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 8.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            clicked = !clicked
-                        },
-                        onLongClick = {
-                            selected = !selected
-                        },
-                    )
-                    .background(color = SocialTheme.colors.uiBackground)
-
-                    .border(
-                        border = BorderStroke(1.dp, SocialTheme.colors.uiBorder),
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 8.dp
-                        )
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = text,
-                    style = TextStyle(
-                        fontFamily = Lexend,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = SocialTheme.colors.textPrimary
+        Box(
+            modifier = Modifier
+                .clip(
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 8.dp
                     )
                 )
-            }
+                .combinedClickable(
+                    onClick = {
+                        clicked = !clicked
+                    },
+                    onLongClick = {
+                        selected = !selected
+                    },
+                )
+                .background(color = SocialTheme.colors.uiBackground)
+
+                .border(
+                    border = BorderStroke(1.dp, SocialTheme.colors.uiBorder),
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 8.dp
+                    )
+                )
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = SocialTheme.colors.textPrimary
+                )
+            )
+        }
         AnimatedVisibility(visible = selected) {
             Row(
                 Modifier
 
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                ChatSettingItem(label ="Reply" , icon =R.drawable.ic_reply , onClick = {onEvent(ChatEvents.Reply)})
-                ChatSettingItem(label ="Copy" , icon =R.drawable.ic_copy , onClick = {onEvent(ChatEvents.Copy)})
-                ChatSettingItem(label ="Share" , icon =R.drawable.ic_share , onClick = {onEvent(ChatEvents.Share)})
-                ChatSettingItem(label ="Delete" , icon =R.drawable.ic_delete , onClick = {onEvent(ChatEvents.Delete)})
-                ChatSettingItem(label ="Report" , icon =R.drawable.ic_flag , onClick = {onEvent(ChatEvents.Report)})
+                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                ChatSettingItem(
+                    label = "Reply",
+                    icon = R.drawable.ic_reply,
+                    onClick = { onEvent(ChatEvents.Reply(chat)) })
+                ChatSettingItem(
+                    label = "Copy",
+                    icon = R.drawable.ic_copy,
+                    onClick = { onEvent(ChatEvents.Copy(chat.text)) })
+                ChatSettingItem(
+                    label = "Share",
+                    icon = R.drawable.ic_share,
+                    onClick = { onEvent(ChatEvents.Share) })
+                ChatSettingItem(
+                    label = "Delete",
+                    icon = R.drawable.ic_delete,
+                    onClick = { onEvent(ChatEvents.Delete(chat.id)) })
+                ChatSettingItem(
+                    label = "Report",
+                    icon = R.drawable.ic_flag,
+                    onClick = { onEvent(ChatEvents.Report) })
             }
         }
 
@@ -232,19 +534,34 @@ fun ChatItemLeft(modifier: Modifier=Modifier,text: String,timeSent: String="12:1
 }
 
 @Composable
-fun ChatSettingItem(label:String,icon: Int,onClick: () -> Unit){
+fun ChatSettingItem(label: String, icon: Int, onClick: () -> Unit) {
     val color = SocialTheme.colors.uiBorder.copy(0.2f)
-    Column (horizontalAlignment = Alignment.CenterHorizontally){
-        Box(modifier = Modifier
-            .clip(CircleShape)
-            .clickable(onClick=onClick)
-            .background(color)
-            .padding(12.dp)){
-            Icon(painter = painterResource(id = icon), contentDescription =null, tint = SocialTheme.colors.textPrimary.copy(0.8f) )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
+        .clip(RoundedCornerShape(9.dp))
+        .clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(color)
+                .padding(12.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                tint = SocialTheme.colors.textPrimary.copy(0.8f)
+            )
 
         }
         Spacer(modifier = Modifier.height(5.dp))
-        Text(text = label, style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Normal), color = SocialTheme.colors.textPrimary.copy(0.8f))
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = Lexend,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal
+            ),
+            color = SocialTheme.colors.textPrimary.copy(0.8f)
+        )
     }
 
 }
@@ -252,8 +569,14 @@ fun ChatSettingItem(label:String,icon: Int,onClick: () -> Unit){
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun ChatItemRight(text: String,timeSent:String="12:12",onEvent:(ChatEvents)->Unit) {
-    var  clicked by remember {
+fun ChatItemRight(
+    text_type: String,
+    text: String,
+    timeSent: String = "12:12",
+    highlite_message: Boolean,
+    onEvent: (ChatEvents) -> Unit,chat:ChatMessage
+) {
+    var clicked by remember {
         mutableStateOf(false)
     }
 
@@ -261,63 +584,101 @@ fun ChatItemRight(text: String,timeSent:String="12:12",onEvent:(ChatEvents)->Uni
         mutableStateOf(false)
     }
 
-    Column(horizontalAlignment = Alignment.End,
+    Column(
+        horizontalAlignment = Alignment.End,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 1.dp)
             .padding(horizontal = 12.dp)
     ) {
         AnimatedVisibility(visible = clicked) {
-            Text(modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Normal)
-                , text = timeSent,color=SocialTheme.colors.iconPrimary)
+            Text(
+                modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal
+                ), text = timeSent, color = SocialTheme.colors.iconPrimary
+            )
             Spacer(modifier = Modifier.height(4.dp))
         }
-            Box(
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 8.dp,
-                            bottomEnd = 0.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            clicked = !clicked
-                        },
-                        onLongClick = {
-                            selected=!selected
-                        },
-                    )
-
-                    .fillMaxHeight()
-                    .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
-
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = text,
-                    style = TextStyle(
-                        fontFamily = Lexend,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = SocialTheme.colors.uiBackground.copy(alpha = 0.9f)
+        Box(
+            modifier = Modifier
+                .clip(
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 8.dp,
+                        bottomEnd = 0.dp
                     )
                 )
-            }
+                .combinedClickable(
+                    onClick = {
+                        if (highlite_message) {
+                            if (text_type.equals("live") || text_type.equals("latLng")) {
+
+                            } else {
+                                /*
+                                *      openDialog()
+                                highlightMessage(chat.text)
+                                * */
+
+                            }
+                        } else {
+                            if (text_type.equals("uri")) {
+                                /*
+                                    displayPicture(chat.text)
+                                * */
+
+                            }
+                        }
+
+
+                        clicked = !clicked
+                    },
+                    onLongClick = {
+                        selected = !selected
+                    },
+                )
+
+                .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
+
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = SocialTheme.colors.uiBackground.copy(alpha = 0.9f)
+                )
+            )
+        }
         AnimatedVisibility(visible = selected) {
             Row(
                 Modifier
 
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                ChatSettingItem(label ="Reply" , icon =R.drawable.ic_reply , onClick = {onEvent(ChatEvents.Reply)})
-                ChatSettingItem(label ="Copy" , icon =R.drawable.ic_copy , onClick = {onEvent(ChatEvents.Copy)})
-                ChatSettingItem(label ="Share" , icon =R.drawable.ic_share , onClick = {onEvent(ChatEvents.Share)})
-                ChatSettingItem(label ="Delete" , icon =R.drawable.ic_delete , onClick = {onEvent(ChatEvents.Delete)})
+                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                ChatSettingItem(
+                    label = "Reply",
+                    icon = R.drawable.ic_reply,
+                    onClick = { onEvent(ChatEvents.Reply(chat)) })
+                ChatSettingItem(
+                    label = "Copy",
+                    icon = R.drawable.ic_copy,
+                    onClick = { onEvent(ChatEvents.Copy(chat.text)) })
+                ChatSettingItem(
+                    label = "Share",
+                    icon = R.drawable.ic_share,
+                    onClick = { onEvent(ChatEvents.Share) })
+                ChatSettingItem(
+                    label = "Delete",
+                    icon = R.drawable.ic_delete,
+                    onClick = { onEvent(ChatEvents.Delete(chat.id)) })
 
             }
         }
@@ -326,14 +687,12 @@ fun ChatItemRight(text: String,timeSent:String="12:12",onEvent:(ChatEvents)->Uni
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) -> Unit) {
+fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) -> Unit,textState:TextFieldState
+,reply:Boolean) {
 
     val focusRequester = remember { FocusRequester() }
 
 
-    var text by remember {
-        mutableStateOf("")
-    }
     var focus by remember {
         mutableStateOf(false)
     }
@@ -364,7 +723,7 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
                     }
                     .wrapContentHeight(align = Alignment.Top)
                     .fillMaxWidth(),
-                value = text, onValueChange = { text = it },
+                value = textState.text, onValueChange = { textState.text = it},
                 textStyle = TextStyle(
                     fontFamily = Lexend, fontSize = 14.sp,
                     fontWeight = FontWeight.Light
@@ -376,19 +735,38 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
                     onDone = { /* Perform action on Done button press */ }
                 ),
             )
-            if (text.isEmpty()) {
-                Text(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 0.dp),
-                    text = "Send a message",
-                    style = TextStyle(
-                        fontFamily = Lexend,
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Light
-                    )
-                )
+            if (textState.text.isEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (reply){
+                        Icon(painter = painterResource(id = R.drawable.ic_reply_arrow), contentDescription =null, tint = SocialTheme.colors.uiBorder )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 0.dp),
+                            text = "Reply",
+                            style = TextStyle(
+                                fontFamily = Lexend,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Light
+                            )
+                        )
+                    }else{
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 0.dp),
+                            text = "Send a message",
+                            style = TextStyle(
+                                fontFamily = Lexend,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Light
+                            )
+                        )
+                    }
+
+                }
+
             }
         }
     }
@@ -445,10 +823,16 @@ fun chatButtonsRow(modifier: Modifier) {
 }
 
 @Composable
-fun BottomChatBar(modifier: Modifier = Modifier) {
+fun BottomChatBar(modifier: Modifier = Modifier,onEvent: (ChatEvents) -> Unit,replyMessage:MutableState<ChatMessage?>,chat_id:String) {
     var focused by remember { mutableStateOf(false) }
+    var text by rememberSaveable(stateSaver = MessageStateSaver) {
+        mutableStateOf(MessageState())
+    }
     Column(modifier.background(color = SocialTheme.colors.uiBackground.copy(0.7f))) {
         chatButtonsRow(modifier = Modifier)
+        if (replyMessage.value!=null){
+            ReplyMessage(replyMessage.value!!)
+        }
         //todo set appropirate color to theme
         Row(
             modifier = Modifier
@@ -461,14 +845,43 @@ fun BottomChatBar(modifier: Modifier = Modifier) {
                 focus = false,
                 onFocusChange = { focusState ->
                     focused = focusState
-                })
+                }, textState = text,
+            reply=replyMessage.value!=null
+                )
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
             )
-            eButtonSimpleBlue(icon = R.drawable.ic_send, onClick = {})
+            eButtonSimpleBlue(icon = R.drawable.ic_send, onClick = {
+                if(text.text.isNotEmpty()){
+                    onEvent(ChatEvents.SendMessage(chat_id = chat_id,text.text))
+                    text.text=""
+                }else{
+
+                }
+                }
+            )
         }
 
+    }
+}
+
+@Composable
+fun ReplyMessage(chat:ChatMessage) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(color = SocialTheme.colors.uiBorder.copy(0.3f))
+            .padding(vertical = 8.dp, horizontal = 24.dp)) {
+        if (chat.sender_id == UserData.user!!.id) {
+
+            ChatItemRight(text_type = chat.message_type, text =chat.text , highlite_message = false, onEvent ={}, chat = chat)
+
+        } else {
+
+            ChatItemLeft(text_type = chat.message_type, text =chat.text , highlite_message = false, onEvent ={}, chat = chat)
+
+        }
     }
 }
 
@@ -490,7 +903,7 @@ fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
                     tint = SocialTheme.colors.iconPrimary
                 )
             }
-            Spacer(modifier = Modifier.width(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(image)

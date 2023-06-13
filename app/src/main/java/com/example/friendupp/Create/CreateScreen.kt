@@ -279,7 +279,7 @@ fun BottomBarCreate(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateButton(text: String, createClicked: () -> Unit = {},
-                 modifier: Modifier = Modifier, disabled:Boolean) {
+                 modifier: Modifier = Modifier.width(150.dp), disabled:Boolean) {
     val cardColor by animateColorAsState(
         if (disabled){
             SocialTheme.colors.uiBorder

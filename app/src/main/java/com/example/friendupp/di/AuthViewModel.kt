@@ -3,6 +3,7 @@ package com.example.friendupp.di
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.model.OneTapResponse
 import com.example.friendupp.model.Response
-import com.example.friendupp.model.UserData
+import com.example.friendupp.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -30,9 +31,9 @@ class AuthViewModel @Inject constructor(
 ): ViewModel() {
 
 
-
     val currentUser :FirebaseUser?
         get()= repo.currentUser
+
 
     val isUserAuthenticated get() =repo.isUserAuthenticatedInFirebase
 
@@ -78,13 +79,11 @@ class AuthViewModel @Inject constructor(
         repo.logout()
         _loginFlow.value=null
         _signupFlow.value=null
-        UserData.user=null
     }
     fun deleteAuth(){
         repo.deleteAuth()
         _loginFlow.value=null
         _signupFlow.value=null
-        UserData.user=null
     }
      fun deleteAccount(id:String){
          viewModelScope.launch {

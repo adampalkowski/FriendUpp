@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,11 @@ import com.example.friendupp.Profile.FriendListEvents
 import com.example.friendupp.Profile.UsernameState
 import com.example.friendupp.Profile.UsernameStateSaver
 import com.example.friendupp.R
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Chat
+import com.example.friendupp.model.Response
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
@@ -52,12 +58,15 @@ sealed class GroupsEvents{
 
 
 @Composable
-fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit){
-
+fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chatViewModel: ChatViewModel){
+    val groupFlow =  chatViewModel.groupsState.collectAsState()
     val focusRequester = remember { FocusRequester() }
     val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
         mutableStateOf(UsernameState())
     }
+
+    val groups = remember { mutableStateListOf<Chat>() }
+
     BackHandler(true) {
         onEvent(GroupsEvents.GoBack)
     }
@@ -90,31 +99,31 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit){
         CreateHeading(text = "Your groups", icon = R.drawable.ic_group, tip = false)
 
         LazyColumn {
-
-            items(1) {
-                GroupItem(groupname = "Promień mikluszowice",
-                    description = "GRupa dla piłkarzy",
-                    groupPicture = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZml" +
-                            "sZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
-                    numberOfUsers = "30",
-                    isCreator = false,
+            items(groups){group->
+                GroupItem(groupname = group.name.toString(),
+                    description = group.description.toString(),
+                    groupPicture =group.imageUrl.toString(),
+                    numberOfUsers =group.members.size.toString(),
+                    isCreator = group.owner_id==UserData.user!!.id,
                     onEvent = {groupId->
-                        onEvent(GroupsEvents.GoToGroupDisplay(groupId))
+                        onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
 
                     })
             }
-                items(1) {
-                    GroupItem(
-                        groupname = "Promień mikluszowice",
-                        description = "GRupa dla piłkarzy",
-                        groupPicture = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
-                        numberOfUsers = "30",
-                        isCreator = true
-                   , onEvent = {} )
-                }
+
             }
         }
+    groupFlow.value.let {response ->
+        when(response){
+            is Response.Success->{
+                groups.clear()
+                groups.addAll(response.data)
+            }
+            is Response.Loading->{}
+            is Response.Failure->{}
+        }
     }
+}
 
 
 sealed class GroupItemEvent{
@@ -132,7 +141,7 @@ fun GroupItem(groupname:String,description:String,numberOfUsers:String,groupPict
 
     Column() {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-            .clickable(onClick = {onEvent("12312312")})
+            .clickable(onClick = { onEvent("12312312") })
             .padding(horizontal = 24.dp, vertical = 8.dp)) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)

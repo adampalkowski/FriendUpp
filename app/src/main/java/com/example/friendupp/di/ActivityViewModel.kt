@@ -411,13 +411,11 @@ class ActivityViewModel @Inject constructor(
 
     fun addActivity(activity: Activity) {
         viewModelScope.launch {
-            val activityImage = activity.image
-            if(activityImage.isNullOrEmpty()){
                 repo.addActivity(activity).collect { responseAddActivity ->
                     _isActivityAddedState.value = responseAddActivity
                 }
 
-            }else{
+           /* }else{
                 repo.addImageFromGalleryToStorage(activity.id, activity.image.toUri()).collect{ response ->
                     _isImageAddedToStorageState.value=response
                     when(response){
@@ -441,7 +439,7 @@ class ActivityViewModel @Inject constructor(
                     }
 
                 }
-            }
+            }*/
 
 
         }

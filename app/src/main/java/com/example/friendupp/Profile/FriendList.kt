@@ -1,11 +1,15 @@
 package com.example.friendupp.Profile
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.camera.core.ImageProcessor.Response
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -23,6 +27,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
+import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Chat
+import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
@@ -37,32 +45,56 @@ sealed class FriendListEvents{
 }
 
 @Composable
-fun FriendListScreen(modifier: Modifier=Modifier,onEvent:(FriendListEvents)->Unit){
+fun FriendListScreen(modifier: Modifier=Modifier,onEvent:(FriendListEvents)->Unit,userViewModel:UserViewModel){
+    val friendsList = remember { mutableStateListOf<User>() }
+    friendsLoading(userViewModel,friendsList)
     Column(modifier=Modifier) {
         ScreenHeading(title = "Friend list", backButton = true, onBack = {onEvent(FriendListEvents.GoBack)})
         {}
         Modifier.height(32.dp)
 
         LazyColumn {
-            items(5){
-                FriendItem(username = "adamooo-5", name ="Adam Pałkowski" , pictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZml" +
-                        "sZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",onEvent=onEvent)
+            items(friendsList){user->
+                FriendItem(username =user.username.toString()
+                    , name =user.name.toString()
+                    , pictureUrl = user.pictureUrl.toString()
+                    ,onEvent=onEvent,user=user)
             }
         }
 
     }
-}
 
+}
 @Composable
-fun FriendItem(username:String,name:String,pictureUrl:String,onEvent: (FriendListEvents) -> Unit){
+fun friendsLoading(
+    userViewModel: UserViewModel,
+    friendsList: MutableList<User>
+) {
+    val friendsFlow =userViewModel.friendState.collectAsState()
+    friendsFlow.value.let {
+            response -> when(response){
+        is com.example.friendupp.model.Response.Success->{
+            friendsList.clear()
+            friendsList.addAll(response.data)
+        }
+        is com.example.friendupp.model.Response.Loading->{
+            CircularProgressIndicator()
+        }
+        is com.example.friendupp.model.Response.Failure->{
+            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
+        }
+    }
+    }
+}
+@Composable
+fun FriendItem(username:String,name:String,pictureUrl:String,user:User,onEvent: (FriendListEvents) -> Unit){
     var expand by remember { mutableStateOf(false) }
-    val userID="123123123"
     BackHandler(true) {
         onEvent(FriendListEvents.GoBack)
     }
     Column() {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-            .clickable(onClick = { onEvent(FriendListEvents.ProfileDisplay(userID)) })
+            .clickable(onClick = { onEvent(FriendListEvents.ProfileDisplay(user.id)) })
             .padding(horizontal = 24.dp, vertical = 8.dp)) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)

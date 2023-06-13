@@ -7,14 +7,18 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Groups.*
+import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
+import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.groupGraph(navController: NavController) {
+fun NavGraphBuilder.groupGraph(navController: NavController,chatViewModel:ChatViewModel) {
     navigation(startDestination = "Groups", route = "GroupGraph") {
         composable("Groups") {
+            chatViewModel.getGroups(UserData.user!!.id)
+
             GroupsScreen(onEvent = {event->
                 when(event){
                     is GroupsEvents.CreateGroup->{navController.navigate("GroupsCreate")}
@@ -22,7 +26,7 @@ fun NavGraphBuilder.groupGraph(navController: NavController) {
                     is GroupsEvents.GoToGroupDisplay->{navController.navigate("GroupDisplay/"+event.groupId)}
                     else ->{}
                 }
-            })
+            }, chatViewModel = chatViewModel)
         }
         composable("GroupsCreate") {
             GroupsCreateScreen(onEvent = {event->

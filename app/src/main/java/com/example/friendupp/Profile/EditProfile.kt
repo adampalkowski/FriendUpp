@@ -39,29 +39,13 @@ import com.example.friendupp.model.User
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
-
-val user = User(
-    name = "John Doe",
-    username = "johndoe",
-    email = "johndoe@example.com",
-    id = "123456789",
-    pictureUrl = "https://example.com/profile_picture1.jpg",
-    biography = "Hello, I'm John Doe!",
-    location = "New York",
-    blocked_ids = ArrayList(),
-    friends_ids = HashMap(),
-    invited_ids = ArrayList(),
-    user_requests = ArrayList(),
-    activities = ArrayList(),
-    activitiesCreated = 10,
-    usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label)
-    , accountCreateTime = ""
-)
-
+sealed class EditProfileEvents{
+    object GoBack:EditProfileEvents()
+    object ConfirmChanges:EditProfileEvents()
+}
 
 @Composable
-fun EditProfile(modifier: Modifier, goBack: () -> Unit, onClick: () -> Unit) {
+fun EditProfile(modifier: Modifier, goBack: () -> Unit,user:User, onEvent: (EditProfileEvents) -> Unit) {
     val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     BackHandler(true) {
         goBack()
@@ -90,7 +74,7 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit, onClick: () -> Unit) {
 
 
 
-            CreateButton("Confirm changes", disabled = false)
+            CreateButton("Confirm changes", modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp), disabled = false, createClicked = {onEvent(EditProfileEvents.ConfirmChanges)})
             Spacer(modifier = Modifier.height(120.dp)) }
 
 

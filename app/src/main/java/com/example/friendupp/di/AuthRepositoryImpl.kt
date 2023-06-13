@@ -140,7 +140,9 @@ class AuthRepositoryImpl @Inject constructor(
             OneTapResponse.Success(signInResult)
         } catch (e: Exception) {
             try {
+
                 val signUpResult = oneTapClient.beginSignIn(signUpRequest).await()
+                Log.d("ONETAP","exception")
                 OneTapResponse.Success(signUpResult)
             } catch (e: Exception) {
                 OneTapResponse.Failure(SocialException("oneTapSignInWithGoogle error",e))

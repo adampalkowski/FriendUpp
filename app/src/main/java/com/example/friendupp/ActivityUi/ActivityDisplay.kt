@@ -1,5 +1,6 @@
 package com.example.friendupp.ActivityUi
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 
@@ -25,7 +26,16 @@ import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.example.friendupp.Home.buttonsRow
 import com.example.friendupp.Profile.TagDivider
+import com.example.friendupp.TimeFormat.getFormattedDate
+import com.example.friendupp.TimeFormat.getFormattedDateNoSeconds
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.UserData
+
+sealed class ActivityEvents{
+    class Expand(val activity:Activity):ActivityEvents()
+    class Join(val id :String):ActivityEvents()
+    class OpenChat(val id :String):ActivityEvents()
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +45,8 @@ fun activityCard(
     description: String,
     creatorUsername: String,
     creatorFullName: String,
-    profilePictureUrl: String,onExpand:()->Unit
+    profilePictureUrl: String,
+    onExpand:()->Unit
 ) {
     Card(
         modifier = Modifier
@@ -125,7 +136,7 @@ fun activityCard(
 fun activityItem(
     activity: Activity,
     onClick:()->Unit,
-    onExpand:(Activity)->Unit,
+    onEvent:(ActivityEvents)->Unit
 ) {
 
         Box(
@@ -159,9 +170,12 @@ fun activityItem(
                     creatorUsername = activity.creator_username,
                     creatorFullName = activity.creator_name,
                     profilePictureUrl = activity.creator_profile_picture,
-                    onExpand= { onExpand(activity) }
+                    onExpand= {
+
+                        Log.d("ACTIVITYDEBUG","LAUNCH ")
+                       onEvent( ActivityEvents.Expand(activity)) }
                 )
-                buttonsRow(modifier = Modifier)
+                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=activity.participants_ids.contains(UserData.user!!.id))
 
             }
         }
@@ -182,7 +196,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = Color(0xFF
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = time,
+            text = getFormattedDateNoSeconds(time),
             style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,

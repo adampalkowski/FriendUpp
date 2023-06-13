@@ -1,16 +1,14 @@
 package com.example.friendupp.ChatUi
 
-import android.media.midi.MidiOutputPort
-import android.security.keystore.UserNotAuthenticatedException
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -19,6 +17,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -39,25 +38,32 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
-
+import com.example.friendupp.TimeFormat.getFormattedDate
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.model.Chat
+import com.example.friendupp.model.Response
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
+import com.google.type.DateTime
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 sealed class ChatCollectionEvents {
     object GoToSearch : ChatCollectionEvents()
     object GoBack : ChatCollectionEvents()
     object GoToGroups : ChatCollectionEvents()
-    object GoToChat : ChatCollectionEvents()
+    class GoToChat (val chat:Chat): ChatCollectionEvents()
 }
 @Composable
-fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit) {
+fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit,chatViewModel: ChatViewModel) {
     val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     BackHandler(true) {
         chatEvent(ChatCollectionEvents.GoBack)
     }
-
+    val chatCollectionsToBeDisplayed = remember { mutableStateOf(ArrayList<Chat>()) }
 
     LazyColumn(modifier=Modifier.background(SocialTheme.colors.uiBackground)){
         item {
@@ -75,18 +81,26 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
 
             }
         }
-        items(5) {
-            ChatItem(
-                "https://developer.android.com/static/images/jetpack/compose/graphics-sourceimagesmall.jpg",
-                "Adam PałkowskiAdam PałkowskiAdam PałkowskiAdam PałkowskiAdam PałkowskiAdam PałkowskiAdam PałkowskiAdam Pałkowski",
-                "o to wałsnie chodzi jhasfawjhfalsdkjfhsdlkfjhsdfljkhsdglkjsdfhgsldkjghsdflkjgshdlgk",
-                "10:23",
-                onClick = {chatEvent(ChatCollectionEvents.GoToChat)}
-            )
 
+        items(chatCollectionsToBeDisplayed.value.reversed()) {chat->
+            ChatItem(
+                image=chat.imageUrl.toString(),
+                title=chat.name.toString(),
+                subtitle=chat.recent_message.toString(),
+                date=chat.recent_message_time.toString(),
+                onClick = {chatEvent(ChatCollectionEvents.GoToChat(chat))}
+            )
         }
     }
-
+    chatViewModel.chatCollectionsState.value.let {response->
+        when (response) {
+            is Response.Success -> {
+                chatCollectionsToBeDisplayed.value = response.data
+            }
+            is Response.Loading -> {}
+            is Response.Failure -> {}
+        }
+    }
 }
 
 
@@ -221,7 +235,7 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String, onCli
                     )
                 }
                 Text(
-                    text = date,
+                    text = getFormattedDate(date),
                     style = TextStyle(
                         fontFamily = Lexend,
                         fontWeight = FontWeight.SemiBold,

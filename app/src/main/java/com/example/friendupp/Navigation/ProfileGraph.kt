@@ -2,12 +2,16 @@ package com.example.friendupp.Navigation
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -15,8 +19,13 @@ import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Categories.Category
+import com.example.friendupp.ChatUi.ChatEvents
+import com.example.friendupp.Groups.GroupItemEvent
 
 import com.example.friendupp.Profile.*
+import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
@@ -26,11 +35,14 @@ import java.io.File
 import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: File,
-                                 executor: Executor) {
+fun NavGraphBuilder.profileGraph(
+    navController: NavController, outputDirectory: File,
+    executor: Executor,userViewModel:UserViewModel,
+    chatViewModel: ChatViewModel
+) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
-        composable( "CameraProfile",
+        composable("CameraProfile",
             enterTransition = {
                 when (initialState.destination.route) {
                     "Create" ->
@@ -86,26 +98,33 @@ fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: 
             }
 
 
-            CameraView(outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
-                photoUri= uri
-                /*todo handle the image uri*/
-            }, onError = {}, onEvent = {event->
-                when(event){
-                    is CameraEvent.GoBack->{
-                        navController.navigate("Home")
-                    }
-                    is CameraEvent.AcceptPhoto->{
-                        Log.d("CAMERAGRAPHACTIvity","ACASDASDASD")
-                        if (photoUri!=null){
-                            val photo:String = photoUri.toString()
-
-
-                            /*todo dooo sth with the final uri */
+            CameraView(
+                outputDirectory = outputDirectory,
+                executor = executor,
+                onImageCaptured = { uri ->
+                    photoUri = uri
+                    /*todo handle the image uri*/
+                },
+                onError = {},
+                onEvent = { event ->
+                    when (event) {
+                        is CameraEvent.GoBack -> {
+                            navController.navigate("Home")
                         }
+                        is CameraEvent.AcceptPhoto -> {
+                            Log.d("CAMERAGRAPHACTIvity", "ACASDASDASD")
+                            if (photoUri != null) {
+                                val photo: String = photoUri.toString()
+
+
+                                /*todo dooo sth with the final uri */
+                            }
+                        }
+                        else -> {}
                     }
-                    else ->{}
-                }
-            },photoUri=photoUri)
+                },
+                photoUri = photoUri
+            )
 
         }
         composable(
@@ -211,28 +230,39 @@ fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: 
                 }
             }
         ) {
-            val user =UserData.user
-            if (user==null){
+            val user = UserData.user
+            if (user == null) {
 
                 navController.navigate("Welcome")
-            }else{
+            } else {
                 ProfileScreen(modifier = Modifier.fillMaxSize(),
-                    onEvent = {event->
-                        when(event){
-                            is ProfileEvents.GoBack->{
+                    onEvent = { event ->
+                        when (event) {
+                            is ProfileEvents.GoBack -> {
                                 navController.popBackStack()
                             }
-                            is ProfileEvents.GoToEditProfile->{               navController.navigate("EditProfile")}
-                            is ProfileEvents.GoToSearch->{               navController.navigate("Search")}
-                            is ProfileEvents.GoToFriendList->{        navController.navigate("FriendList")    }
-                            is ProfileEvents.GoToSettings->{         navController.navigate("Settings")     }
-                            is ProfileEvents.GetProfileLink->{             }
-                            is ProfileEvents.OpenCamera->{      navController.navigate("CameraProfile")}
+                            is ProfileEvents.GoToEditProfile -> {
+                                navController.navigate("EditProfile")
+                            }
+                            is ProfileEvents.GoToSearch -> {
+                                navController.navigate("Search")
+                            }
+                            is ProfileEvents.GoToFriendList -> {
+                                navController.navigate("FriendList")
+                            }
+                            is ProfileEvents.GoToSettings -> {
+                                navController.navigate("Settings")
+                            }
+                            is ProfileEvents.GetProfileLink -> {}
+                            is ProfileEvents.OpenCamera -> {
+                                navController.navigate("CameraProfile")
+                            }
 
                         }
 
                     },
-                    onClick = { navController.navigate("EditProfile") },user=user)
+                    onClick = { navController.navigate("EditProfile") }, user = user
+                )
             }
 
 
@@ -280,9 +310,23 @@ fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: 
                 }
             }
         ) {
-            EditProfile(
-                modifier = Modifier,
-                goBack = { navController.navigate("Profile") }, onClick = {})
+            val user = UserData.user
+            if(user!=null){
+                EditProfile(
+                    modifier = Modifier,
+                    goBack = { navController.navigate("Profile") },user=user, onEvent = {
+                            event->
+                        when(event){
+                            is EditProfileEvents.GoBack->{navController.popBackStack()}
+                            is EditProfileEvents.ConfirmChanges->{}
+                        }
+
+
+                    })
+            }else{
+                navController.popBackStack()
+            }
+
         }
         composable(
             "FriendList",
@@ -387,18 +431,27 @@ fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: 
                 }
             }
         ) {
-          FriendListScreen(onEvent={event->
-              when(event){
-                  is FriendListEvents.GoBack->{navController.navigate("Profile")}
-                  is FriendListEvents.GoToAddFriends->{navController.navigate("Search")}
-                  is FriendListEvents.ProfileDisplay->{
-                      navController.navigate("ProfileDisplay/event.userId")}
-                  else->{}
-              }
-          })
+            userViewModel.getFriends(UserData.user!!.id)
+
+
+            FriendListScreen(onEvent = { event ->
+                when (event) {
+                    is FriendListEvents.GoBack -> {
+                        navController.navigate("Profile")
+                    }
+                    is FriendListEvents.GoToAddFriends -> {
+                        navController.navigate("Search")
+                    }
+                    is FriendListEvents.ProfileDisplay -> {
+                        navController.navigate("ProfileDisplay/"+event.userId)
+                    }
+                    else -> {}
+                }
+            },userViewModel=userViewModel)
         }
         composable(
-            "ProfileDisplay/{userID}",    arguments = listOf(navArgument("userID") { type = NavType.StringType }),
+            "ProfileDisplay/{userID}",
+            arguments = listOf(navArgument("userID") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "EditProfile" ->
@@ -499,25 +552,101 @@ fun NavGraphBuilder.profileGraph(navController: NavController, outputDirectory: 
                     else -> null
                 }
             }
-        ) {backStackEntry ->
+        ) { backStackEntry ->
+            val userViewModel :UserViewModel= hiltViewModel()
+            val userID = backStackEntry.arguments?.getString("userID")
 
-            val userID=   backStackEntry.arguments?.getString("type")
+            Log.d("SEARCHSCREENDEBUG","USER ID")
+            if (userID != null) {
+                LaunchedEffect(key1 = userID) {
+                    Log.d("SEARCHSCREENDEBUG","get user")
+                    userViewModel.getUser(userID)
+                }
+            }
+            val context = LocalContext.current
+            val userFlow = userViewModel.userState?.collectAsState()
+            val user = remember{ mutableStateOf<User?>(null) }
+            if(user.value==null){
+                CircularProgressIndicator()
+            }else{
+                //check if user is me then go to profiel
+                if (user.value!!.id==UserData.user!!.id){navController.navigate("Profile")}
+                ProfileDisplayScreen(modifier = Modifier.fillMaxSize(),
+                    onEvent = { event ->
+                        when (event) {
+                            is ProfileDisplayEvents.GoBack -> {
+                                navController.popBackStack()
+                                userViewModel.resetUserValue()
+                            }
+                            is ProfileDisplayEvents.GoToEditProfile -> {
+                                navController.navigate("EditProfile")
+                            }
+                            is ProfileDisplayEvents.GoToSearch -> {
+                                navController.navigate("Search")
+                            }
+                            is ProfileDisplayEvents.GoToFriendList -> {
+                                navController.navigate("FriendList")
+                            }
+                            is ProfileDisplayEvents.GoToSettings -> {
+                                navController.navigate("Settings")
+                            }
+                            is ProfileDisplayEvents.GetProfileLink -> {}
+                            is ProfileDisplayEvents.RemoveFriend -> {
 
-            ProfileDisplayScreen(modifier = Modifier.fillMaxSize(),
-                onEvent = {event->
-                    when(event){
-                        is ProfileDisplayEvents.GoBack->{
-                            navController.popBackStack()
+                                userViewModel.removeInvitedIdFromUser(UserData.user!!.id,event.user_id)
+                                userViewModel.removeFriendFromBothUsers(UserData.user!!.id,event.user_id)
+
+
+                                val chat_id =UserData.user!!.friends_ids.get(event.user_id)
+                                // REMOVE CHAT BETWEEN USERS ????/
+                                if(chat_id!=null){
+                                    chatViewModel.deleteChatCollection(chat_id)
+
+                                }
+
+                                Toast.makeText(context,
+                                    "Invite to " + event.user_id+ " removed ",Toast.LENGTH_LONG).show()
+
+                            }
+
+                            is ProfileDisplayEvents.InviteUser -> {
+                                userViewModel.addInvitedIdToUser(UserData.user!!.id,event.user_id)
+                                Toast.makeText(
+                                  context,
+                                    "User " + event.user_id+ " invited ", Toast.LENGTH_LONG).show()
+                            }
+                            is ProfileDisplayEvents.GoToChat->{
+                                navController.navigate("ChatItem/"+event.chat_id)
+                            }
+
                         }
-                        is ProfileDisplayEvents.GoToEditProfile->{               navController.navigate("EditProfile")}
-                        is ProfileDisplayEvents.GoToSearch->{               navController.navigate("Search")}
-                        is ProfileDisplayEvents.GoToFriendList->{        navController.navigate("FriendList")    }
-                        is ProfileDisplayEvents.GoToSettings->{         navController.navigate("Settings")     }
-                        is ProfileDisplayEvents.GetProfileLink->{             }
+                    }
+                    , user = user.value!!
+                )
+            }
+
+
+
+            userFlow?.value.let { response ->
+                when (response) {
+                    is Response.Success -> {
+                        Log.d("SEARCHSCREENDEBUG","saearch sucess")
+                        user.value=response.data
+                        userViewModel.resetUserValue()
+                    }
+                    is Response.Failure -> {
 
                     }
-                },
-                onClick = { navController.navigate("EditProfile") },user= user)
+                    is Response.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    null->{
+                    }
+                }
+
+            }
+
+
         }
     }
 }

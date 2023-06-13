@@ -30,7 +30,7 @@ import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
 @Composable
-fun FriendPickerItem(username:String,imageUrl:String,onClick:()->Unit, onUserSelected: (String) -> Unit,
+fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit, onUserSelected: (String) -> Unit,
                      onUserDeselected: (String) -> Unit){
     var selected by rememberSaveable{
         mutableStateOf(false)
@@ -49,10 +49,10 @@ fun FriendPickerItem(username:String,imageUrl:String,onClick:()->Unit, onUserSel
             .clickable(onClick = {
                 if(selected){
                     selected = !selected
-                    onUserDeselected(username)
+                    onUserDeselected(id)
                 }else{
                     selected = !selected
-                    onUserSelected(username)
+                    onUserSelected(id)
                 }
 
             })

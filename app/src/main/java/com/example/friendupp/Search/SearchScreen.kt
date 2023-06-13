@@ -1,5 +1,6 @@
 package com.example.friendupp.Search
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -14,8 +15,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -42,27 +45,43 @@ import com.example.friendupp.Home.eButtonSimpleBlue
 import com.example.friendupp.Profile.UsernameState
 import com.example.friendupp.Profile.UsernameStateSaver
 import com.example.friendupp.R
+import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Response
+import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
+sealed class SearchEvents{
+    object GoBack:SearchEvents()
+    class SearchForUser(val username :String):SearchEvents()
+    class OnInviteAccepted(user: User) : SearchEvents() {
+        val user = user
+    }
+}
+
 @Composable
-fun SearchScreen(goBack: () -> Unit) {
+fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
     val focusRequester = remember { FocusRequester() }
     val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
         mutableStateOf(UsernameState())
     }
+    var invitesList = remember { mutableStateListOf<User>() }
+    invitesLoading(userViewModel,invitesList)
+
     BackHandler(true) {
-        goBack()
+        onEvent(SearchEvents.GoBack)
     }
 
     Column() {
 
-
         LazyColumn {
             item {
-                ScreenHeading(title = "Search", backButton = true, onBack = goBack) {
+                ScreenHeading(title = "Search", backButton = true, onBack = {        onEvent(SearchEvents.GoBack)
+                }) {
 
                 }
                 Row(
@@ -81,7 +100,12 @@ fun SearchScreen(goBack: () -> Unit) {
                         }, label = "Search by username", textState = usernameState
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    eButtonSimpleBlue(icon = R.drawable.ic_search, onClick = {}, modifier = Modifier.padding(top=8.dp))
+                    eButtonSimpleBlue(icon = R.drawable.ic_search, onClick = {
+                        if(usernameState.text.isNotEmpty()){
+                            onEvent(SearchEvents.SearchForUser(usernameState.text))
+
+                        }
+                    }, modifier = Modifier.padding(top=8.dp))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -92,77 +116,61 @@ fun SearchScreen(goBack: () -> Unit) {
             item {
                 CreateHeading(text = "Invites", icon = R.drawable.ic_invites, tip = false)
             }
+            items(invitesList) { user ->
+                InviteItem(
+                    name = user.name.toString(),
+                    username = user.username.toString(),
+                    profilePictureUrl = user.pictureUrl.toString(),
+                    onAccept = {
+                        onEvent(SearchEvents.OnInviteAccepted(user))
+                    })
+                Spacer(modifier = Modifier.width(16.dp))
+            }
             items(5) {
                 var visibility by remember {
                     mutableStateOf(true)
                 }
                 AnimatedVisibility(visible = visibility) {
-                    InviteItem(
-                        name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                        username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                        profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
-                        onInvite = {
-                            visibility = !visibility
-                        })
+
                 }
 
             }
 
         }
     }
+
 }
-
 @Composable
-fun InvitesComponent() {
-    Column() {
-        CreateHeading(text = "Invites", icon = R.drawable.ic_invites, tip = false)
-        LazyColumn {
-            item {
-                InviteItem(
-                    name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
-                )
-            }
-            item {
-                InviteItem(
-                    name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
-                )
-            }
+fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>){
+    //call for invites
+    LaunchedEffect(key1 = userViewModel) {
+        userViewModel.getInvites(UserData.user!!.id)
+    }
 
-            item {
-                InviteItem(
-                    name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
-                )
+    //retrieve invites
+    userViewModel.invitesStateFlow.value.let { response ->
+        when (response) {
+            is Response.Success ->{
+                invitesList.clear()
+                invitesList.addAll(response.data)
             }
-            item {
-                InviteItem(
-                    name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
-                )
+            is Response.Loading -> {
+                androidx.compose.material3.CircularProgressIndicator()
             }
-            item {
-                InviteItem(
-                    name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    username = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                    profilePictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
-                )
+            is Response.Failure -> {
+                Toast.makeText(LocalContext.current,"Failed to load in invites ", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
+
 
 @Composable
 fun InviteItem(
     profilePictureUrl: String,
     username: String,
     name: String,
-    onInvite: () -> Unit = {}
+    onAccept: () -> Unit = {}
 ) {
 
     val truncatedName = if (name.length > 15) name.substring(0, 15) + "..." else name
@@ -224,7 +232,7 @@ fun InviteItem(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(SocialTheme.colors.textInteractive)
-                        .padding(horizontal = 18.dp, vertical = 8.dp), onClick = onInvite
+                        .padding(horizontal = 18.dp, vertical = 8.dp), onClick = onAccept,label="Accept"
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 InActionButton(
