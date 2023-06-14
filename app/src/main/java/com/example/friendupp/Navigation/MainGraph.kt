@@ -1,12 +1,15 @@
 package com.example.friendupp.Navigation
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.example.friendupp.ActivityUi.ActivityPreview
@@ -27,6 +30,10 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import com.google.firebase.dynamiclinks.ktx.dynamicLink
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.ktx.Firebase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -42,7 +49,7 @@ fun NavGraphBuilder.mainGraph(
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
-        activityViewModel.getActivitiesForUser(UserData.user!!.id)
+
 
         composable(
             "Home",
@@ -131,7 +138,40 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
+            homeViewModel.deep_link.value.let {deep_link->
+                when(deep_link?.pathSegments?.get(0)){
+                    "Activity"->{
+                        val activity_id = deep_link.pathSegments?.get(1).toString()
+                        activityViewModel.getActivity(activity_id)
+                        Log.d("MAINGRAPHACTIVITY","Activity")
 
+
+                        homeViewModel.resetDeepLink()
+                    }
+                    "User"->{
+                        homeViewModel.resetDeepLink()
+                        navController.navigate("ProfileDisplay/"+ deep_link.pathSegments?.get(1).toString())
+
+                    }
+                }
+            }
+
+            activityViewModel.activityState.value.let {
+                when(it){
+                    is Response.Success->{
+                        Log.d("MAINGRAPHACTIVITY","ActivityPreviewD")
+                        homeViewModel.setExpandedActivity(it.data)
+                        activityViewModel.resetActivityState()
+                        navController.navigate("ActivityPreview")
+                    }
+                    is Response.Failure->{
+                        Toast.makeText(LocalContext.current,"Couldn't display activity",Toast.LENGTH_SHORT).show()
+
+                    }
+                    is Response.Loading->{
+                    }
+                }
+            }
 
             HomeScreen(modifier = Modifier, onEvent = { event ->
                 when (event) {
@@ -165,6 +205,7 @@ fun NavGraphBuilder.mainGraph(
                     }
                 }
             }, activityViewModel = activityViewModel)
+
 
         }
         composable(
@@ -254,11 +295,29 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
+            val localClipboardManager= LocalClipboardManager.current
+            val context= LocalContext.current
+
+
+
 
             ActivityPreview(onEvent = { event ->
                 when (event) {
                     is ActivityPreviewEvents.GoBack -> {
                         navController.navigate("Home")
+                    }
+                    is ActivityPreviewEvents.ShareActivityLink->{
+                        //CREATE A DYNAMINC LINK TO DOMAIN
+                        val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                            link = Uri.parse("https://link.friendup.app/" + "Activity" + "/" + event.link)
+                            domainUriPrefix = "https://link.friendup.app/"
+                            // Open links with this app on Android
+                            androidParameters { }
+                        }
+                        val dynamicLinkUri = dynamicLink.uri
+                        //COPY LINK AND MAKE A TOAST
+                        localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                        Toast.makeText(context, "Copied activity link to clipboard", Toast.LENGTH_LONG).show()
                     }
                 }
             }, homeViewModel = homeViewModel)

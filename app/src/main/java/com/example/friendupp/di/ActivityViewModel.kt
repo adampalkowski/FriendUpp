@@ -64,10 +64,11 @@ class ActivityViewModel @Inject constructor(
     private val _moreActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val moreActivitiesListState: State<Response<List<Activity>>> = _moreActivitiesListState
 
-    private val _userActivitiesState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
-    val userActivitiesState: State<Response<List<Activity>>> = _userActivitiesState
-    private val _joinedActivitiesState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
-    val joinedActivitiesState: State<Response<List<Activity>>> = _joinedActivitiesState
+    private val _userActivitiesState = MutableStateFlow<Response<List<Activity>>>(Response.Loading)
+    val userActivitiesState = _userActivitiesState
+
+    private val _joinedActivitiesState = MutableStateFlow<Response<List<Activity>>?>(Response.Loading)
+    val joinedActivitiesState = _joinedActivitiesState
 
     private val _userMoreActivitiesState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val userMoreActivitiesState: State<Response<List<Activity>>> = _userMoreActivitiesState
@@ -280,7 +281,6 @@ class ActivityViewModel @Inject constructor(
             repo.getActivity(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        if(response.data!=null){
                            /* val time_left: String = calculateTimeLeft(
                                 response.data.date,
                                 response.data.start_time,
@@ -289,7 +289,6 @@ class ActivityViewModel @Inject constructor(
                                 })
                             response.data.time_left = time_left*/
                             _activityState.value = response
-                        }
                         }   else->{}
 
                 }
@@ -300,6 +299,8 @@ class ActivityViewModel @Inject constructor(
     }
 
     fun getMoreActivitiesForUser(id: String?) {
+        Log.d("ActivityLoadInDebug", "Get more activites called")
+
         if (id == null) {
             _moreActivitiesListState.value = Response.Failure(
                 SocialException(
@@ -314,7 +315,7 @@ class ActivityViewModel @Inject constructor(
                     when (response) {
                         is Response.Success -> {
                             response.data.forEach {
-                                /*list_without_removed_activites.add(it)
+                                list_without_removed_activites.add(it)/*
                                 val time_left: String = calculateTimeLeft(
                                     it.date,
                                     it.start_time,
@@ -349,7 +350,7 @@ class ActivityViewModel @Inject constructor(
     }
     fun getActivitiesForUser(id: String?) {
         _activitiesListState.value=Response.Loading
-        Log.d("getActivitiesForUser", " getActivitiesForUser")
+        Log.d("ActivityLoadInDebug", "First get activity call")
         if (id == null) {
             _activitiesListState.value = Response.Failure(
                 SocialException(

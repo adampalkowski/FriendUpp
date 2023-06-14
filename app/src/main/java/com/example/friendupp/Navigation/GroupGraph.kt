@@ -32,6 +32,7 @@ fun NavGraphBuilder.groupGraph(navController: NavController,chatViewModel:ChatVi
             GroupsCreateScreen(onEvent = {event->
                 when(event){
                     is GroupCreateEvents.GoBack->{navController.navigate("Groups")}
+                    is GroupCreateEvents.OpenCamera->{}
                 }
             })
         }

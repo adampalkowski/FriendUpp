@@ -25,6 +25,7 @@ import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
+import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Chat
 
 import com.example.friendupp.model.User
@@ -40,6 +41,7 @@ sealed class GroupDisplayEvents {
 
     /*todo*/
     object GoToFriendList : GroupDisplayEvents()
+    object GoToGroupCreate : GroupDisplayEvents()
     object GetProfileLink : GroupDisplayEvents()
 }
 
@@ -51,6 +53,8 @@ fun GroupDisplayScreen(
     group: Chat,
     onClick: () -> Unit={},
 ) {
+    val joinedActivities = remember { mutableStateListOf<Activity>() }
+    val activitiesHistory = remember { mutableStateListOf<Activity>() }
     var displaySettings by remember {
         mutableStateOf(false)
     }
@@ -82,7 +86,7 @@ fun GroupDisplayScreen(
             }
         }
 
-        item { ProfileDisplayPicker() }
+        item { ProfileDisplayPicker(joinedActivities,activitiesHistory) }
     }
 
     AnimatedVisibility(visible = displaySettings) {

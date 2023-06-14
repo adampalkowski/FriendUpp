@@ -93,7 +93,7 @@ dependencies {
     // If you want to additionally use the CameraX Extensions library
     implementation("androidx.camera:camera-extensions:${camerax_version}")
     //maps
-    implementation 'com.google.maps.android:maps-compose:2.10.0'
+    implementation 'com.google.maps.android:maps-compose:2.11.4'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.camera:camera-core:1.2.2'

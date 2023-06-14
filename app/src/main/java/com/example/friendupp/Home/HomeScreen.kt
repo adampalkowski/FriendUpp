@@ -51,6 +51,7 @@ import com.example.friendupp.R
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
+import com.example.friendupp.model.UserData
 
 import java.net.CookieHandler
 
@@ -69,6 +70,7 @@ fun HomeScreen(
     onEvent: (HomeEvents) -> Unit,
     activityViewModel: ActivityViewModel,
 ) {
+    Log.d("ActivityLoadInDebug", "Screen load")
     var calendarView by rememberSaveable {
         mutableStateOf(false)
     }
@@ -76,6 +78,25 @@ fun HomeScreen(
         mutableStateOf(false)
     }
     val activities = remember { mutableStateListOf<Activity>() }
+    val moreActivities = remember { mutableStateListOf<Activity>() }
+    var activitiesExist = remember { mutableStateOf(false) }
+
+
+
+    val publicActivities = remember { mutableStateListOf<Activity>() }
+    val morePublicActivities = remember { mutableStateListOf<Activity>() }
+    var publicActivitiesExist = remember { mutableStateOf(false) }
+
+    // PUBLIC OR FRIENDS ACTIVITIEWS
+    var selectedOption by rememberSaveable { mutableStateOf(Option.FRIENDS) }
+    if(selectedOption==Option.FRIENDS){
+        loadFriendsActivities(activityViewModel,activities, activitiesExist = activitiesExist)
+        loadMoreFriendsActivities(activityViewModel,moreActivities)
+
+    }else{
+        loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist)
+        loadMorePublicActivities(activityViewModel,morePublicActivities)
+    }
 
     Column() {
         TopBar(modifier = Modifier, onClick = {
@@ -97,7 +118,6 @@ fun HomeScreen(
             state = lazyListState
         ) {
 
-
             item {
                 AnimatedVisibility(visible = calendarView, enter = slideInVertically(animationSpec = tween(800)), exit = slideOutVertically(animationSpec = tween(0)) ) {
                     val state = rememberHorizontalDatePickerState2()
@@ -108,56 +128,114 @@ fun HomeScreen(
                     FilterList(tags = SnapshotStateList(), onSelected = {}, onDeSelected = {})
 
                 }
-                OptionPicker(onEvent = onEvent)
+                OptionPicker(onEvent = onEvent, onOptionSelected = {option->selectedOption=option}, selectedOption = selectedOption)
             }
-
-
-            items(activities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
-                                onEvent(HomeEvents.ExpandActivity(event.activity))
+            if(selectedOption==Option.FRIENDS){
+                items(activities) { activity ->
+                    activityItem(
+                        activity,
+                        onClick = {
+                            // Handle click event
+                        },
+                        onEvent = { event->
+                            when(event){
+                                is ActivityEvents.Expand->{
+                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                }
+                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                             }
-                            is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
-                            is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                         }
-                   }
-                )
+                    )
+                }
+
+                items(moreActivities) { activity ->
+                    activityItem(
+                        activity,
+                        onClick = {
+                            // Handle click event
+                        },
+                        onEvent = { event->
+                            when(event){
+                                is ActivityEvents.Expand->{
+                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                }
+                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                            }
+                        }
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(64.dp))
+
+                }
+                item {
+                    LaunchedEffect(true) {
+                        if (activitiesExist.value) {
+                            activityViewModel.getMoreActivitiesForUser(UserData.user!!.id)
+                        }
+                    }
+                }
+            }else{
+                items(publicActivities) { activity ->
+                    activityItem(
+                        activity,
+                        onClick = {
+                            // Handle click event
+                        },
+                        onEvent = { event->
+                            when(event){
+                                is ActivityEvents.Expand->{
+                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                }
+                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                            }
+                        }
+                    )
+                }
+
+                items(morePublicActivities) { activity ->
+                    activityItem(
+                        activity,
+                        onClick = {
+                            // Handle click event
+                        },
+                        onEvent = { event->
+                            when(event){
+                                is ActivityEvents.Expand->{
+                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                }
+                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                            }
+                        }
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(64.dp))
+
+                }
+                item {
+                    LaunchedEffect(true) {
+                        if (activitiesExist.value) {
+                            activityViewModel.location.value.let {location->
+                                if(location!=null){
+                                    activityViewModel.getMoreClosestActivities(location.latitude,location.longitude, 50.0*1000.0)
+                                }
+
+                            }
+                        }
+                    }
+                }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(64.dp))
 
-            }
         }
     }
-    activityViewModel.activitiesListState.value.let { response ->
-        when (response) {
-            is Response.Success -> {
 
-                activities.clear()
-                activities.addAll(response.data)
-            }
-            is Response.Failure -> {
 
-                Toast.makeText(LocalContext.current, "FAiled", Toast.LENGTH_SHORT).show()
-
-            }
-            is Response.Loading -> {
-                Toast.makeText(LocalContext.current, "LOAding", Toast.LENGTH_SHORT).show()
-            }
-            null->{
-
-            }
-        }
-    }
 
 }
 
@@ -506,9 +584,8 @@ enum class Option(val label: String, val icon: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionPicker(onEvent: (HomeEvents) -> Unit) {
+fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSelected:(Option)->Unit) {
     val context = LocalContext.current
-    var selectedOption by rememberSaveable { mutableStateOf(Option.PUBLIC) }
     val dividerColor = SocialTheme.colors.uiBorder
     Row(
         horizontalArrangement = Arrangement.Start,
@@ -526,7 +603,7 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit) {
         )
         ActionButton(option = Option.FRIENDS,
             isSelected = selectedOption == Option.FRIENDS,
-            onClick = { selectedOption = Option.FRIENDS })
+            onClick = {onOptionSelected(Option.FRIENDS)})
         Spacer(
             modifier = Modifier
                 .width(8.dp)
@@ -535,7 +612,7 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit) {
         )
         ActionButton(option = Option.PUBLIC,
             isSelected = selectedOption == Option.PUBLIC,
-            onClick = { selectedOption = Option.PUBLIC })
+            onClick = {onOptionSelected(Option.PUBLIC)})
         Spacer(
             modifier = Modifier
                 .width(64.dp)

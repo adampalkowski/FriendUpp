@@ -1,11 +1,13 @@
 package com.example.friendupp.Profile
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -26,10 +28,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.ActivityUi.ActivityEvents
+import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
+import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
+import com.example.friendupp.model.Activity
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
@@ -39,6 +45,9 @@ import com.example.friendupp.ui.theme.SocialTheme
 sealed class ProfileDisplayEvents {
     object GoToSearch : ProfileDisplayEvents()
     class InviteUser(val user_id :String): ProfileDisplayEvents()
+    class BlockUser(val user_id :String): ProfileDisplayEvents()
+    class UnBlock(val user_id :String): ProfileDisplayEvents()
+    class ShareProfileLink(val user_id :String): ProfileDisplayEvents()
     class GoToChat(val chat_id :String): ProfileDisplayEvents()
     class RemoveFriend(val user_id :String): ProfileDisplayEvents()
     object GoBack : ProfileDisplayEvents()
@@ -62,10 +71,19 @@ fun ProfileDisplayScreen(
     modifier: Modifier,
     onEvent: (ProfileDisplayEvents) -> Unit,
     user: User,
+    activityViewModel:ActivityViewModel
 ) {
     var displaySettings by remember {
         mutableStateOf(false)
     }
+
+    //LOAD IN PROFILE ACTIVITIES
+    val joinedActivities = remember { mutableStateListOf<Activity>() }
+    val activitiesHistory = remember { mutableStateListOf<Activity>() }
+    loadJoinedActivities(activityViewModel,joinedActivities)
+    loadActivitiesHistory(activityViewModel,activitiesHistory)
+
+
     // check if is Friend
     var userOption = if(user.friends_ids.containsKey(UserData.user!!.id)){UserOption.FRIEND}
     else if(UserData.user!!.invited_ids.contains(user.id)){
@@ -77,6 +95,11 @@ fun ProfileDisplayScreen(
 
     var isBlocked =UserData.user!!.blocked_ids.contains(user.id)
     userOption= if(isBlocked){UserOption.BLOCKED}else{userOption}
+
+    var selectedItem by remember { mutableStateOf("Upcoming") }
+    var ifCalendar by remember { mutableStateOf(true) }
+    var ifHistory by remember { mutableStateOf(false) }
+
 
     BackHandler(true) {
         onEvent(ProfileDisplayEvents.GoBack)
@@ -103,6 +126,7 @@ fun ProfileDisplayScreen(
                         location = user.location,
                         description = user.biography
                     )
+                if(userOption!=UserOption.BLOCKED){
                     TagDivider(user.tags)
                     ProfileStats(
                         modifier = Modifier.fillMaxWidth(),
@@ -110,6 +134,8 @@ fun ProfileDisplayScreen(
                         user.friends_ids.size,
                         user.usersReached
                     )
+                }
+
                     ProfileDisplayOptions(userOption,
                     onEvent=onEvent, user_id = user.id)
 
@@ -117,13 +143,92 @@ fun ProfileDisplayScreen(
             }
         }
 
-        item { ProfileDisplayPicker() }
+        item{
+
+            Column (Modifier.fillMaxSize()){
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    ProfilePickerItem(
+                        label = "Upcoming",
+                        icon = R.drawable.ic_calendar_upcoming,
+                        selected = selectedItem == "Upcoming",
+                        onItemSelected = {
+                            selectedItem = "Upcoming"
+                            ifCalendar = true
+                            ifHistory = false
+                        }
+                    )
+                    ProfilePickerItem(
+                        label = "History",
+                        icon = R.drawable.ic_history,
+                        selected = selectedItem == "History",
+                        onItemSelected = {
+                            selectedItem = "History"
+                            ifCalendar = false
+                            ifHistory = true
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(SocialTheme.colors.uiBorder))
+
+
+            }
+        }
+        if(ifCalendar){
+            items(joinedActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{ }
+                        }
+                    }
+                )
+            }
+        }
+        if(ifHistory){
+            items(activitiesHistory) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{ }
+                        }
+                    }
+                )
+            }
+        }
     }
 
     AnimatedVisibility(visible = displaySettings) {
         Dialog(onDismissRequest = { displaySettings=false }) {
             ProfileDisplaySettingContent(onCancel={displaySettings=false},onRemoveFriend={
                 onEvent(ProfileDisplayEvents.RemoveFriend(user.id))
+                displaySettings=false
+            },shareProfileLink={
+                onEvent(ProfileDisplayEvents.ShareProfileLink(user.id))
+                displaySettings=false
+            },blockUser={
+                onEvent(ProfileDisplayEvents.BlockUser(user.id))
+                displaySettings=false
             })
         }
     }
@@ -152,7 +257,7 @@ fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents)
 
         }
         UserOption.BLOCKED->{
-            ProfileOptionItem(R.drawable.ic_block,"Unblock", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+            ProfileOptionItem(R.drawable.ic_block,"Unblock", onClick = {onEvent(ProfileDisplayEvents.UnBlock(user_id=user_id))})
 
         }
         UserOption.INVITED->{
@@ -224,17 +329,19 @@ fun ProfileInfoDisplay(name:String,username:String,profilePictureUrl:String,loca
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-
             val truncatedDescription = if (description.length > 500) description.substring(0, 500)+"..." else description
-            androidx.compose.material.Text(
-                text = truncatedDescription,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontFamily = Lexend,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = SocialTheme.colors.textPrimary
-            )
+            if(truncatedDescription.isNotEmpty()){
+                androidx.compose.material.Text(
+                    text = truncatedDescription,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = SocialTheme.colors.textPrimary
+                )
+            }
+
 
     }
 }
@@ -242,11 +349,11 @@ fun ProfileInfoDisplay(name:String,username:String,profilePictureUrl:String,loca
 
 
 @Composable
-fun ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={}) {
+fun ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={},shareProfileLink: () -> Unit={},blockUser: () -> Unit={}) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
-        ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary)
+        ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary, onClick = shareProfileLink)
         ProfileDisplaySettingsItem(label="Remove friend",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
-        ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error)
+        ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error, onClick = blockUser)
         ProfileDisplaySettingsItem(label="Cancel" , turnOffIcon = true, textColor = SocialTheme.colors.textPrimary.copy(0.5f), onClick = onCancel)
     }
 }

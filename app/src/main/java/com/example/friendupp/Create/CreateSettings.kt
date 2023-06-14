@@ -138,10 +138,10 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) 
                     )
                 }, backButton = true, title = "Additional settings") {}
                 Spacer(modifier = Modifier.height(8.dp))
-                /* LocationSettings(locationPicked={
+                LocationSettings(locationPicked={
                      latLng->
                      locationState=latLng
-                 })*/
+                 })
                 CustomLocationSettings(focusRequester, customLocationState)
                 TagsSettings(
                     tags = tags,

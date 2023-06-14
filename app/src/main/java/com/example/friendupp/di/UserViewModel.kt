@@ -287,7 +287,7 @@ class UserViewModel @Inject constructor(
 
     fun addBlockedIdToUser(my_id: String, blocked_id: String) {
         viewModelScope.launch {
-            repo.addInvitedIDs(my_id, blocked_id).collect { response ->
+            repo.addBlockedIDs(my_id, blocked_id).collect { response ->
                 _isBlockedAddedState.value = response
             }
         }
@@ -295,7 +295,7 @@ class UserViewModel @Inject constructor(
 
     fun removeBlockedIdFromUser(my_id: String, blocked_id: String) {
         viewModelScope.launch {
-            repo.removeInvitedIDs(my_id, blocked_id).collect { response ->
+            repo.removeBlockedIDs(my_id, blocked_id).collect { response ->
                 _isBlockedRemovedState.value = response
             }
         }

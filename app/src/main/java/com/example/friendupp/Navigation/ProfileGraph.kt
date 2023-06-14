@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -23,6 +25,8 @@ import com.example.friendupp.ChatUi.ChatEvents
 import com.example.friendupp.Groups.GroupItemEvent
 
 import com.example.friendupp.Profile.*
+import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.di.AuthViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Response
@@ -31,6 +35,10 @@ import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import com.google.firebase.dynamiclinks.ktx.dynamicLink
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.util.concurrent.Executor
 
@@ -38,7 +46,8 @@ import java.util.concurrent.Executor
 fun NavGraphBuilder.profileGraph(
     navController: NavController, outputDirectory: File,
     executor: Executor,userViewModel:UserViewModel,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    authViewModel: AuthViewModel,
 ) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
@@ -230,11 +239,17 @@ fun NavGraphBuilder.profileGraph(
                 }
             }
         ) {
+            val localClipboardManager =  LocalClipboardManager.current
+            val context = LocalContext.current
             val user = UserData.user
+            val activityViewModel:ActivityViewModel = hiltViewModel()
             if (user == null) {
 
                 navController.navigate("Welcome")
             } else {
+                activityViewModel.getJoinedActivities(user.id)
+                activityViewModel.getUserActivities(user.id)
+
                 ProfileScreen(modifier = Modifier.fillMaxSize(),
                     onEvent = { event ->
                         when (event) {
@@ -253,7 +268,23 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileEvents.GoToSettings -> {
                                 navController.navigate("Settings")
                             }
-                            is ProfileEvents.GetProfileLink -> {}
+                            is ProfileEvents.GetProfileLink -> {
+                                val user = UserData.user
+                                if (user!=null){
+                                    val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                        link = Uri.parse("https://link.friendup.app/" + "User" + "/" + user.id)
+                                        domainUriPrefix = "https://link.friendup.app/"
+                                        // Open links with this app on Android
+                                        androidParameters { }
+                                    }
+                                    val dynamicLinkUri = dynamicLink.uri
+                                    //COPY LINK AND MAKE A TOAST
+                                    localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                                    Toast.makeText(context, "Copied user link to clipboard", Toast.LENGTH_LONG).show()
+                                }
+
+
+                            }
                             is ProfileEvents.OpenCamera -> {
                                 navController.navigate("CameraProfile")
                             }
@@ -262,7 +293,7 @@ fun NavGraphBuilder.profileGraph(
 
                     },
                     onClick = { navController.navigate("EditProfile") }, user = user
-                )
+               , activityViewModel = activityViewModel )
             }
 
 
@@ -555,14 +586,18 @@ fun NavGraphBuilder.profileGraph(
         ) { backStackEntry ->
             val userViewModel :UserViewModel= hiltViewModel()
             val userID = backStackEntry.arguments?.getString("userID")
+            val activityViewModel:ActivityViewModel= hiltViewModel()
 
-            Log.d("SEARCHSCREENDEBUG","USER ID")
+
             if (userID != null) {
                 LaunchedEffect(key1 = userID) {
                     Log.d("SEARCHSCREENDEBUG","get user")
                     userViewModel.getUser(userID)
+                    activityViewModel.getJoinedActivities(userID)
+                    activityViewModel.getUserActivities(userID)
                 }
             }
+            val localClipboardManager =  LocalClipboardManager.current
             val context = LocalContext.current
             val userFlow = userViewModel.userState?.collectAsState()
             val user = remember{ mutableStateOf<User?>(null) }
@@ -581,6 +616,37 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileDisplayEvents.GoToEditProfile -> {
                                 navController.navigate("EditProfile")
                             }
+                            is ProfileDisplayEvents.BlockUser -> {
+
+                                //UPDATE DATA
+                                userViewModel.addBlockedIdToUser(UserData.user!!.id,event.user_id)
+
+                                //to update the user data ??
+                                val currentUser = authViewModel.currentUser
+                                if(currentUser!=null){
+                                    userViewModel.validateUser(currentUser)
+                                }
+
+                                navController.popBackStack()
+                                Toast.makeText(
+                                    context,
+                                    "User " + event.user_id+ " invited ", Toast.LENGTH_LONG).show()
+                            }
+                            is ProfileDisplayEvents.UnBlock -> {
+                                userViewModel.removeBlockedIdFromUser(UserData.user!!.id,event.user_id)
+
+                                //to update the user data ??
+                                val currentUser = authViewModel.currentUser
+                                if(currentUser!=null){
+                                    userViewModel.validateUser(currentUser)
+                                }
+                                navController.popBackStack()
+
+
+                                Toast.makeText(
+                                    context,
+                                    "User " + event.user_id+ " invited ", Toast.LENGTH_LONG).show()
+                            }
                             is ProfileDisplayEvents.GoToSearch -> {
                                 navController.navigate("Search")
                             }
@@ -589,6 +655,21 @@ fun NavGraphBuilder.profileGraph(
                             }
                             is ProfileDisplayEvents.GoToSettings -> {
                                 navController.navigate("Settings")
+                            }
+                            is ProfileDisplayEvents.ShareProfileLink -> {
+
+                                //CREATE A DYNAMINC LINK TO DOMAIN
+                                val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                    link = Uri.parse("https://link.friendup.app/" + "User" + "/" + event.user_id)
+                                    domainUriPrefix = "https://link.friendup.app/"
+                                    // Open links with this app on Android
+                                    androidParameters { }
+                                }
+                                val dynamicLinkUri = dynamicLink.uri
+                            //COPY LINK AND MAKE A TOAST
+                                localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                                Toast.makeText(context, "Copied user link to clipboard", Toast.LENGTH_LONG).show()
+
                             }
                             is ProfileDisplayEvents.GetProfileLink -> {}
                             is ProfileDisplayEvents.RemoveFriend -> {
@@ -603,9 +684,8 @@ fun NavGraphBuilder.profileGraph(
                                     chatViewModel.deleteChatCollection(chat_id)
 
                                 }
-
                                 Toast.makeText(context,
-                                    "Invite to " + event.user_id+ " removed ",Toast.LENGTH_LONG).show()
+                                    "Removed",Toast.LENGTH_LONG).show()
 
                             }
 
@@ -622,7 +702,7 @@ fun NavGraphBuilder.profileGraph(
                         }
                     }
                     , user = user.value!!
-                )
+                ,activityViewModel=activityViewModel)
             }
 
 

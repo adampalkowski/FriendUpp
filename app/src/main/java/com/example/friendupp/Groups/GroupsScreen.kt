@@ -74,7 +74,7 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
     Column(modifier=modifier) {
         ScreenHeading(title = "Groups", backButton = true, onBack = {onEvent(GroupsEvents.GoBack)}) {
             Row(Modifier.weight(1f)) {
-                ButtonAdd(onClick = {}, icon = R.drawable.ic_add)
+                ButtonAdd(onClick = {onEvent(GroupsEvents.CreateGroup)}, icon = R.drawable.ic_add)
             }
         }
 

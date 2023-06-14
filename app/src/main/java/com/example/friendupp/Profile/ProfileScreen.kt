@@ -1,5 +1,7 @@
 package com.example.friendupp.Profile
 
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -14,6 +16,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,13 +32,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ButtonAdd
 
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Components.getExpandedTags
+import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.R
+import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
 import com.example.friendupp.model.Activity
 
@@ -61,8 +67,21 @@ sealed class ProfileEvents {
 
 
 @Composable
-fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: User, onClick: () -> Unit) {
+fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: User, onClick: () -> Unit,activityViewModel:ActivityViewModel) {
     val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+    //LOAD IN PROFILE ACTIVITIES
+    val joinedActivities = remember { mutableStateListOf<Activity>() }
+    val activitiesHistory = remember { mutableStateListOf<Activity>() }
+    loadJoinedActivities(activityViewModel,joinedActivities)
+    loadActivitiesHistory(activityViewModel,activitiesHistory)
+
+
+
+    //FOR ACTIVITIES DISPLLAY
+    var selectedItem by remember { mutableStateOf("Upcoming") }
+    var ifCalendar by remember { mutableStateOf(true) }
+    var ifHistory by remember { mutableStateOf(false) }
 
 
     BackHandler(true) {
@@ -97,9 +116,120 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
 
 
 
-        item {   ProfileDisplayPicker()}
-    }
+        item {      Column (Modifier.fillMaxSize()){
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                ProfilePickerItem(
+                    label = "Upcoming",
+                    icon = R.drawable.ic_calendar_upcoming,
+                    selected = selectedItem == "Upcoming",
+                    onItemSelected = {
+                        selectedItem = "Upcoming"
+                        ifCalendar = true
+                        ifHistory = false
+                    }
+                )
+                ProfilePickerItem(
+                    label = "History",
+                    icon = R.drawable.ic_history,
+                    selected = selectedItem == "History",
+                    onItemSelected = {
+                        selectedItem = "History"
+                        ifCalendar = false
+                        ifHistory = true
+                    }
+                )
+            }
+            Spacer(modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(SocialTheme.colors.uiBorder))
 
+        }
+        }
+        if(ifCalendar){
+            items(joinedActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{ }
+                        }
+                    }
+                )
+            }
+        }
+        if(ifHistory){
+            items(activitiesHistory) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{ }
+                        }
+                    }
+                )
+            }
+        }
+
+
+    }
+}
+
+
+@Composable
+fun loadActivitiesHistory(activityViewModel: ActivityViewModel, activitiesHistory: MutableList<Activity>) {
+    val historyFlow =activityViewModel.userActivitiesState.collectAsState()
+    historyFlow.value.let {
+            response -> when(response){
+        is com.example.friendupp.model.Response.Success->{
+            activitiesHistory.clear()
+            activitiesHistory.addAll(response.data)
+        }
+        is com.example.friendupp.model.Response.Loading->{
+            CircularProgressIndicator()
+        }
+        is com.example.friendupp.model.Response.Failure->{
+            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
+        }
+        else->{}
+    }
+    }
+}
+
+@Composable
+fun loadJoinedActivities(activityViewModel: ActivityViewModel, joinedActivities: MutableList<Activity>) {
+    val joinedListFlow =activityViewModel.joinedActivitiesState.collectAsState()
+    joinedListFlow.value.let {
+            response -> when(response){
+        is com.example.friendupp.model.Response.Success->{
+            joinedActivities.clear()
+            joinedActivities.addAll(response.data)
+        }
+        is com.example.friendupp.model.Response.Loading->{
+            CircularProgressIndicator()
+        }
+        is com.example.friendupp.model.Response.Failure->{
+            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
+        }
+        else->{}
+    }
+    }
 }
 
 @Composable
@@ -126,7 +256,8 @@ fun ProfileInfo(name:String,username:String,profilePictureUrl:String,location:St
                 if(profilePictureUrl.equals(DEFAULT_PROFILE_PICTURE_URL)){
                     Box(   modifier = Modifier
                         .size(90.dp)
-                        .clip(CircleShape).clickable(onClick = {onEvent(ProfileEvents.OpenCamera)})
+                        .clip(CircleShape)
+                        .clickable(onClick = { onEvent(ProfileEvents.OpenCamera) })
                         .background(Color.Black.copy(0.5f)), contentAlignment = Alignment.Center){
 
                         Icon(painter = painterResource(id = R.drawable.ic_add_image), contentDescription =null ,tint=Color.White)
@@ -271,7 +402,7 @@ fun ProfileOptionItem(icon: Int,label: String,onClick:()->Unit){
 }
 
 @Composable
-fun ProfileDisplayPicker() {
+fun ProfileDisplayPicker(joinedActivities: MutableList<Activity>,activitiesHistory: MutableList<Activity>) {
     var selectedItem by remember { mutableStateOf("Upcoming") }
     var ifCalendar by remember { mutableStateOf(true) }
     var ifHistory by remember { mutableStateOf(false) }
@@ -305,10 +436,20 @@ fun ProfileDisplayPicker() {
             .background(SocialTheme.colors.uiBorder))
 
         AnimatedVisibility(visible = ifCalendar) {
-            ProfileCalendar(modifier=Modifier.weight(1f))
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                item {
+                    ProfileCalendar(modifier=Modifier.weight(1f),joinedActivities)
+                }
+            }
+
         }
         AnimatedVisibility(visible = ifHistory) {
-            ProfileHistory(modifier=Modifier.weight(1f))
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                item {
+                    ProfileHistory(modifier=Modifier.weight(1f),activitiesHistory)
+
+                }
+            }
         }
     }
 }
@@ -344,20 +485,35 @@ fun ProfilePickerItem(label: String, icon: Int, selected: Boolean, onItemSelecte
 }
 
 @Composable
-fun ProfileCalendar(modifier:Modifier){
-
-
-    Column(
-        modifier
+fun ProfileCalendar(modifier:Modifier,joinedActivities:MutableList<Activity>){
+    LazyColumn(
+        modifier = Modifier
             .fillMaxWidth()
             .background(SocialTheme.colors.uiBorder.copy(0.1f))
-        ){
+    ) {
+        items(joinedActivities) { activity ->
+            activityItem(
+                activity,
+                onClick = {
+                    // Handle click event
+                },
+                onEvent = { event->
+                    when(event){
+                        is ActivityEvents.Expand->{
+                            Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
+                        }
+                        is ActivityEvents.Join->{  }
+                        is ActivityEvents.OpenChat->{ }
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
-fun ProfileHistory(modifier:Modifier){
+fun ProfileHistory(modifier:Modifier,activitiesHistory: MutableList<Activity>){
 
     Column(
         modifier

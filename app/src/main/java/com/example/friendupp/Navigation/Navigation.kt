@@ -65,14 +65,14 @@ fun NavigationComponent(
     userViewModel: UserViewModel,
     chatViewModel: ChatViewModel,
     authViewModel: AuthViewModel,
-    homeViewModel:HomeViewModel
+    homeViewModel:HomeViewModel,
+    activityViewModel:ActivityViewModel
 ) {
 
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
     val bottomDestinations = listOf("Home", "Chat", "Map", "Profile")
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val activityViewModel: ActivityViewModel = hiltViewModel()
 
 
     val currentActivity = remember { mutableStateOf(Activity()) }
@@ -203,7 +203,6 @@ fun NavigationComponent(
                 }
             })
 
-
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
             AnimatedNavHost(navController, startDestination = "Welcome") {
@@ -219,7 +218,8 @@ fun NavigationComponent(
                     outputDirectory = outputDirectory,
                     executor = executor,
                     userViewModel=userViewModel,
-                    chatViewModel=chatViewModel
+                    chatViewModel=chatViewModel,
+                    authViewModel=authViewModel,
                 )
                 createGraph(
                     navController,

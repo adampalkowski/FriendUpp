@@ -44,6 +44,7 @@ import com.google.maps.android.compose.*
 
 sealed class ActivityPreviewEvents{
     object GoBack:ActivityPreviewEvents()
+    class ShareActivityLink(val link:String):ActivityPreviewEvents()
 }
 
 /*
@@ -111,7 +112,14 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 
     AnimatedVisibility(visible = displaySettings) {
         Dialog(onDismissRequest = { displaySettings=false }) {
-            ActivityPreviewSettings(onCancel={displaySettings=false})
+            ActivityPreviewSettings(onCancel={displaySettings=false},shareActivityLink= {
+
+
+                if(activityData.value!=null){
+                    onEvent(ActivityPreviewEvents.ShareActivityLink(activityData.value!!.id))
+                    displaySettings=false
+                }
+                })
         }
     }
 }
@@ -178,9 +186,9 @@ fun ActivityPreviewOption() {
 }
 
 @Composable
-fun ActivityPreviewSettings(onCancel: () -> Unit={}) {
+fun ActivityPreviewSettings(onCancel: () -> Unit={},shareActivityLink: () -> Unit={}) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
-        ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary)
+        ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary, onClick = shareActivityLink)
         ProfileDisplaySettingsItem(label="Report",icon=R.drawable.ic_flag, textColor = SocialTheme.colors.error)
         ProfileDisplaySettingsItem(label="Leave",icon=R.drawable.ic_logout , textColor = SocialTheme.colors.error)
         ProfileDisplaySettingsItem(label="Add users",icon=R.drawable.ic_person_add , textColor = SocialTheme.colors.textPrimary)

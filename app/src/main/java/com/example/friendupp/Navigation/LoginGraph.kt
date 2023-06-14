@@ -54,8 +54,6 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
         composable("Login") {
 
 
-
-
             /*
             check if user is already signed in
              */

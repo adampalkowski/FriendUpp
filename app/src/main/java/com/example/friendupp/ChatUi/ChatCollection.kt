@@ -42,6 +42,7 @@ import com.example.friendupp.TimeFormat.getFormattedDate
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.type.DateTime
@@ -83,13 +84,34 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
         }
 
         items(chatCollectionsToBeDisplayed.value.reversed()) {chat->
-            ChatItem(
-                image=chat.imageUrl.toString(),
-                title=chat.name.toString(),
+            if (chat!=null){
+                var chat_name = chat.name.toString()
+                if (chat.type.equals("duo")){
+                    if(chat.user_one_username== UserData.user!!.username){
+                        chat_name=chat.user_two_username.toString()
+                    }else{
+                        chat_name=chat.user_one_username.toString()
+
+                    }
+                }
+                var chat_image = chat.imageUrl.toString()
+                if (chat.type.equals("duo")){
+                    if(chat.user_one_profile_pic== UserData.user!!.pictureUrl){
+                        chat_image=chat.user_two_profile_pic.toString()
+                    }else{
+                        chat_image=chat.user_one_profile_pic.toString()
+
+                    }
+                }
+
+                ChatItem(
+                image=chat_image,
+                title=chat_name,
                 subtitle=chat.recent_message.toString(),
                 date=chat.recent_message_time.toString(),
                 onClick = {chatEvent(ChatCollectionEvents.GoToChat(chat))}
             )
+        }
         }
     }
     chatViewModel.chatCollectionsState.value.let {response->
