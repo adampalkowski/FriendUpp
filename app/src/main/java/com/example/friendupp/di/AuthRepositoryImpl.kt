@@ -135,7 +135,7 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
                 Log.d("ONETAP","123")
             val signInResult = oneTapClient.beginSignIn(signInRequest).await()
-            Log.d("ONETAP","321")
+            Log.d("ONETAP",signInResult.toString())
 
             OneTapResponse.Success(signInResult)
         } catch (e: Exception) {

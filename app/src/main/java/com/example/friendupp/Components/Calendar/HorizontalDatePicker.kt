@@ -42,14 +42,7 @@ import kotlin.time.Duration.Companion.days
 
 private val defaultCardShape = RoundedCornerShape(8.dp)
 
-/**
- * Represents the selected date for a horizontal date picker.
- *
- * @param selectedDay The selected day of the month.
- * @param selectedMonth The selected month (January is 0).
- * @param selectedYear The selected year.
- * @param autoScrollToSelectedDate Whether to scroll to the selected date automatically.
- */
+
 class HorizontalDateState2(
     selectedDay: Int,
     selectedMonth: Int,
@@ -334,7 +327,7 @@ fun CardButton(
     borderColor: Color =Color(0xFFEAEAEA),
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     cardPadding: Dp = 8.dp
-) {//TODO
+) {
     androidx.compose.material3.Card(
         modifier = modifier,
         onClick = onClick,

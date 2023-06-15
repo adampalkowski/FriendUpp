@@ -64,14 +64,16 @@ class ActivityViewModel @Inject constructor(
     private val _moreActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val moreActivitiesListState: State<Response<List<Activity>>> = _moreActivitiesListState
 
-    private val _userActivitiesState = MutableStateFlow<Response<List<Activity>>>(Response.Loading)
+    private val _userActivitiesState = MutableStateFlow<Response<List<Activity>>?>(null)
     val userActivitiesState = _userActivitiesState
 
-    private val _joinedActivitiesState = MutableStateFlow<Response<List<Activity>>?>(Response.Loading)
+    private val _joinedActivitiesState = MutableStateFlow<Response<List<Activity>>?>(null)
     val joinedActivitiesState = _joinedActivitiesState
 
     private val _userMoreActivitiesState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val userMoreActivitiesState: State<Response<List<Activity>>> = _userMoreActivitiesState
+    private val _moreJoinedActivitiesState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
+    val moreJoinedActivitiesState: State<Response<List<Activity>>> = _moreJoinedActivitiesState
 
     private val _activityState = mutableStateOf<Response<Activity>>(Response.Loading)
     val activityState: State<Response<Activity>> = _activityState
@@ -557,6 +559,13 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getJoinedActivities(id).collect { response ->
                 _joinedActivitiesState.value = response
+            }
+        }
+    }
+    fun getMoreJoinedActivities(id: String) {
+        viewModelScope.launch {
+            repo.getMoreJoinedActivities(id).collect { response ->
+                _moreJoinedActivitiesState.value = response
             }
         }
     }

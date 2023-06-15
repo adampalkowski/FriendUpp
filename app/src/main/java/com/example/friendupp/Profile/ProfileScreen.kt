@@ -44,8 +44,10 @@ import com.example.friendupp.R
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Response
 
 import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -69,19 +71,37 @@ sealed class ProfileEvents {
 @Composable
 fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: User, onClick: () -> Unit,activityViewModel:ActivityViewModel) {
     val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-
-    //LOAD IN PROFILE ACTIVITIES
-    val joinedActivities = remember { mutableStateListOf<Activity>() }
-    val activitiesHistory = remember { mutableStateListOf<Activity>() }
-    loadJoinedActivities(activityViewModel,joinedActivities)
-    loadActivitiesHistory(activityViewModel,activitiesHistory)
-
-
-
     //FOR ACTIVITIES DISPLLAY
     var selectedItem by remember { mutableStateOf("Upcoming") }
     var ifCalendar by remember { mutableStateOf(true) }
     var ifHistory by remember { mutableStateOf(false) }
+    var joinedActivitiesExist= remember { mutableStateOf(false) }
+    var historyActivitiesExist= remember { mutableStateOf(false) }
+
+    //LOAD IN PROFILE ACTIVITIES
+
+    val activitiesHistory = remember { mutableStateListOf<Activity>() }
+    val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
+
+
+    val joinedActivities = remember { mutableStateListOf<Activity>() }
+    val moreJoinedActivities = remember { mutableStateListOf<Activity>() }
+
+    if(selectedItem=="Upcoming"){
+
+        loadJoinedActivities(activityViewModel,joinedActivities,user.id)
+        loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
+
+
+    }else{
+        loadActivitiesHistory(activityViewModel,activitiesHistory,user.id)
+        loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
+    }
+
+
+
+
+
 
 
     BackHandler(true) {
@@ -165,6 +185,33 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     }
                 )
             }
+            items(moreJoinedActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{  }
+                        }
+                    }
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+
+            }
+            item {
+                LaunchedEffect(true) {
+                    if (joinedActivitiesExist.value) {
+                        activityViewModel.getMoreJoinedActivities(UserData.user!!.id)
+                    }
+                }
+            }
         }
         if(ifHistory){
             items(activitiesHistory) { activity ->
@@ -185,6 +232,34 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     }
                 )
             }
+
+            items(moreHistoryActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{  }
+                        }
+                    }
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+
+            }
+            item {
+                LaunchedEffect(true) {
+                    if (historyActivitiesExist.value) {
+                        activityViewModel.getMoreUserActivities(UserData.user!!.id)
+                    }
+                }
+            }
         }
 
 
@@ -193,7 +268,16 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
 
 
 @Composable
-fun loadActivitiesHistory(activityViewModel: ActivityViewModel, activitiesHistory: MutableList<Activity>) {
+fun loadActivitiesHistory(activityViewModel: ActivityViewModel, activitiesHistory: MutableList<Activity>,user_id:String) {
+
+    //call get activities only once
+    val activitiesFetched = remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = activitiesFetched.value) {
+        if (!activitiesFetched.value) {
+            activityViewModel.getUserActivities(user_id)
+            activitiesFetched.value = true
+        }
+    }
     val historyFlow =activityViewModel.userActivitiesState.collectAsState()
     historyFlow.value.let {
             response -> when(response){
@@ -213,7 +297,42 @@ fun loadActivitiesHistory(activityViewModel: ActivityViewModel, activitiesHistor
 }
 
 @Composable
-fun loadJoinedActivities(activityViewModel: ActivityViewModel, joinedActivities: MutableList<Activity>) {
+fun loadMoreActivitiesHistory(activityViewModel: ActivityViewModel, activities: MutableList<Activity>) {
+    activityViewModel.userMoreActivitiesState.value.let {
+        when (it) {
+            is Response.Success -> {
+                activities.clear()
+                activities.addAll(it.data)
+            }
+            else -> {}
+        }
+    }
+
+}
+
+@Composable
+fun loadMoreJoinedActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>) {
+    activityViewModel.moreJoinedActivitiesState.value.let {
+        when (it) {
+            is Response.Success -> {
+                activities.clear()
+                activities.addAll(it.data)
+            }
+            else -> {}
+        }
+    }
+
+}
+@Composable
+fun loadJoinedActivities(activityViewModel: ActivityViewModel, joinedActivities: MutableList<Activity>,user_id: String) {
+
+    val activitiesFetched = remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = activitiesFetched.value) {
+        if (!activitiesFetched.value) {
+            activityViewModel.getJoinedActivities(user_id)
+            activitiesFetched.value = true
+        }
+    }
     val joinedListFlow =activityViewModel.joinedActivitiesState.collectAsState()
     joinedListFlow.value.let {
             response -> when(response){

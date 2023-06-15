@@ -33,8 +33,8 @@ class ChatViewModel @Inject constructor(
     private val _chatCollectionState = MutableStateFlow<Response<Chat>>(Response.Loading)
     val chatCollectionState: StateFlow<Response<Chat>> = _chatCollectionState
 
-    private val _uri = MutableLiveData<Uri>()
-    val uri: LiveData<Uri> = _uri
+    private val _uri = MutableStateFlow<Uri?>(null)
+    val uri: MutableStateFlow<Uri?> = _uri
     private val _uriReceived = mutableStateOf(false)
     val uriReceived: State<Boolean> = _uriReceived
     private val _granted_permission = MutableStateFlow<Boolean>(false)

@@ -9,11 +9,12 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Settings.*
+import com.example.friendupp.di.ActivityViewModel
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.drawerGraph(navController: NavController) {
+fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 
         composable(
@@ -66,7 +67,6 @@ fun NavGraphBuilder.drawerGraph(navController: NavController) {
 
             when(backStackEntry.arguments?.getString("type")){
                 "Inbox"->{
-
                     LanguageScreen(onEvent = {event->
                         when(event){
                             is LanguageEvents.GoBack->{navController.navigate("Settings")}
@@ -75,28 +75,29 @@ fun NavGraphBuilder.drawerGraph(navController: NavController) {
 
                 }
                 "Trending"->{
-                    RangeScreen(onEvent = {event->
+                    TrendingActivitiesScreen(onEvent={event->
                         when(event){
-                            is RangeEvents.GoBack->{navController.navigate("Settings")}
+                            is TrendingActivitiesEvents.GoBack->{navController.popBackStack()}
                         }
 
                     })
                 }
                 "Joined"->{
-                    PasswordScreen(onEvent = {event->
+                    JoinedActivitiesScreen(onEvent={event->
                         when(event){
-                            is  PasswordEvents.GoBack->{navController.navigate("Settings")}
+                            is JoinedActivitiesEvents.GoBack->{navController.popBackStack()}
                         }
 
-                    })
+                    },activityViewModel)
                 }
                 "Created"->{
-                    EmailScreen(onEvent = {event->
+                    CreatedActivitiesScreen(onEvent={event->
                         when(event){
-                            is EmailEvents.GoBack->{navController.navigate("Settings")}
+                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
                         }
 
-                    })
+                    },activityViewModel)
+
                 }
                 "ForYou"->{
                     NotificationScreen(onEvent = {event->

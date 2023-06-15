@@ -48,7 +48,6 @@ fun loadFriendsActivities(activityViewModel: ActivityViewModel, activities: Muta
 
             }
             is Response.Loading -> {
-                Toast.makeText(LocalContext.current, "LOAding", Toast.LENGTH_SHORT).show()
             }
             null->{
 
@@ -104,7 +103,6 @@ fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: Mutab
 
             }
             is Response.Loading -> {
-                Toast.makeText(LocalContext.current, "LOAding", Toast.LENGTH_SHORT).show()
             }
             null->{
 

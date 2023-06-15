@@ -32,6 +32,8 @@ import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Home.HomeEvents
+import com.example.friendupp.Home.loadMoreFriendsActivities
 import com.example.friendupp.R
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
@@ -73,15 +75,42 @@ fun ProfileDisplayScreen(
     user: User,
     activityViewModel:ActivityViewModel
 ) {
+
+    var joinedActivitiesExist= remember { mutableStateOf(false) }
+    var historyActivitiesExist= remember { mutableStateOf(false) }
+
+
     var displaySettings by remember {
         mutableStateOf(false)
     }
 
     //LOAD IN PROFILE ACTIVITIES
-    val joinedActivities = remember { mutableStateListOf<Activity>() }
+
+
+    var selectedItem by remember { mutableStateOf("Upcoming") }
+    var ifCalendar by remember { mutableStateOf(true) }
+    var ifHistory by remember { mutableStateOf(false) }
+
     val activitiesHistory = remember { mutableStateListOf<Activity>() }
-    loadJoinedActivities(activityViewModel,joinedActivities)
-    loadActivitiesHistory(activityViewModel,activitiesHistory)
+    val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
+
+
+    val joinedActivities = remember { mutableStateListOf<Activity>() }
+    val moreJoinedActivities = remember { mutableStateListOf<Activity>() }
+
+    if(selectedItem=="Upcoming"){
+
+        loadJoinedActivities(activityViewModel,joinedActivities,user.id)
+        loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
+
+
+    }else{
+        loadActivitiesHistory(activityViewModel,activitiesHistory,user.id)
+        loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
+    }
+
+
+
 
 
     // check if is Friend
@@ -95,10 +124,6 @@ fun ProfileDisplayScreen(
 
     var isBlocked =UserData.user!!.blocked_ids.contains(user.id)
     userOption= if(isBlocked){UserOption.BLOCKED}else{userOption}
-
-    var selectedItem by remember { mutableStateOf("Upcoming") }
-    var ifCalendar by remember { mutableStateOf(true) }
-    var ifHistory by remember { mutableStateOf(false) }
 
 
     BackHandler(true) {
@@ -195,6 +220,33 @@ fun ProfileDisplayScreen(
                     }
                 )
             }
+            items(moreJoinedActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{  }
+                        }
+                    }
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+
+            }
+            item {
+                LaunchedEffect(true) {
+                    if (joinedActivitiesExist.value) {
+                        activityViewModel.getMoreJoinedActivities(UserData.user!!.id)
+                    }
+                }
+            }
         }
         if(ifHistory){
             items(activitiesHistory) { activity ->
@@ -207,13 +259,40 @@ fun ProfileDisplayScreen(
                         when(event){
                             is ActivityEvents.Expand->{
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
                             }
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
                     }
                 )
+            }
+
+            items(moreHistoryActivities) { activity ->
+                activityItem(
+                    activity,
+                    onClick = {
+                        // Handle click event
+                    },
+                    onEvent = { event->
+                        when(event){
+                            is ActivityEvents.Expand->{
+                            }
+                            is ActivityEvents.Join->{  }
+                            is ActivityEvents.OpenChat->{  }
+                        }
+                    }
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+
+            }
+            item {
+                LaunchedEffect(true) {
+                    if (historyActivitiesExist.value) {
+                        activityViewModel.getMoreUserActivities(UserData.user!!.id)
+                    }
+                }
             }
         }
     }

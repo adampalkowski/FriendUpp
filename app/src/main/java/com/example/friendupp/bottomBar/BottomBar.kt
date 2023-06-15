@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 enum class BottomBarOption(val label: String, val icon: Int) {
     Home("Home", R.drawable.ic_home_300),
     Chat("Chat", R.drawable.ic_chat_300),
+    Create("Create", R.drawable.ic_add),
     Map("Map", R.drawable.ic_map_300),
     Profile("Profile", R.drawable.ic_profile_300),
 }
@@ -66,7 +67,13 @@ fun BottomBar(modifier: Modifier,onClick: (BottomBarOption) -> Unit,selectedOpti
                         onClick(BottomBarOption.Chat)
                     })
                 Spacer(modifier = Modifier.width(48.dp))
-
+                BottomBarButton(modifier.semantics { contentDescription = "Create" }
+                    ,option = BottomBarOption.Create,
+                    isSelected = selectedOption ==BottomBarOption.Create.label,
+                    onClick = {
+                        onClick(BottomBarOption.Create)
+                    })
+                Spacer(modifier = Modifier.width(48.dp))
                 BottomBarButton(modifier.semantics { contentDescription = "Map" }
                     ,option = BottomBarOption.Map,
                     isSelected = selectedOption == BottomBarOption.Map.label,

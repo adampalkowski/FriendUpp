@@ -593,8 +593,6 @@ fun NavGraphBuilder.profileGraph(
                 LaunchedEffect(key1 = userID) {
                     Log.d("SEARCHSCREENDEBUG","get user")
                     userViewModel.getUser(userID)
-                    activityViewModel.getJoinedActivities(userID)
-                    activityViewModel.getUserActivities(userID)
                 }
             }
             val localClipboardManager =  LocalClipboardManager.current

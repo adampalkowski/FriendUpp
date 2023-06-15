@@ -3,11 +3,16 @@ package com.example.friendupp.Navigation
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -23,6 +28,7 @@ import com.example.friendupp.*
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Drawer.drawerGraph
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
 import com.example.friendupp.di.ActivityViewModel
@@ -35,6 +41,7 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executor
@@ -49,7 +56,7 @@ fun customShape() = object : Shape {
             Rect(
                 0f,
                 0f,
-                size.width / 1.5f /* width */,
+                size.width / 1.7f /* width */,
                 size.height /* height */
             )
         )
@@ -65,8 +72,8 @@ fun NavigationComponent(
     userViewModel: UserViewModel,
     chatViewModel: ChatViewModel,
     authViewModel: AuthViewModel,
-    homeViewModel:HomeViewModel,
-    activityViewModel:ActivityViewModel
+    homeViewModel: HomeViewModel,
+    activityViewModel: ActivityViewModel,
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -77,6 +84,8 @@ fun NavigationComponent(
 
     val currentActivity = remember { mutableStateOf(Activity()) }
     val currentChat = remember { mutableStateOf<Chat?>(null) }
+    var displaySplashScreen = rememberSaveable { mutableStateOf(true) }
+
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -144,6 +153,7 @@ fun NavigationComponent(
                 }
             })
         }, floatingActionButton = {
+            /*
             if (currentBackStackEntry != null && bottomDestinations.contains(navController.currentDestination?.route)) {
                 FloatingActionButton(elevation = FloatingActionButtonDefaults.elevation(0.dp),
                     onClick = { navController.navigate("Create") },
@@ -156,13 +166,13 @@ fun NavigationComponent(
                     }
                 )
             }
-
+*/
 
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
         bottomBar = {
 
-            if (currentBackStackEntry != null && bottomDestinations.contains(navController.currentDestination?.route)) {
+            if (currentBackStackEntry != null && bottomDestinations.contains(navController.currentDestination?.route) && displaySplashScreen.value == false) {
                 BottomBar(
                     modifier = Modifier,
                     onClick = { option ->
@@ -180,6 +190,10 @@ fun NavigationComponent(
                                 navController.navigate("Home")
 
                             }
+                            BottomBarOption.Create -> {
+                                navController.navigate("Create")
+
+                            }
                         }
 
                     },
@@ -194,8 +208,7 @@ fun NavigationComponent(
                 .background(SocialTheme.colors.uiBackground)
                 .fillMaxSize()
         ) {
-
-           BackHandler(onBack = {
+            BackHandler(onBack = {
                 if (scaffoldState.drawerState.isOpen) {
                     coroutineScope.launch {
                         scaffoldState.drawerState.close()
@@ -212,14 +225,15 @@ fun NavigationComponent(
                         scaffoldState.drawerState.open()
                     }
                 }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel)
-                chatGraph(navController, chatViewModel, currentChat)
+                chatGraph(navController, chatViewModel, currentChat  ,outputDirectory = outputDirectory,
+                    executor = executor,)
                 profileGraph(
                     navController,
                     outputDirectory = outputDirectory,
                     executor = executor,
-                    userViewModel=userViewModel,
-                    chatViewModel=chatViewModel,
-                    authViewModel=authViewModel,
+                    userViewModel = userViewModel,
+                    chatViewModel = chatViewModel,
+                    authViewModel = authViewModel,
                 )
                 createGraph(
                     navController,
@@ -231,12 +245,27 @@ fun NavigationComponent(
                     userViewModel = userViewModel,
                 )
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController)
-                groupGraph(navController,chatViewModel)
+                drawerGraph(navController, activityViewModel)
+                groupGraph(navController, chatViewModel)
                 cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
             }
-        }
 
+
+            /* SPLASH SCREEN*/
+            AnimatedVisibility(
+                visible = displaySplashScreen.value,
+                enter = fadeIn(animationSpec = tween(800)),
+                exit = fadeOut(animationSpec = tween(800))
+            ) {
+                SplashScreen(2000)
+
+            }
+            LaunchedEffect(Unit) {
+                delay(2000) // Delay for 1 second (1000 milliseconds)
+                displaySplashScreen.value =
+                    false // Change the value of displaySplashScreen after the delay
+            }
+        }
     }
 
 

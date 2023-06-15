@@ -18,6 +18,7 @@ interface ActivityRepository {
     suspend fun getMoreFilteredClosestActivities(lat: Double,lng:Double,tags:ArrayList<String>,radius:Double): Flow<Response<List<Activity>>>
     suspend fun getMoreClosestActivities(lat: Double,lng:Double,radius:Double): Flow<Response<List<Activity>>>
     suspend fun getMoreUserActivities(id: String): Flow<Response<List<Activity>>>
+    suspend fun getMoreJoinedActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun addImageFromGalleryToStorage(id: String,uri: Uri): Flow<Response<String>>
     suspend fun deleteImageFromHighResStorage(id: String): Flow<Response<String>>
     suspend fun deleteActivityImageFromFirestoreActivity(activity_id: String,user_id:String): Flow<Response<String>>

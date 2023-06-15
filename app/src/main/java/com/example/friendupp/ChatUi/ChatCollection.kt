@@ -70,7 +70,7 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
         item {
             ScreenHeading(title = "Chats"){
                 Row(Modifier,verticalAlignment = Alignment.CenterVertically){
-                    ButtonAdd(icon = R.drawable.ic_group_add, onClick = {})
+                    ButtonAdd(icon = R.drawable.ic_group_add, onClick = {chatEvent(ChatCollectionEvents.GoToGroups)})
                     Spacer(modifier = Modifier
                         .background(SocialTheme.colors.uiBorder)
                         .width(16.dp))
@@ -109,7 +109,9 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
                 title=chat_name,
                 subtitle=chat.recent_message.toString(),
                 date=chat.recent_message_time.toString(),
-                onClick = {chatEvent(ChatCollectionEvents.GoToChat(chat))}
+                onClick = {
+                    chatEvent(ChatCollectionEvents.GoToChat(chat))
+                }
             )
         }
         }

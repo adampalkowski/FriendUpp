@@ -39,10 +39,12 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.ActivityUi.activityItemCard
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.CalendarComponent
 import com.example.friendupp.Components.FilterList
+import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
@@ -234,7 +236,6 @@ fun HomeScreen(
 
         }
     }
-
 
 
 }

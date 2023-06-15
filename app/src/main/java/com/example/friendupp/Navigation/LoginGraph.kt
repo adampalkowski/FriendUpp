@@ -7,10 +7,13 @@ import android.util.Log
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.Toast
+import android.window.SplashScreen
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,12 +46,15 @@ import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider.getCredential
+import kotlinx.coroutines.delay
 import okhttp3.internal.wait
+import java.time.Duration
 
 val TAG= "LOGINGRAPHDEBUG"
 
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserViewModel,authViewModel: AuthViewModel) {
+
     navigation(startDestination = "Login", route = "Welcome") {
 
         composable("Login") {
@@ -114,12 +120,23 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                 launcher.launch(intent)
             }
 
-            OneTapSignIn(
-                launch = {
-                    launch(it)
+            authViewModel.oneTapSignInResponse.let {response->
+                when(val oneTapSignInResponse = response) {
+                    is OneTapResponse.Loading -> CircularProgressIndicator()
+                    is OneTapResponse.Success -> oneTapSignInResponse.data?.let {
+                        Log.d("ONETAP","RESponse")
+                        Log.d("ONETAP",it.toString())
+                        LaunchedEffect(it) {
+                            Log.d("ONETAP","launch")
+                            launch(it)
+                        }
+                    }
+                    is OneTapResponse.Failure -> LaunchedEffect(Unit) {
+                        print(oneTapSignInResponse.e)
+                    }
+                    else->{}
                 }
-            )
-
+            }
             SignInWithGoogle(
                 navigateToHomeScreen = { signedIn ->
                     if (signedIn) {
@@ -200,7 +217,190 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                 }
             }
         }
-        composable("Splash_screen") { }
+        composable("Splash_screen", enterTransition = {
+            when (initialState.destination.route) {
+                "Home" ->
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                "Map" ->
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                "Profile" ->
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+
+                else -> null
+            }
+        },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            }){
+            val splash_screen_delay:Long=1000
+            /*
+         check if user is already signed in
+          */
+            val loginFLow = authViewModel.loginFlow.collectAsState()
+            val userFlow = userViewModel.userValidation.collectAsState()
+
+            /* CHECK IF USER ALREADY SIGNED IN*/
+            if(authViewModel.currentUser!=null){
+                if(authViewModel.isUserAuthenticated){
+                    /*AUTH IS THERE*/
+                    userViewModel.validateUser(authViewModel.currentUser!!)
+                    /*VALIDATE IT*/
+                    userFlow.value.let {
+                            validationResponse ->
+                        when(validationResponse){
+                            is Response.Success->{
+                                if(validationResponse.data){
+                                    LaunchedEffect(Unit){
+                                        /*succesfully validated*/
+                                        delay(splash_screen_delay) // Delay for 1 second (1000 milliseconds) to display splash screen
+
+                                        navController.navigate("Home")
+                                    }
+
+
+                                }else{
+                                    /*user doestn have username assigned*/
+                                    LaunchedEffect(Unit){
+                                        Log.d(TAG,"No username")
+                                        userViewModel.resetUserValidation()
+                                        delay(splash_screen_delay) // Delay for 1 second (1000 milliseconds) to display splash screen
+
+                                        navController.navigate("pickUsername")
+                                    }
+                                }
+
+                            }
+                            is Response.Failure->{
+                            }
+                            else->{}
+                        }
+                    }
+                }
+            }
+            /* wait for login success then go to validate*/
+            loginFLow.value?.let {
+                when(it){
+                    is Response.Success->{
+                        userViewModel.validateUser(it.data)
+                        userFlow.value.let {
+                                validationResponse ->
+                            when(validationResponse){
+                                is Response.Success->{
+                                    if(validationResponse.data){
+                                        LaunchedEffect(Unit){
+                                            /*sucessfully validated user */
+                                            Log.d(TAG,"Login success validation")
+                                                delay(splash_screen_delay) // Delay for 1 second (1000 milliseconds) to display splash screen
+                                            navController.navigate("Home")
+                                        }
+                                    }else{
+                                        /*user doestn have username assigned*/
+                                        LaunchedEffect(Unit){
+                                            Log.d(TAG,"Login no username")
+                                            userViewModel.resetUserValidation()
+                                            delay(splash_screen_delay) // Delay for 1 second (1000 milliseconds) to display splash screen
+
+                                            navController.navigate("pickUsername")
+                                        }
+                                    }
+                                }
+                                is Response.Failure->{
+                                    val context = LocalContext.current
+                                    userViewModel.resetUserValidation()
+                                    Toast.makeText(context,"Failed to validate user code 102",
+                                        Toast.LENGTH_LONG).show()
+                                    /*user not inDB*/
+                                }
+                                else->{}
+                            }
+                        }
+
+                    }
+                    is Response.Loading ->{
+                        CircularProgressIndicator()
+                    }
+                    is Response.Failure ->{
+                        val context = LocalContext.current
+                        Toast.makeText(context,"Failed to login, account doesn't exist, check if input email and password are correct.",Toast.LENGTH_LONG).show()
+                        authViewModel.resetLoginFlow()
+                    }
+                    else->{}
+                }
+            }
+
+            SplashScreen(splash_screen_delay)
+
+
+        }
         composable("TagPicker") {
 
 
@@ -360,24 +560,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
     }
 }
 
-@Composable
-fun OneTapSignIn(
-    viewModel: AuthViewModel = hiltViewModel(),
-    launch: (result: BeginSignInResult) -> Unit
-) {
-    when(val oneTapSignInResponse = viewModel.oneTapSignInResponse) {
-        is OneTapResponse.Loading -> CircularProgressIndicator()
-        is OneTapResponse.Success -> oneTapSignInResponse.data?.let {
-            LaunchedEffect(it) {
-                launch(it)
-            }
-        }
-        is OneTapResponse.Failure -> LaunchedEffect(Unit) {
-            print(oneTapSignInResponse.e)
-        }
-        else->{}
-    }
-}
+
 @Composable
 fun SignInWithGoogle(
     viewModel: AuthViewModel = hiltViewModel(),

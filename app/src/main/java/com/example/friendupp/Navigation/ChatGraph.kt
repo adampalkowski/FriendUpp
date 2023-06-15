@@ -1,5 +1,6 @@
 package com.example.friendupp.Navigation
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
@@ -7,27 +8,34 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.Camera.CameraEvent
+import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.firebase.firestore.auth.User
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executor
 
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatViewModel,currentChat: MutableState<Chat?>) {
+fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatViewModel, currentChat: MutableState<Chat?>, outputDirectory: File,
+                              executor: Executor
+) {
     navigation(startDestination = "Chat", route = "Chats") {
         composable(
             "Chat",
@@ -130,7 +138,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatVie
                             navController.navigate("Home")
                         }
                         is ChatCollectionEvents.GoToGroups->{
-
+                            navController.navigate("Groups")
                         }
                         is ChatCollectionEvents.GoToSearch->{navController.navigate("Search")}
                     }
@@ -192,6 +200,97 @@ fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatVie
                     }
                 })
         }
+
+        composable("ChatCamera",
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Create" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Create" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(400)
+                        )
+                    else -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Create" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Create" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(400)
+                        )
+                    else -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                }
+            }
+        ) { backStackEntry ->
+            var photoUri by rememberSaveable {
+                mutableStateOf<Uri?>(null)
+            }
+
+            CameraView(
+                outputDirectory = outputDirectory,
+                executor = executor,
+                onImageCaptured = { uri ->
+                    photoUri = uri
+                    /*todo handle the image uri*/
+                },
+                onError = {},
+                onEvent = { event ->
+                    when (event) {
+                        is CameraEvent.GoBack -> {
+                            navController.popBackStack()
+                        }
+                        is CameraEvent.AcceptPhoto -> {
+                            if (photoUri != null) {
+                                chatViewModel.onUriReceived(photoUri!!)
+                                navController.popBackStack()
+                            }else{
+                                navController.popBackStack()
+
+                            }
+                        }
+                        is CameraEvent.DeletePhoto -> {
+                            Log.d("CreateGraphActivity", "dElete photo")
+                            photoUri=null
+                        }
+                        else -> {}
+                    }
+                },
+                photoUri = photoUri
+            )
+
+        }
+
+
         composable(
             "ChatItem/{chatID}",   arguments = listOf(navArgument("chatID") { type = NavType.StringType }),
             enterTransition = {
@@ -244,8 +343,6 @@ fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatVie
                 if (chatID != null) {
                     Log.d("CHATDEBUG","GET MESSAGES CALLED ")
                     chatViewModel.getChatCollection(chatID)
-                    chatViewModel.getMessages(chatID, formattedDateTime)
-                    chatViewModel.getFirstMessages(chatID, formattedDateTime)
                 }
             }
 
@@ -256,11 +353,29 @@ fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatVie
                         is ChatEvents.GoBack -> {
                             navController.popBackStack()
                         }
+                        is ChatEvents.SendImage -> {
+                            //id and sent_time are set in view model
+                            //we have URI
+                            //add uri to storage and resize it
+                            //get the url and add it to the message
+                            chatViewModel.sendImage(chatID!!, ChatMessage(
+                                text = event.message.toString(),
+                                sender_picture_url = UserData.user?.pictureUrl!!,
+                                sent_time = "",
+                                sender_id = UserData.user!!.id,
+                                message_type = "uri",
+                                id = ""
+                            ),event.message)
+
+                        }
                         is ChatEvents.OpenChatSettings -> {
                             navController.navigate("ChatSettings")
                         }
                         is ChatEvents.GetMoreMessages -> {
                             chatViewModel.getMoreMessages(event.chat_id)
+                        }
+                        is ChatEvents.OpenGallery -> {
+                            navController.navigate("ChatCamera")
                         }
                         is ChatEvents.SendMessage->{
                             Log.d("CHATDEBUG","SENDING MESSAGE"+formattedDateTime.toString()+event.message.toString())
@@ -281,8 +396,28 @@ fun NavGraphBuilder.chatGraph(navController: NavController,chatViewModel:ChatVie
 
                 },chatViewModel=chatViewModel)
 
+            var uri by remember { mutableStateOf<Uri?>(null) }
+            val uriFlow = chatViewModel.uri.collectAsState()
 
-
+            LaunchedEffect(uriFlow.value) {
+                val newUri = uriFlow.value
+                if (newUri != null) {
+                    uri = newUri
+                    chatViewModel.sendImage(
+                        chatID!!,
+                        ChatMessage(
+                            text = uri.toString(),
+                            sender_picture_url = UserData.user?.pictureUrl!!,
+                            sent_time = "",
+                            sender_id = UserData.user!!.id,
+                            message_type = "uri",
+                            id = ""
+                        ),
+                        uri!!
+                    )
+                    chatViewModel.onUriProcessed()
+                }
+            }
 
         }
 
