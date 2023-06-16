@@ -44,8 +44,6 @@ fun loadFriendsActivities(activityViewModel: ActivityViewModel, activities: Muta
             }
             is Response.Failure -> {
 
-                Toast.makeText(LocalContext.current, "FAiled", Toast.LENGTH_SHORT).show()
-
             }
             is Response.Loading -> {
             }
@@ -99,7 +97,6 @@ fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: Mutab
             }
             is Response.Failure -> {
 
-                Toast.makeText(LocalContext.current, "FAiled", Toast.LENGTH_SHORT).show()
 
             }
             is Response.Loading -> {

@@ -289,7 +289,6 @@ fun loadActivitiesHistory(activityViewModel: ActivityViewModel, activitiesHistor
             CircularProgressIndicator()
         }
         is com.example.friendupp.model.Response.Failure->{
-            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
         }
         else->{}
     }
@@ -344,7 +343,6 @@ fun loadJoinedActivities(activityViewModel: ActivityViewModel, joinedActivities:
             CircularProgressIndicator()
         }
         is com.example.friendupp.model.Response.Failure->{
-            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
         }
         else->{}
     }

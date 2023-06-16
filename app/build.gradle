@@ -28,6 +28,9 @@ android {
 
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
         manifestPlaceholders = [MAPS_API_KEY: "${properties.getProperty('MAPS_API_KEY')}"]
+        manifestPlaceholders = [MAIN_STORAGE_LINK: "${properties.getProperty('MAIN_STORAGE_LINK')}"]
+        manifestPlaceholders = [MEDIUM_STORAGE_LINK: "${properties.getProperty('MEDIUM_STORAGE_LINK')}"]
+        manifestPlaceholders = [LARGE_STORAGE_LINK: "${properties.getProperty('LARGE_STORAGE_LINK')}"]
     }
 
     buildTypes {

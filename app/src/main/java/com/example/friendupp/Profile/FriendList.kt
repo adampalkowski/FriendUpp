@@ -70,6 +70,16 @@ fun friendsLoading(
     userViewModel: UserViewModel,
     friendsList: MutableList<User>
 ) {
+
+
+    //call get activities only once
+    val activitiesFetched = remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = activitiesFetched.value) {
+        if (!activitiesFetched.value) {
+            userViewModel.getFriends(UserData.user!!.id)
+            activitiesFetched.value = true
+        }
+    }
     val friendsFlow =userViewModel.friendState.collectAsState()
     friendsFlow.value.let {
             response -> when(response){
@@ -81,7 +91,6 @@ fun friendsLoading(
             CircularProgressIndicator()
         }
         is com.example.friendupp.model.Response.Failure->{
-            Toast.makeText(LocalContext.current,"Failed to load in friends list ", Toast.LENGTH_SHORT).show()
         }
     }
     }

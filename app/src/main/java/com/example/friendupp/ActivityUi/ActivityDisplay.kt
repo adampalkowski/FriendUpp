@@ -201,7 +201,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = Color(0xFF
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
-                color = Color(0xFF41960D)
+                color = SocialTheme.colors.uiBorder
             )
         )
         Spacer(modifier = Modifier.weight(1f))

@@ -3,6 +3,7 @@ package com.example.friendupp.Profile
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +43,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 sealed class EditProfileEvents{
     object GoBack:EditProfileEvents()
     object ConfirmChanges:EditProfileEvents()
+    object OpenCamera:EditProfileEvents()
 }
 
 @Composable
@@ -67,7 +69,7 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit,user:User, onEvent: (Edit
             }
             Spacer(modifier = Modifier.height(24.dp))
 
-            EditProfileInfo(name=user.name?: "",username=user.username?: "",imageUrl=user.pictureUrl?: "",onClick={})
+            EditProfileInfo(name=user.name?: "",username=user.username?: "",imageUrl=user.pictureUrl?: "",onClick={onEvent(EditProfileEvents.OpenCamera)})
             Spacer(modifier = Modifier.height(24.dp))
             EditInfoContent(name=user.name?: "",username=user.username?: "", biography =user.biography, location =user.location )
             ActivityPreferences()
@@ -118,7 +120,7 @@ fun EditProfileInfo(name: String, username: String, imageUrl: String, onClick: (
                 )
                 Box(modifier = Modifier
                     .size(90.dp)
-                    .clip(CircleShape)
+                    .clip(CircleShape).clickable(onClick = onClick)
                     .background(color = Color.Black.copy(0.6f))){
                 }
             }

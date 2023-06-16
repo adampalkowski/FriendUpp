@@ -29,6 +29,7 @@ import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.AuthViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.ChatMessage
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
@@ -123,10 +124,16 @@ fun NavGraphBuilder.profileGraph(
                         is CameraEvent.AcceptPhoto -> {
                             Log.d("CAMERAGRAPHACTIvity", "ACASDASDASD")
                             if (photoUri != null) {
-                                val photo: String = photoUri.toString()
+                                if (photoUri != null) {
+                                    userViewModel.onUriReceived(photoUri!!)
+                                    navController.popBackStack()
+                                }else{
+                                    navController.popBackStack()
+
+                                }
 
 
-                                /*todo dooo sth with the final uri */
+
                             }
                         }
                         else -> {}
@@ -294,6 +301,21 @@ fun NavGraphBuilder.profileGraph(
                     },
                     onClick = { navController.navigate("EditProfile") }, user = user
                , activityViewModel = activityViewModel )
+                var uri by remember { mutableStateOf<Uri?>(null) }
+                val uriFlow = userViewModel.uri.collectAsState()
+
+                LaunchedEffect(uriFlow.value) {
+                    val newUri = uriFlow.value
+                    if (newUri != null) {
+                        uri = newUri
+                        userViewModel.changeUserProfilePicture(
+                            UserData.user!!.id,
+                            uri!!
+                        )
+                        userViewModel.onUriProcessed()
+                        userViewModel.onUriReceived(null)
+                    }
+                }
             }
 
 
@@ -350,10 +372,26 @@ fun NavGraphBuilder.profileGraph(
                         when(event){
                             is EditProfileEvents.GoBack->{navController.popBackStack()}
                             is EditProfileEvents.ConfirmChanges->{}
+                            is EditProfileEvents.OpenCamera->{navController.navigate("CameraProfile")}
                         }
 
 
                     })
+                var uri by remember { mutableStateOf<Uri?>(null) }
+                val uriFlow = userViewModel.uri.collectAsState()
+
+                LaunchedEffect(uriFlow.value) {
+                    val newUri = uriFlow.value
+                    if (newUri != null) {
+                        uri = newUri
+                        userViewModel.changeUserProfilePicture(
+                            UserData.user!!.id,
+                            uri!!
+                        )
+                        userViewModel.onUriProcessed()
+                        userViewModel.onUriReceived(null)
+                    }
+                }
             }else{
                 navController.popBackStack()
             }
@@ -462,7 +500,7 @@ fun NavGraphBuilder.profileGraph(
                 }
             }
         ) {
-            userViewModel.getFriends(UserData.user!!.id)
+
 
 
             FriendListScreen(onEvent = { event ->
