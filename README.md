@@ -23,9 +23,9 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 ## Installation
 To install the FriendUpp, follow these steps:
 
-1. Download the APK file from the provided link.\
-2. Enable installation from unknown sources in the Android device settings.\
-3. Open the downloaded APK file and follow the on-screen instructions to install the app.\
+1. Download the APK file from the provided link.
+2. Enable installation from unknown sources in the Android device settings.
+3. Open the downloaded APK file and follow the on-screen instructions to install the app.
 4. Launch the app and sign up for a new account or log in using existing credentials.
 
 Please note that the app requires a minimum Android version XYZ or higher.
