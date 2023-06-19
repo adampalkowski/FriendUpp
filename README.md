@@ -37,7 +37,7 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 | :---------: | :-------------: |
 | ![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/07c27c06-e750-4ac6-b97f-7566a494db90)|![Screenshot_2023-06-19-16-21-21-459_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f0ee579-954f-471e-805d-78b5e96a1dac) |
 
-| Dark theme |
+| Dark theme | :-------------: |:-------------: |
 | :---------: | :-------------: |:-------------: |
 |![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/4396c25d-0096-48ed-8c68-994002455659)|![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/ff304d28-ef41-4005-a874-869ccee7ae66)|![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/23cf0935-1da5-44f9-9713-5b4f74f6a080)|
 
