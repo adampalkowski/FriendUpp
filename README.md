@@ -16,6 +16,8 @@ FriendUpp is a dynamic Android application designed to enhance social interactio
 FriendUpp is an Android app designed to bring friends closer together by simplifying event planning and promoting social interactions. The app allows users to create personalized events, invite friends, and explore public events in their local area. With features like real-time chat, activity maps, user profiles, groups, activity filters, and live activities, FriendUpp offers a comprehensive platform for users to connect, discover new activities, and enjoy memorable experiences with their social circle.
 
 ## Demo
+<h2>Different filter options</h2>
+<video src="https://github.com/adampalkowski/FriendUpp/assets/50372825/106eee9e-52d5-4ee5-8771-b4e509ac790c" controls></video>
 <h2>Flexible jetpack compose designed on Tablet aswell</h2>
 <video src="https://github.com/adampalkowski/FriendUpp/assets/50372825/a6254f56-4b31-4b4a-8804-130ab062a100" controls></video>
 
