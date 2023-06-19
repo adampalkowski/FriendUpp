@@ -37,22 +37,11 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 | :---------: | :-------------: |
 | ![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/07c27c06-e750-4ac6-b97f-7566a494db90)|![Screenshot_2023-06-19-16-21-21-459_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f0ee579-954f-471e-805d-78b5e96a1dac) |
 
-| Dark theme | :-------------: |:-------------: |
+| Dark theme |  | |
 | :---------: | :-------------: |:-------------: |
 |![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/4396c25d-0096-48ed-8c68-994002455659)|![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/ff304d28-ef41-4005-a874-869ccee7ae66)|![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/23cf0935-1da5-44f9-9713-5b4f74f6a080)|
 
 
-
-
-## Installation
-To install the FriendUpp, follow these steps:
-
-1. Download the APK file from the provided link.
-2. Enable installation from unknown sources in the Android device settings.
-3. Open the downloaded APK file and follow the on-screen instructions to install the app.
-4. Launch the app and sign up for a new account or log in using existing credentials.
-
-Please note that the app requires a minimum Android version XYZ or higher.
 ## Usage
 
 After installing the app, you can start utilizing its features:
@@ -68,13 +57,14 @@ After installing the app, you can start utilizing its features:
 
 
 
-
 ## Technologies Used
 
 Android SDK
-Java/Kotlin programming language
-Firebase (Authentication, Realtime Database, Cloud Messaging)
+Kotlin ,Jetpack compose
+Firebase (Authentication, Firestore, Dynamic links, storage)
 Google Maps API (for location-based features)
+Hilt
+Mvvm architecture
 
 ## Contributing
 
@@ -82,4 +72,4 @@ At the moment, contributions to the Social Events App project are not being acce
 
 ## License
 
-Specify the license under which your Android app is distributed. If you haven't chosen a license, you can mention that the app is currently not licensed.
+App is currently not licensed, stil under production.
