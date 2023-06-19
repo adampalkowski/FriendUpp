@@ -71,7 +71,7 @@ Mvvm architecture
 
 ## Contributing
 
-At the moment, contributions to the Social Events App project are not being accepted. However, if you encounter any issues or have suggestions, feel free to report them using the provided contact details.
+At the moment, contributions to the FriendUpp project are not being accepted. However, if you encounter any issues or have suggestions, feel free to report them using the provided contact details.
 
 ## License
 
