@@ -20,6 +20,9 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 ## Features
 
+| Main Screen | Activity Display |
+| :---------: | :-------------: |
+|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/02f21a3c-90c0-4816-9bd1-93d604cb5cd8)| |
 ## Installation
 To install the FriendUpp, follow these steps:
 
@@ -41,6 +44,10 @@ After installing the app, you can start utilizing its features:
 7. Stay updated with event notifications and receive alerts about new invitations, event updates, and RSVP confirmations. 
 8. Interact with other users through chat, questions, or messages related to specific events. 
 9. Manage your profile and customize it to reflect your interests and preferences .
+
+
+https://github.com/adampalkowski/FriendUpp/assets/50372825/a6254f56-4b31-4b4a-8804-130ab062a100
+
 
 ## Technologies Used
 
