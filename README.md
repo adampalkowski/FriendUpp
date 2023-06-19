@@ -32,15 +32,14 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 | :---------: | :-------------: | :-------------: |
 | ![Camerax](https://github.com/adampalkowski/FriendUpp/assets/50372825/9e7b9146-0e45-464e-85ee-677c8b6c8f0b) | ![Custom settings](https://github.com/adampalkowski/FriendUpp/assets/50372825/2f721a23-ba96-425d-805a-eb791a4c39b0) | ![Login](https://github.com/adampalkowski/FriendUpp/assets/50372825/07c27c06-e750-4ac6-b97f-7566a494db90) |
 
-| Register |
-| :---------: |
-| ![Register](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f0ee579-954f-471e-805d-78b5e96a1dac) |
+| Register | Search |
+| :---------: | :---------: |
+| ![Register](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f0ee579-954f-471e-805d-78b5e96a1dac) | ![Search](https://github.com/adampalkowski/FriendUpp/assets/50372825/3ab4b038-2025-4948-a9f4-f9d6406502a3) |
 
-| Dark theme |
-| :---------: |
-| ![Dark theme 1](https://github.com/adampalkowski/FriendUpp/assets/50372825/4396c25d-0096-48ed-8c68-994002455659) |
-| ![Dark theme 2](https://github.com/adampalkowski/FriendUpp/assets/50372825/ff304d28-ef41-4005-a874-869ccee7ae66) |
-| ![Dark theme 3](https://github.com/adampalkowski/FriendUpp/assets/50372825/23cf0935-1da5-44f9-9713-5b4f74f6a080) |
+
+| Dark theme | | |
+| :---------: | :---------: | :---------: |
+| ![Dark theme 1](https://github.com/adampalkowski/FriendUpp/assets/50372825/4396c25d-0096-48ed-8c68-994002455659) | ![Dark theme 2](https://github.com/adampalkowski/FriendUpp/assets/50372825/ff304d28-ef41-4005-a874-869ccee7ae66) | ![Dark theme 3](https://github.com/adampalkowski/FriendUpp/assets/50372825/23cf0935-1da5-44f9-9713-5b4f74f6a080) |
 
 
 
