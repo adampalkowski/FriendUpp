@@ -18,11 +18,23 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 ## Demo
 <h2>Flexible jetpack compose designed on Tablet aswell</h2>
 <video src="https://github.com/adampalkowski/FriendUpp/assets/50372825/a6254f56-4b31-4b4a-8804-130ab062a100" controls></video>
+
 ## Features
 
-| Main Screen | Activity Display |
+
+| Main Screen | Chat |
 | :---------: | :-------------: |
-|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/02f21a3c-90c0-4816-9bd1-93d604cb5cd8)| |
+|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/02f21a3c-90c0-4816-9bd1-93d604cb5cd8)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/b064b0d6-b663-419b-bf65-f3ac287c5c85)|
+| Local activities | Create |
+| :---------: | :-------------: |
+|![Screenshot_2023-06-19-15-22-51-407_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2bb386e9-a5b0-4ceb-b287-56c63720b280) | ![Screenshot_2023-06-19-15-23-15-838_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5aa4c04b-38bc-4fda-803f-ee760118d16f)|
+| Profile | Settings |
+| :---------: | :-------------: |
+|![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/49460d06-4e92-4c3f-9817-38bdb015c9d6) | ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/ebeff398-c916-46c9-aa8c-570e86cf9ae7)|
+| Camerax | Settings |
+| :---------: | :-------------: |
+|![Screenshot_2023-06-19-15-24-38-047_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/9e7b9146-0e45-464e-85ee-677c8b6c8f0b)||
+
 ## Installation
 To install the FriendUpp, follow these steps:
 
