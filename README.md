@@ -21,6 +21,12 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173
 
+<h2>Flexible jetpack compose layout for tablets aswell</h2>
+
+
+
+https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80cc-d3ed2db7b3aa
+
 
 
 <h2>Flexible jetpack compose designed on Tablet aswell</h2>
@@ -33,7 +39,7 @@ https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3
 
 | Create | Profile | Settings |
 | :---------: | :-------------: | :-------------: |
-| ![Create](https://github.com/adampalkowski/FriendUpp/assets/50372825/5aa4c04b-38bc-4fda-803f-ee760118d16f) | ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)| ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)|
+| ![Screenshot_2023-06-19-15-23-15-838_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/3e762f00-e099-4d8c-9fd6-2f9e05ee48c8)| ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)| ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)|
 
 | Camerax | Custom settings | Login |
 | :---------: | :-------------: | :-------------: |
