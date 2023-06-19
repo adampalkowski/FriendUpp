@@ -17,9 +17,14 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 ## Demo
 <h2>Different filter options</h2>
-<video src="https://github.com/adampalkowski/FriendUpp/assets/50372825/106eee9e-52d5-4ee5-8771-b4e509ac790c" controls></video>
+
+
+https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173
+
+
+
 <h2>Flexible jetpack compose designed on Tablet aswell</h2>
-<video src="https://github.com/adampalkowski/FriendUpp/assets/50372825/a6254f56-4b31-4b4a-8804-130ab062a100" controls></video>
+
 
 ## Features
 | Main Screen | Chat | Map |
@@ -28,9 +33,7 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 | Create | Profile | Settings |
 | :---------: | :-------------: | :-------------: |
-| ![Create](https://github.com/adampalkowski/FriendUpp/assets/50372825/5aa4c04b-38bc-4fda-803f-ee760118d16f) | ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)
- | ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)
-|
+| ![Create](https://github.com/adampalkowski/FriendUpp/assets/50372825/5aa4c04b-38bc-4fda-803f-ee760118d16f) | ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)| ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)|
 
 | Camerax | Custom settings | Login |
 | :---------: | :-------------: | :-------------: |
@@ -47,7 +50,8 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 | Dark theme | | |
 | :---------: | :---------: | :---------: |
-| ![Dark theme 1](https://github.com/adampalkowski/FriendUpp/assets/50372825/4396c25d-0096-48ed-8c68-994002455659) | ![Dark theme 2](https://github.com/adampalkowski/FriendUpp/assets/50372825/ff304d28-ef41-4005-a874-869ccee7ae66) | ![Dark theme 3](https://github.com/adampalkowski/FriendUpp/assets/50372825/23cf0935-1da5-44f9-9713-5b4f74f6a080) |
+|![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/f253b581-4f7e-4930-8d48-9b5039febea1)| ![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8a6ae1b6-7d7d-40a3-aa9b-3831047fe1f3)|![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/cd846e3e-8e21-4535-920a-8db940e1faf3)
+|
 
 
 
