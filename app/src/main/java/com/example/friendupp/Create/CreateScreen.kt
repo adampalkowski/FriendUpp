@@ -230,10 +230,31 @@ hour:Int,minute:Int,
     Column {
         CreateHeading("Date", icon = com.example.friendupp.R.drawable.ic_date)
         CalendarComponent(dateState)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly){
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically){
 
-            TimePicker(hour,minute, includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute ->  })
-            TimePicker(hour+1,minute,includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute -> })
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(
+                        BorderStroke(1.dp, SocialTheme.colors.uiBorder),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 12.dp)){
+                Text(text=hour.toString()+":"+minute.toString(), style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 14.sp), color = SocialTheme.colors.textPrimary)
+            }
+            Icon(painter = painterResource(id = com.example.friendupp.R.drawable.ic_long_right), contentDescription = null, tint = SocialTheme.colors.iconPrimary)
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(
+                        BorderStroke(1.dp, SocialTheme.colors.uiBorder),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 12.dp)){
+                Text(text=(hour+1).toString()+":"+minute.toString(), style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 14.sp), color = SocialTheme.colors.textPrimary)
+            }
+         /*   TimePicker(hour,minute, includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute ->  })
+            TimePicker(hour+1,minute,includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute -> })*/
 
         }
 
@@ -293,7 +314,9 @@ fun CreateButton(text: String, createClicked: () -> Unit = {},
         if (!disabled){createClicked()} }, shape = RoundedCornerShape(8.dp), colors = CardDefaults.cardColors(containerColor = cardColor, contentColor = cardColor)) {
 
             Text(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 48.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp, horizontal = 48.dp),
                 text = text,
                 style = TextStyle(
                     fontFamily = Lexend,
@@ -345,7 +368,7 @@ fun BottomBarSettings(onClick: () -> Unit) {
             .fillMaxWidth(), horizontalArrangement = Arrangement.End
     ) {
 
-        CreateButton("Create", disabled = false)
+        ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_checkl)
     }
 }
 

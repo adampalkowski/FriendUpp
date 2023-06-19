@@ -45,6 +45,7 @@ import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerSta
 import com.example.friendupp.Components.CalendarComponent
 import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Login.SplashScreen
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
@@ -54,6 +55,7 @@ import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.google.android.gms.maps.model.LatLng
 
 import java.net.CookieHandler
 
@@ -71,6 +73,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onEvent: (HomeEvents) -> Unit,
     activityViewModel: ActivityViewModel,
+    mapViewModel: MapViewModel,
 ) {
     Log.d("ActivityLoadInDebug", "Screen load")
     var calendarView by rememberSaveable {
@@ -83,7 +86,13 @@ fun HomeScreen(
     val moreActivities = remember { mutableStateListOf<Activity>() }
     var activitiesExist = remember { mutableStateOf(false) }
 
-
+    val locationFlow = mapViewModel.currentLocation.collectAsState()
+    var currentLocation by rememberSaveable { mutableStateOf<LatLng?>(null) }
+    locationFlow.value.let { latLng ->
+        if (latLng != null) {
+            currentLocation = latLng
+        }
+    }
 
     val publicActivities = remember { mutableStateListOf<Activity>() }
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
@@ -96,7 +105,8 @@ fun HomeScreen(
         loadMoreFriendsActivities(activityViewModel,moreActivities)
 
     }else{
-        loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist)
+
+        loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation)
         loadMorePublicActivities(activityViewModel,morePublicActivities)
     }
 
@@ -115,8 +125,7 @@ fun HomeScreen(
         }, calendarView, filterView, openDrawer = { onEvent(HomeEvents.OpenDrawer) })
         val lazyListState = rememberLazyListState()
         LazyColumn(
-            modifier
-              ,
+            modifier ,
             state = lazyListState
         ) {
 
@@ -622,7 +631,8 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSel
         )
         CreateLive(
             onClick = { onEvent(HomeEvents.CreateLive) },
-            imageUrl = "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80"
+            imageUrl =   "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxw" +
+                    "aG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80"
         )
         Spacer(
             modifier = Modifier
@@ -631,8 +641,9 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSel
                 .background(dividerColor)
         )
         LiveUserItem(
-            text = "Sports??",
-            imageUrl = "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80"
+            text = "Quick trip?",
+            imageUrl ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScGQQPJTeRXYxfbXVhLLXPl4aCJCexZ4dS7Q&usqp=CAU"
+
         )
         Spacer(
             modifier = Modifier
@@ -640,14 +651,14 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSel
                 .height(1.dp)
                 .background(dividerColor)
         )
-        LiveUserItem(imageUrl = "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80")
+        LiveUserItem(imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdMOgc-WqbgagnyjIGnPOvsxypn_bNVODFaQ&usqp=CAU")
         Spacer(
             modifier = Modifier
                 .width(8.dp)
                 .height(1.dp)
                 .background(dividerColor)
         )
-        LiveUserItem(imageUrl = "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80")
+        LiveUserItem(imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf686xJRtWDvGxXHISwA9QBWLPi-EVW3PFIw&usqp=CAU")
         Spacer(
             modifier = Modifier
                 .weight(1f)
@@ -786,67 +797,14 @@ fun buttonsRow(modifier: Modifier,
         if (switch) Color.Green else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Spacer(
-            modifier = Modifier
-                .width(32.dp)
-                .height(
-                    if (switch) {
-                        1.dp
-                    } else {
-                        0.5.dp
-                    }
-                )
-                .background(color = bgColor)
-        )
-        eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
-            onEvent(ActivityEvents.Join(id))
-            switch = !switch
-        }, iconColor = iconColor, selected = switch, iconFilled = R.drawable.ic_check_filled)
-        Spacer(
-            modifier = Modifier
-                .width(12.dp)
-                .height(
-                    if (switch) {
-                        1.dp
-                    } else {
-                        0.5.dp
-                    }
-                )
-                .background(color = bgColor)
-        )
-        eButtonSimple(icon = R.drawable.ic_chat_300, onClick = {onEvent(ActivityEvents.OpenChat(id))})
-        Spacer(
-            modifier = Modifier
-                .width(12.dp)
-                .height(
-                    if (switch) {
-                        1.dp
-                    } else {
-                        0.5.dp
-                    }
-                )
-                .background(color = bgColor)
-        )
-        eButtonSimple(
-            icon = R.drawable.ic_bookmark_300,
-            onClick = {
-                bookmarked = !bookmarked
-            },
-            iconColor = bookmarkColor,
-            selected = bookmarked,
-            iconFilled = R.drawable.ic_bookmark_filled
-        )
-
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(4.dp), contentAlignment = Alignment.Center
-        ) {
-            Box(
+    Box(modifier = Modifier.fillMaxWidth().background(SocialTheme.colors.uiBackground)){
+        Row(
+            modifier.align(Alignment.TopCenter)
+                .fillMaxWidth()
+               , verticalAlignment = Alignment.CenterVertically) {
+            Spacer(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(32.dp)
                     .height(
                         if (switch) {
                             1.dp
@@ -854,23 +812,82 @@ fun buttonsRow(modifier: Modifier,
                             0.5.dp
                         }
                     )
-                    .background(SocialTheme.colors.uiBorder)
+                    .background(color = bgColor)
             )
-            if (switch) {
+            eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
+                onEvent(ActivityEvents.Join(id))
+                switch = !switch
+            }, iconColor = iconColor, selected = switch, iconFilled = R.drawable.ic_check_filled)
+            Spacer(
+                modifier = Modifier
+                    .width(12.dp)
+                    .height(
+                        if (switch) {
+                            1.dp
+                        } else {
+                            0.5.dp
+                        }
+                    )
+                    .background(color = bgColor)
+            )
+            eButtonSimple(icon = R.drawable.ic_chat_300, onClick = {onEvent(ActivityEvents.OpenChat(id))})
+            Spacer(
+                modifier = Modifier
+                    .width(12.dp)
+                    .height(
+                        if (switch) {
+                            1.dp
+                        } else {
+                            0.5.dp
+                        }
+                    )
+                    .background(color = bgColor)
+            )
+            eButtonSimple(
+                icon = R.drawable.ic_bookmark_300,
+                onClick = {
+                    bookmarked = !bookmarked
+                },
+                iconColor = bookmarkColor,
+                selected = bookmarked,
+                iconFilled = R.drawable.ic_bookmark_filled
+            )
+
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(4.dp), contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(fraction = alpha)
-                        .height((alpha * 1).dp)
-                        .background(bgColor)
+                        .fillMaxWidth()
+                        .height(
+                            if (switch) {
+                                1.dp
+                            } else {
+                                0.5.dp
+                            }
+                        )
+                        .background(SocialTheme.colors.uiBorder)
                 )
+                if (switch) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = alpha)
+                            .height((alpha * 1).dp)
+                            .background(bgColor)
+                    )
+
+                }
+
 
             }
 
 
         }
-
-
     }
+
 }
 
 

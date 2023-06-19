@@ -19,6 +19,7 @@ import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.MapEvent
 import com.example.friendupp.MapScreen
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
@@ -44,7 +45,8 @@ fun NavGraphBuilder.mainGraph(
     openDrawer: () -> Unit,
     activityViewModel: ActivityViewModel,
     userViewModel: UserViewModel,chatViewModel:ChatViewModel,
-    homeViewModel:HomeViewModel
+    homeViewModel:HomeViewModel,
+    mapViewModel:MapViewModel
 
 ) {
     navigation(startDestination = "Home", route = "Main") {
@@ -204,7 +206,7 @@ fun NavGraphBuilder.mainGraph(
                         navController.navigate("ActivityPreview")
                     }
                 }
-            }, activityViewModel = activityViewModel)
+            }, activityViewModel = activityViewModel,mapViewModel=mapViewModel)
 
 
         }
@@ -300,11 +302,10 @@ fun NavGraphBuilder.mainGraph(
 
 
 
-
             ActivityPreview(onEvent = { event ->
                 when (event) {
                     is ActivityPreviewEvents.GoBack -> {
-                        navController.navigate("Home")
+                        navController.popBackStack()
                     }
                     is ActivityPreviewEvents.ShareActivityLink->{
                         //CREATE A DYNAMINC LINK TO DOMAIN
@@ -408,29 +409,18 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
-            val context = LocalContext.current
 
-            val mapViewModel = remember { MapViewModel(context) }
-            DisposableEffect(Unit) {
-                mapViewModel.checkLocationPermission(
-                    permissionDenied = {
-                        Toast.makeText(context, "denied", Toast.LENGTH_SHORT).show()
-                    },
-                    permissionGranted = {
-                        Toast.makeText(context, "grant", Toast.LENGTH_SHORT).show()
-
-                        mapViewModel.startLocationUpdates()
+            MapScreen(mapViewModel,activityViewModel=activityViewModel, onEvent = {
+                event->
+                when(event){
+                    is MapEvent.PreviewActivity->{
+                        Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW")
+                        homeViewModel.setExpandedActivity(event.activity)
+                        navController.navigate("ActivityPreview")
                     }
-                )
-
-                onDispose {
-                    Toast.makeText(context, "dispose", Toast.LENGTH_SHORT).show()
-                    mapViewModel.stopLocationUpdates()
+                    else->{}
                 }
-            }
-
-
-            MapScreen(mapViewModel)
+            })
         }
 
 

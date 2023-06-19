@@ -9,9 +9,10 @@ import android.os.Build
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
@@ -25,14 +26,27 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.example.friendupp.Home.loadMorePublicActivities
+import com.example.friendupp.Home.loadPublicActivities
+import com.example.friendupp.Map.MapActivityItem
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.model.Activity
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 
 
+sealed class MapEvent{
+    class PreviewActivity(val activity:Activity):MapEvent()
+}
+
 @Composable
-fun MapScreen(mapViewModel:MapViewModel) {
+fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEvent:(MapEvent)->Unit) {
+    val publicActivities = remember { mutableStateListOf<Activity>() }
+    val morePublicActivities = remember { mutableStateListOf<Activity>() }
+    var publicActivitiesExist = remember { mutableStateOf(false) }
+
     val flow = mapViewModel.currentLocation.collectAsState()
     val context= LocalContext.current
     var currentLocation by remember { mutableStateOf(LatLng(50.0, 20.0)) }
@@ -40,8 +54,12 @@ fun MapScreen(mapViewModel:MapViewModel) {
     flow.value.let { latLng ->
         if (latLng != null) {
             currentLocation = latLng
+
         }
     }
+    loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation)
+    loadMorePublicActivities(activityViewModel,morePublicActivities)
+
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 11f)
     }
@@ -64,7 +82,7 @@ fun MapScreen(mapViewModel:MapViewModel) {
         mutableStateOf(MapProperties(mapType = MapType.NORMAL))
     }
 
-
+    val activityToScroll = remember { mutableStateOf<Activity?>(null) }
 
     Box(modifier = Modifier) {
 
@@ -80,7 +98,6 @@ fun MapScreen(mapViewModel:MapViewModel) {
         ) {
 
             val bitmap = getBitmapDescriptor(context,R.drawable.ic_pin)
-
             selectedLocation.let { selectedLatLng ->
                 if (selectedLatLng != null) {
 
@@ -95,6 +112,19 @@ fun MapScreen(mapViewModel:MapViewModel) {
                 }
             }
 
+            publicActivities.forEach { activity ->
+                if(activity.lat!=null){
+                    val latLng = LatLng(activity.lat!!,activity.lng!!)
+                    MarkerInfoWindow(alpha=0.8f,
+                        state = MarkerState(
+                            position = latLng,
+                        )
+                    ) {
+                            activityToScroll.value=activity
+                    }
+                }
+
+            }
 
             currentLocation.let { latLng ->
                 MarkerInfoWindow(alpha=0.8f,
@@ -108,27 +138,68 @@ fun MapScreen(mapViewModel:MapViewModel) {
 
         }
 
-        Box(
-            Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(SocialTheme.colors.uiBackground)
-                .clickable(onClick = {
-                    cameraPositionState.position =
-                        CameraPosition.fromLatLngZoom(currentLocation, 11f)
-                }), contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_my_location),
-                contentDescription = null,
-                tint = Color.Black
-            )
+        MapActivitiesDisplay(modifier=Modifier.align(Alignment.BottomCenter), publicActivities = publicActivities, morePublicActivities = morePublicActivities, CenterOnPoint = {
+            latLng ->
+            cameraPositionState.position =
+                CameraPosition.fromLatLngZoom(latLng, 13f)
+
+        },activityToScroll=activityToScroll, onEvent = onEvent)
+
+        Box(modifier = Modifier.align(Alignment.TopEnd).padding(24.dp)){
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(SocialTheme.colors.uiBackground)
+                    .clickable(onClick = {
+                        cameraPositionState.position =
+                            CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                    }), contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_my_location),
+                    contentDescription = null,
+                    tint = Color.Black
+                )
+            }
         }
+
+
 
     }
 
 
 }
+
+@Composable
+fun MapActivitiesDisplay(activityToScroll:MutableState<Activity?>,
+                         modifier:Modifier,publicActivities: MutableList<Activity>
+                         ,morePublicActivities: MutableList<Activity>
+                         ,CenterOnPoint:(LatLng)->Unit,onEvent:(MapEvent)->Unit) {
+    val lazyListState = rememberLazyListState()
+
+
+    LazyRow(modifier=modifier,
+        state = lazyListState){
+        items(publicActivities){ activity ->
+            MapActivityItem(onClick = {
+                val latLng= LatLng(activity.lat!!,activity.lng!!)
+
+                CenterOnPoint(latLng)},activity=activity, onEvent = onEvent)
+            Spacer(modifier = Modifier.width(16.dp))
+        }
+    }
+
+    // Trigger scrolling when the activityToScroll value changes
+    LaunchedEffect(activityToScroll.value) {
+        val index = publicActivities.indexOf(activityToScroll.value)
+        if (index != -1) {
+            lazyListState.animateScrollToItem(index)
+        }
+    }
+}
+
 
 private fun getBitmapDescriptor(context:Context,id: Int): BitmapDescriptor? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

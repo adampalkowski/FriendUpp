@@ -22,6 +22,7 @@ import java.time.LocalTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.ln
 
 sealed class ActivityEvent {
     object DeleteActivity : ActivityEvent()
@@ -115,11 +116,17 @@ class ActivityViewModel @Inject constructor(
         _location.value=location
     }
     fun getClosestActivities(lat:Double,lng:Double,radius:Double){
+        Log.d("getClosestActimivities","CALL")
+        Log.d("getClosestActimivities",lat.toString())
+        Log.d("getClosestActimivities", lng.toString())
+
         viewModelScope.launch {
             val list_without_removed_activites: ArrayList<Activity> = ArrayList()
             repo.getClosestActivities(lat,lng,radius).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        Log.d("getClosestActimivities","SUCESS")
+                        Log.d("getClosestActimivities",response.data.toString())
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
@@ -142,9 +149,11 @@ class ActivityViewModel @Inject constructor(
                         }
                     }
                     is Response.Failure -> {
+                        Log.d("getClosestActimivities","Failure")
                         _closestActivitiesListState.value = response
                     }
                     is Response.Loading -> {
+                        Log.d("getClosestActimivities","vLoading")
                         _closestActivitiesListState.value = response
                     }
                 }

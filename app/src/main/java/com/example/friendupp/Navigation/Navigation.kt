@@ -1,5 +1,6 @@
 package com.example.friendupp.Navigation
 
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -18,6 +19,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Drawer.drawerGraph
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Login.SplashScreen
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
 import com.example.friendupp.di.ActivityViewModel
@@ -215,6 +218,24 @@ fun NavigationComponent(
                     }
                 }
             })
+            //GET USER LOCATION CALL
+            val context = LocalContext.current
+
+            val mapViewModel = remember { MapViewModel(context) }
+            DisposableEffect(Unit) {
+                mapViewModel.checkLocationPermission(
+                    permissionDenied = {
+                    },
+                    permissionGranted = {
+
+                        mapViewModel.startLocationUpdates()
+                    }
+                )
+
+                onDispose {
+                    mapViewModel.stopLocationUpdates()
+                }
+            }
 
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
@@ -224,7 +245,7 @@ fun NavigationComponent(
                     coroutineScope.launch {
                         scaffoldState.drawerState.open()
                     }
-                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel)
+                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel, mapViewModel =mapViewModel )
                 chatGraph(navController, chatViewModel, currentChat  ,outputDirectory = outputDirectory,
                     executor = executor,)
                 profileGraph(
@@ -249,6 +270,8 @@ fun NavigationComponent(
                 groupGraph(navController, chatViewModel)
                 cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
             }
+
+
 
 
             /* SPLASH SCREEN*/

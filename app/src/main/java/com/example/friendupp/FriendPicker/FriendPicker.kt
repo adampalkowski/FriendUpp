@@ -257,9 +257,8 @@ fun GroupPicker( selectedUsers: List<String>,
         item {
             GroupPickerItem(
                 onClick = {},
-                groupName = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                groupPic = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?" +
-                        "ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
+                groupName = "Football group",
+                groupPic = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSI607P6C5l8VrALoVEh7laR0Tlv2Yr_NUlaQ&usqp=CAU",
                 onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
 
             )
@@ -268,9 +267,8 @@ fun GroupPicker( selectedUsers: List<String>,
         item {
             GroupPickerItem(
                 onClick = {},
-                groupName = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                groupPic = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?" +
-                        "ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
+                groupName = "party team",
+                groupPic = "https://media.npr.org/assets/img/2022/11/04/gettyimages-1183414292-1-_slide-edff8c3fe6afcab5c6457e3c7bd011f5c1745161.jpg",
                 onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
 
             )
@@ -279,9 +277,8 @@ fun GroupPicker( selectedUsers: List<String>,
         item {
             GroupPickerItem(
                 onClick = {},
-                groupName = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                groupPic = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?" +
-                        "ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
+                groupName = "Tenis club",
+                groupPic = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST3fzOMwla8nHm0NpDEnb7wf__M6Y-86hxqA&usqp=CAU",
                 onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
 
             )

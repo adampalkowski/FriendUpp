@@ -260,6 +260,8 @@ fun InviteItem(
 
 }
 
+val url1="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf686xJRtWDvGxXHISwA9QBWLPi-EVW3PFIw&usqp=CAU"
+val url2="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdMOgc-WqbgagnyjIGnPOvsxypn_bNVODFaQ&usqp=CAU"
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun DiscoverComponent() {
@@ -269,14 +271,44 @@ fun DiscoverComponent() {
             item {
                 Spacer(modifier = Modifier.width(24.dp))
             }
-            items(5) {
+            item{
                 var visibility by remember {
                     mutableStateOf(true)
                 }
                 AnimatedVisibility(visible = visibility, exit = scaleOut()) {
                     DiscoverItem(
-                        name = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-                        username = "<MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+                        name = "Anna Clark",
+                        username = "annclark",
+                        pictureUrl = url1,
+                        onAccept = { visibility = !visibility })
+
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+
+            }
+            item{
+                var visibility by remember {
+                    mutableStateOf(true)
+                }
+                AnimatedVisibility(visible = visibility, exit = scaleOut()) {
+                    DiscoverItem(
+                        name = "John Smith",
+                        username = "johnsmith",
+                        pictureUrl = url2,
+                        onAccept = { visibility = !visibility })
+
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+
+            }
+            item{
+                var visibility by remember {
+                    mutableStateOf(true)
+                }
+                AnimatedVisibility(visible = visibility, exit = scaleOut()) {
+                    DiscoverItem(
+                        name = "John Smith",
+                        username = "<John Smith",
                         pictureUrl = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
                         onAccept = { visibility = !visibility })
 
@@ -284,7 +316,6 @@ fun DiscoverComponent() {
                 Spacer(modifier = Modifier.width(16.dp))
 
             }
-
         }
     }
 }

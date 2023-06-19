@@ -202,11 +202,12 @@ class ActivityRepositoryImpl @Inject constructor(
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
         Log.d("getClosestActivities", "DB getClosestActivities")
+        Log.d("getClosestActivities",lat.toString())
+        Log.d("getClosestActivities",lng.toString())
 
         lastVisibleClosestData = null
         val center = GeoLocation(lat, lng)
         val radiusInM = radius
-        Log.d("getClosestActivities", "settings null")
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
@@ -225,8 +226,6 @@ class ActivityRepositoryImpl @Inject constructor(
                 for (task in tasks) {
                     val snap = task.result
 
-
-
                     for (doc in snap!!.documents) {
                         val lat = doc.getDouble("lat")!!
                         val lng = doc.getDouble("lng")!!
@@ -241,7 +240,7 @@ class ActivityRepositoryImpl @Inject constructor(
                     }
                 }
 
-                if (matchingDocs != null && matchingDocs.isNotEmpty()) {
+                if (matchingDocs.isNotEmpty()) {
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()

@@ -161,9 +161,14 @@ fun ProfileDisplayScreen(
                     )
                 }
 
+                Row() {
+                    Spacer(modifier = Modifier.width(24.dp))
                     ProfileDisplayOptions(userOption,
-                    onEvent=onEvent, user_id = user.id)
 
+                        onEvent=onEvent, user_id = user.id)
+
+                }
+        
 
             }
         }
@@ -443,7 +448,8 @@ fun ProfileDisplaySettingsItem(turnOffIcon:Boolean=false,icon:Int=R.drawable.ic_
 
         
     Row(modifier = Modifier
-        .fillMaxWidth().clickable(onClick=onClick)
+        .fillMaxWidth()
+        .clickable(onClick = onClick)
         .padding(vertical = 16.dp, horizontal = 12.dp), horizontalArrangement =Arrangement.Center){
         if(!turnOffIcon){
             Icon(painter = painterResource(id = icon), contentDescription =null,tint=textColor )

@@ -151,12 +151,12 @@ fun RegisterScreen(modifier: Modifier,onEvent:(RegisterEvents)->Unit){
 
             }
         )
-        if(!passwordMatch){
+   /*     if(!passwordMatch){
             Text(modifier=Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                 text = "Passwords don't match",
                 style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Normal, fontSize = 12.sp), color = SocialTheme.colors.error.copy(1f)
             )
-        }
+        }*/
 
 
         Spacer(modifier = Modifier.height(24.dp))

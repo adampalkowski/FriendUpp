@@ -1,5 +1,6 @@
 package com.example.friendupp.Home
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -7,6 +8,7 @@ import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun loadMoreFriendsActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>) {
@@ -71,18 +73,19 @@ fun loadMorePublicActivities(activityViewModel: ActivityViewModel, activities: M
 }
 
 @Composable
-fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>, activitiesExist: MutableState<Boolean>) {
+fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>
+                         , activitiesExist: MutableState<Boolean>,currentLocation:LatLng?) {
+    Log.d("getClosestActimivities","load public ")
 
     //call get activities only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
-            activityViewModel.location.value.let {location->
-                if(location!=null){
-                    activityViewModel.getClosestActivities(location.latitude,location.longitude,  50.0*1000.0)
+                if(currentLocation!=null){
+                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude,
+                        50.0*10000.0f)
                     activitiesFetched.value = true
                 }
-            }
 
         }
     }

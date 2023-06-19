@@ -2,6 +2,7 @@ package com.example.friendupp.di
 
 import android.app.Application
 import android.content.Context
+import com.example.friendupp.BuildConfig.MAPS_API_KEY
 import com.example.friendupp.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -25,6 +26,7 @@ import javax.inject.Named
 import javax.inject.Qualifier
 
 //Names
+
 const val SIGN_IN_REQUEST = "signInRequest"
 const val SIGN_UP_REQUEST = "signUpRequest"
 
@@ -43,15 +45,16 @@ annotation class FirebaseStorageHighRes
 class AppModule {
     @Provides
     fun provideFirebaseAuth() = Firebase.auth
+
     @Provides
     @FirebaseStorageDefault
-    fun provideFirebaseStorage() = Firebase.storage("gs://socialv2-340711.appspot.com/")
+    fun provideFirebaseStorage() = Firebase.storage("gs://friendupp-3ecc2.appspot.com")
     @Provides
     @FirebaseStorageRes
-    fun provideFirebaseStorageRes() = Firebase.storage("gs://socialv2-340711")
+    fun provideFirebaseStorageRes() = Firebase.storage("gs://friendupp-3ecc2/")
     @Provides
     @FirebaseStorageHighRes
-    fun provideFirebaseStorageHighRes() = Firebase.storage("gs://socialv2-340711-8wm0n")
+    fun provideFirebaseStorageHighRes() = Firebase.storage("gs://friendupp-3ecc2-knwji")
 
     @Provides
     fun provideFirebaseFirestore() = Firebase.firestore
@@ -70,7 +73,7 @@ class AppModule {
         .setGoogleIdTokenRequestOptions(
             BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                 .setSupported(true)
-                .setServerClientId(app.getString(R.string.web_client_id))
+                .setServerClientId(app.getString(R.string.default_web_client_id))
                 .setFilterByAuthorizedAccounts(true)
                 .build())
         .setAutoSelectEnabled(true)
@@ -84,7 +87,7 @@ class AppModule {
         .setGoogleIdTokenRequestOptions(
             BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                 .setSupported(true)
-                .setServerClientId(app.getString(R.string.web_client_id))
+                .setServerClientId(app.getString(R.string.default_web_client_id))
                 .setFilterByAuthorizedAccounts(false)
                 .build())
         .build()
@@ -93,7 +96,7 @@ class AppModule {
     fun provideGoogleSignInOptions(
         app: Application
     ) = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(app.getString(R.string.web_client_id))
+        .requestIdToken(app.getString(R.string.default_web_client_id))
         .requestEmail()
         .build()
 

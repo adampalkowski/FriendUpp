@@ -48,17 +48,8 @@ fun activityCard(
     profilePictureUrl: String,
     onExpand:()->Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            contentColor = Color.Transparent,
-            containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(0.dp),
 
-    ) {
-        Column() {
+        Column(Modifier.background(SocialTheme.colors.uiBackground)) {
             Box(modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp, top = 6.dp)) {
@@ -128,7 +119,6 @@ fun activityCard(
             }
         }
 
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,7 +176,7 @@ fun activityItem(
 
 
 @Composable
-fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = Color(0xFFA0A0A0)) {
+fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialTheme.colors.uiBorder) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier

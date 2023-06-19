@@ -254,14 +254,10 @@ fun NavGraphBuilder.createGraph(
                            val lat= currentActivity.value.location!!.latitude
                            val lng=  currentActivity.value.location!!.longitude
                            //Create geohash
-                           val hash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
-                           val geohash: MutableMap<String, Any> = mutableMapOf(
-                               "geohash" to hash,
-                               "lat" to lat,
-                               "lng" to lng
-                           )
+                           val geoHash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
 
-                           currentActivity.value = currentActivity.value.copy(geoHash = geohash)
+
+                           currentActivity.value = currentActivity.value.copy(geoHash = geoHash,lat=lat,lng=lng)
                        }
 
                         createGroup(
