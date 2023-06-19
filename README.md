@@ -37,21 +37,15 @@ https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3
 
 | Camerax | Custom settings | Login |
 | :---------: | :-------------: | :-------------: |
-| ![Screenshot_2023-06-19-15-24-38-047_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2341f2b4-1ebb-4a83-a625-771dca1a4445)
-| ![Screenshot_2023-06-19-15-23-41-862_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/3e145f74-6e48-43a4-882f-9e3ab9cc5402)
-|![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f8f815d-da27-4a1a-ae5c-12a8f3a77eb4)
-|
+| ![Screenshot_2023-06-19-15-24-38-047_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2341f2b4-1ebb-4a83-a625-771dca1a4445)| ![Screenshot_2023-06-19-15-23-41-862_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/3e145f74-6e48-43a4-882f-9e3ab9cc5402)|![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f8f815d-da27-4a1a-ae5c-12a8f3a77eb4)|
 
 | Register | Search |
 | :---------: | :---------: |
-| ![Screenshot_2023-06-19-16-21-21-459_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/6f3f0652-9233-4124-8859-1f1b4ec20be3)
-|![Screenshot_2023-06-19-15-21-46-693_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/4d7b0896-b5ed-4714-bbc5-f7817645e64a) |
-
+| ![Screenshot_2023-06-19-16-21-21-459_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/6f3f0652-9233-4124-8859-1f1b4ec20be3)|![Screenshot_2023-06-19-15-21-46-693_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/4d7b0896-b5ed-4714-bbc5-f7817645e64a) |
 
 | Dark theme | | |
 | :---------: | :---------: | :---------: |
-|![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/f253b581-4f7e-4930-8d48-9b5039febea1)| ![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8a6ae1b6-7d7d-40a3-aa9b-3831047fe1f3)|![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/cd846e3e-8e21-4535-920a-8db940e1faf3)
-|
+|![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/f253b581-4f7e-4930-8d48-9b5039febea1)| ![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8a6ae1b6-7d7d-40a3-aa9b-3831047fe1f3)|![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/cd846e3e-8e21-4535-920a-8db940e1faf3)|
 
 
 
