@@ -46,6 +46,7 @@ fun activityCard(
     creatorUsername: String,
     creatorFullName: String,
     profilePictureUrl: String,
+    expandButton:Boolean=true,
     onExpand:()->Unit
 ) {
 
@@ -88,10 +89,13 @@ fun activityCard(
                                 )
                             )
                         }
-                        IconButton(onClick = onExpand) {
-                            Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription =null,tint=SocialTheme.colors.iconPrimary.copy(0.5f))
+                        if(expandButton){
+                            IconButton(onClick = onExpand) {
+                                Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription =null,tint=SocialTheme.colors.iconPrimary.copy(0.5f))
 
+                            }
                         }
+
                         Spacer(modifier = Modifier.width(24.dp))
                     }
 
@@ -176,14 +180,20 @@ fun activityItem(
 
 
 @Composable
-fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialTheme.colors.uiBorder) {
+fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialTheme.colors.uiBorder,Divider:Boolean=true) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .height(0.5.dp)
-                .width(36.dp)
-                .background(color)
-        )
+        if(Divider) {
+            Box(
+                modifier = Modifier
+                    .height(0.5.dp)
+                    .width(36.dp)
+                    .background(color)
+            )
+       }else{
+            Spacer(modifier = Modifier.width(16.dp))
+
+        }
+
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = getFormattedDateNoSeconds(time),

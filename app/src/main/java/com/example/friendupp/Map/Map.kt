@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.example.friendupp.Home.SocialButtonNormal
 import com.example.friendupp.Home.loadMorePublicActivities
 import com.example.friendupp.Home.loadPublicActivities
 import com.example.friendupp.Map.MapActivityItem
@@ -97,15 +99,14 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
             uiSettings = uiSettings
         ) {
 
-            val bitmap = getBitmapDescriptor(context,R.drawable.ic_pin)
+            val bitmap = getBitmapDescriptor(context,R.drawable.ic_puck)
             selectedLocation.let { selectedLatLng ->
                 if (selectedLatLng != null) {
 
                     MarkerInfoWindow(
                         state = MarkerState(
                             position = selectedLatLng
-                        ),
-                        icon =bitmap ,
+                        )
                     ) {
 
                     }
@@ -130,7 +131,7 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
                 MarkerInfoWindow(alpha=0.8f,
                     state = MarkerState(
                         position = latLng
-                    )
+                    ),icon=bitmap
                 ) {
 
                 }
@@ -145,12 +146,14 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
 
         },activityToScroll=activityToScroll, onEvent = onEvent)
 
-        Box(modifier = Modifier.align(Alignment.TopEnd).padding(24.dp)){
+        Row(modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(24.dp)){
+
             Box(
                 Modifier
-                    .align(Alignment.TopEnd)
                     .size(48.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(SocialTheme.colors.uiBackground)
                     .clickable(onClick = {
                         cameraPositionState.position =
@@ -163,6 +166,38 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
                     tint = Color.Black
                 )
             }
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(SocialTheme.colors.uiBackground)
+                    .clickable(onClick = {
+                        cameraPositionState.position =
+                            CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                    }), contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_refresh_map),
+                    contentDescription = null,
+                    tint = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            SocialButtonNormal(
+                icon = R.drawable.ic_filte_300,
+                onClick = { },
+                false
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            SocialButtonNormal(
+                icon = R.drawable.ic_calendar_300,
+                onClick = {  },
+                false
+            )
+
+
+
         }
 
 

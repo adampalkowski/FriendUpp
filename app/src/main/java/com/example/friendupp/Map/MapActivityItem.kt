@@ -34,49 +34,56 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapActivityItem(onClick:()->Unit,activity: Activity,onEvent:(MapEvent)->Unit) {
-    Box(modifier = Modifier
-        .padding(12.dp)
-        .clickable(onClick = onClick)
-      ){
-            Card(elevation = CardDefaults.cardElevation(8.dp), colors = CardDefaults.cardColors(contentColor = SocialTheme.colors.uiBackground, containerColor = SocialTheme.colors.uiBackground), onClick = onClick, modifier = Modifier  .widthIn(min = 150.dp, max = 350.dp), shape = RoundedCornerShape(12.dp)) {
-                Column() {
+fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent) -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(12.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Card(
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(
+                contentColor = SocialTheme.colors.uiBackground,
+                containerColor = SocialTheme.colors.uiBackground
+            ),
+            onClick = onClick,
+            modifier = Modifier.widthIn(min = 150.dp, max = 350.dp),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column() {
+                Spacer(modifier = Modifier.height(8.dp))
+                TimeIndicator(time = activity.start_time, tags = activity.tags,Divider=false)
 
-            TimeIndicator(time = activity.start_time,tags=activity.tags)
-
-            if(activity.image!=null){
-                Spacer(modifier = Modifier.height(6.dp))
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(activity.image)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription =null,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp))
-                            .heightIn(48.dp, 100.dp)
-                    )
+                if (activity.image != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(activity.image)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = null,
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp))
+                                .heightIn(48.dp, 100.dp)
+                        )
+                    }
                 }
-            }
                 activityCard(
                     title = activity.title,
                     description = activity.description,
                     creatorUsername = activity.creator_username,
-                    creatorFullName = activity.creator_name,
-                    profilePictureUrl =activity.creator_profile_picture
-                , onExpand = {
+                    creatorFullName = activity.creator_name,expandButton=false,
+                    profilePictureUrl = activity.creator_profile_picture, onExpand = {
                         onEvent(MapEvent.PreviewActivity(activity))
                     })
 
-                buttonsRow(modifier = Modifier,onEvent={},id=activity.id,joined=activity.participants_ids.contains(
-                    UserData.user!!.id))
             }
-            }
-
         }
+
+    }
 
 
 }

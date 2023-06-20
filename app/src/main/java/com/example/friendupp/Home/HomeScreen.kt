@@ -789,12 +789,10 @@ fun buttonsRow(modifier: Modifier,
         animationSpec = tween(1000, easing = LinearEasing)
     )
 
-    val bgColor: Color by animateColorAsState(
-        if (switch) Color.Green else SocialTheme.colors.uiBorder,
-        animationSpec = tween(1000, easing = LinearEasing)
-    )
+    val bgColor: Color=SocialTheme.colors.uiBorder
+
     val iconColor: Color by animateColorAsState(
-        if (switch) Color.Green else SocialTheme.colors.iconPrimary,
+        if (switch) SocialTheme.colors.textInteractive else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
     Box(modifier = Modifier.fillMaxWidth().background(SocialTheme.colors.uiBackground)){
@@ -806,11 +804,8 @@ fun buttonsRow(modifier: Modifier,
                 modifier = Modifier
                     .width(32.dp)
                     .height(
-                        if (switch) {
-                            1.dp
-                        } else {
+
                             0.5.dp
-                        }
                     )
                     .background(color = bgColor)
             )
@@ -835,11 +830,8 @@ fun buttonsRow(modifier: Modifier,
                 modifier = Modifier
                     .width(12.dp)
                     .height(
-                        if (switch) {
-                            1.dp
-                        } else {
+
                             0.5.dp
-                        }
                     )
                     .background(color = bgColor)
             )
@@ -863,11 +855,9 @@ fun buttonsRow(modifier: Modifier,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(
-                            if (switch) {
-                                1.dp
-                            } else {
+
                                 0.5.dp
-                            }
+
                         )
                         .background(SocialTheme.colors.uiBorder)
                 )
@@ -902,7 +892,7 @@ fun eButtonSimple(
     iconFilled: Int = R.drawable.ic_bookmark_filled,
 ) {
     val backColor = if (selected) {
-        Color.Green
+        SocialTheme.colors.textInteractive.copy(0.5f)
     } else {
         SocialTheme.colors.uiBorder.copy(0.1f)
     }
