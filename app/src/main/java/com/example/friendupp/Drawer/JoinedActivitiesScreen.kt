@@ -45,6 +45,8 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
@@ -61,6 +63,8 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
                         when(event){
                             is ActivityEvents.Expand->{
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{  }
                         }

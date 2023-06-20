@@ -34,6 +34,7 @@ import com.example.friendupp.model.UserData
 sealed class ActivityEvents{
     class Expand(val activity:Activity):ActivityEvents()
     class Join(val id :String):ActivityEvents()
+    class Leave(val id :String):ActivityEvents()
     class OpenChat(val id :String):ActivityEvents()
 }
 
@@ -169,7 +170,12 @@ fun activityItem(
                         Log.d("ACTIVITYDEBUG","LAUNCH ")
                        onEvent( ActivityEvents.Expand(activity)) }
                 )
-                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=activity.participants_ids.contains(UserData.user!!.id))
+                var joined=activity.participants_ids.contains(UserData.user!!.id)
+                var switch by remember { mutableStateOf(joined) }
+
+                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=switch,joinChanged={it->
+                    switch=it
+                })
 
             }
         }

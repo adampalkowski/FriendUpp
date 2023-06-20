@@ -479,6 +479,10 @@ fun NavGraphBuilder.mainGraph(
                     is SearchEvents.GoBack -> {
                         navController.popBackStack()
                     }
+                    is SearchEvents.DisplayUser -> {
+                        navController.navigate("ProfileDisplay/"+event.id)
+
+                    }
                     is SearchEvents.SearchForUser -> {
                         userViewModel.getUserByUsername(event.username)
                     }

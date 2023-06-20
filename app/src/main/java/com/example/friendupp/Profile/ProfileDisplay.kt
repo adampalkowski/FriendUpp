@@ -219,6 +219,8 @@ fun ProfileDisplayScreen(
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
@@ -235,6 +237,8 @@ fun ProfileDisplayScreen(
                         when(event){
                             is ActivityEvents.Expand->{
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{  }
                         }
@@ -261,10 +265,13 @@ fun ProfileDisplayScreen(
                         // Handle click event
                     },
                     onEvent = { event->
+
                         when(event){
                             is ActivityEvents.Expand->{
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
@@ -282,6 +289,8 @@ fun ProfileDisplayScreen(
                         when(event){
                             is ActivityEvents.Expand->{
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{  }
                         }

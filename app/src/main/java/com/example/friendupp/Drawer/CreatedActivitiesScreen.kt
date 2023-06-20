@@ -51,6 +51,7 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
                                 }
                                 is ActivityEvents.Join->{  }
                                 is ActivityEvents.OpenChat->{ }
+                                is ActivityEvents.Leave->{ }
                             }
                         }
                     )
@@ -67,6 +68,9 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
                                 is ActivityEvents.Expand->{
                                 }
                                 is ActivityEvents.Join->{  }
+                                is ActivityEvents.Join->{  }
+                                is ActivityEvents.Leave->{ }
+
                                 is ActivityEvents.OpenChat->{  }
                             }
                         }

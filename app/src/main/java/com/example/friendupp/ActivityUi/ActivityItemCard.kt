@@ -68,8 +68,8 @@ fun activityItemCard(
                         Log.d("ACTIVITYDEBUG","LAUNCH ")
                         onEvent( ActivityEvents.Expand(activity)) }
                 )
-                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=activity.participants_ids.contains(
-                    UserData.user!!.id))
+                /*buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=activity.participants_ids.contains(
+                    UserData.user!!.id),)*/
             }
 
 

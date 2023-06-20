@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 sealed class SearchEvents{
     object GoBack:SearchEvents()
     class SearchForUser(val username :String):SearchEvents()
+    class DisplayUser(val id :String):SearchEvents()
     class OnInviteAccepted(user: User) : SearchEvents() {
         val user = user
     }
@@ -123,7 +124,7 @@ fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
                     profilePictureUrl = user.pictureUrl.toString(),
                     onAccept = {
                         onEvent(SearchEvents.OnInviteAccepted(user))
-                    })
+                    },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
                 Spacer(modifier = Modifier.width(16.dp))
             }
             items(5) {
@@ -170,14 +171,15 @@ fun InviteItem(
     profilePictureUrl: String,
     username: String,
     name: String,
-    onAccept: () -> Unit = {}
+    onAccept: () -> Unit = {},
+    onClick: () -> Unit
 ) {
 
     val truncatedName = if (name.length > 15) name.substring(0, 15) + "..." else name
     val truncatedUsername =
         if (username.length > 15) username.substring(0, 15) + "..." else username
 
-    Column {
+    Column (Modifier.clickable(onClick=onClick)){
         Box(
             modifier = Modifier
                 .height(1.dp)

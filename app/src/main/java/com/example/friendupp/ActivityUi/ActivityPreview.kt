@@ -69,17 +69,20 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                 .background(color = SocialTheme.colors.uiBackground)){
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 Box(modifier = Modifier.fillMaxWidth()){
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(activity!!.image)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription =null,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(150.dp, 300.dp)
-                    )
+                    if(activity!!.image!=null){
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(activity!!.image)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription =null,
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(150.dp, 300.dp)
+                        )
+                    }
+
                     TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
                     },onSettings={displaySettings=true})
                 }

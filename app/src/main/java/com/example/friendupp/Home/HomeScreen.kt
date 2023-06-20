@@ -154,6 +154,7 @@ fun HomeScreen(
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
                                 is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
+                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
                                 is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                             }
                         }
@@ -171,6 +172,8 @@ fun HomeScreen(
                                 is ActivityEvents.Expand->{
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
+                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+
                                 is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
                                 is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                             }
@@ -200,6 +203,8 @@ fun HomeScreen(
                                 is ActivityEvents.Expand->{
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
+                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+
                                 is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
                                 is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                             }
@@ -218,6 +223,8 @@ fun HomeScreen(
                                 is ActivityEvents.Expand->{
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
+                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+
                                 is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
                                 is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
                             }
@@ -250,116 +257,7 @@ fun HomeScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LiveUserItem(imageUrl: String, text: String = "") {
 
-    Box(
-        modifier = Modifier
-            .height(72.dp)
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "stringResource(R.string.description)",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .border(
-                    BorderStroke(1.dp, SocialTheme.colors.textInteractive),
-                    CircleShape
-                )
-                .border(
-                    BorderStroke(3.dp, SocialTheme.colors.uiBackground),
-                    CircleShape
-                )
-        )
-        if (text.isNotEmpty()) {
-            Card(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                shape = RoundedCornerShape(6.dp),
-                border = BorderStroke(1.dp, SocialTheme.colors.uiBorder)
-            ) {
-                Box(
-                    modifier = Modifier.background(SocialTheme.colors.uiBackground),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-                        text = text,
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
-                            color = SocialTheme.colors.textPrimary.copy(0.8f)
-                        )
-                    )
-                }
-            }
-        }
-
-
-    }
-
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CreateLive(imageUrl: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(CircleShape)
-            .clickable(onClick = onClick), contentAlignment = Alignment.Center
-
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "stringResource(R.string.description)",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .border(
-                    BorderStroke(1.dp, Color.Green),
-                    CircleShape
-                )
-                .border(
-                    BorderStroke(3.dp, SocialTheme.colors.uiBackground),
-                    CircleShape
-                )
-        )
-        Card(
-            shape = RoundedCornerShape(100),
-            colors = CardDefaults.cardColors(
-                contentColor = Color.Transparent,
-                containerColor = Color.Transparent
-            )
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .background(color = Color.Black.copy(0.8f)), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    tint = Color.White,
-                    contentDescription = null
-                )
-            }
-
-        }
-
-    }
-
-}
 
 
 @Composable
@@ -587,89 +485,6 @@ fun SocialButton(icon: Int, onClick: () -> Unit, clicked: Boolean = false) {
 }
 
 
-enum class Option(val label: String, val icon: Int) {
-    FRIENDS("Friends", R.drawable.ic_hand_300),
-    PUBLIC("Public", R.drawable.ic_public_300)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSelected:(Option)->Unit) {
-    val context = LocalContext.current
-    val dividerColor = SocialTheme.colors.uiBorder
-    Row(
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(
-                rememberScrollState()
-            )
-    ) {
-        Spacer(
-            modifier = Modifier
-                .width(24.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        ActionButton(option = Option.FRIENDS,
-            isSelected = selectedOption == Option.FRIENDS,
-            onClick = {onOptionSelected(Option.FRIENDS)})
-        Spacer(
-            modifier = Modifier
-                .width(8.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        ActionButton(option = Option.PUBLIC,
-            isSelected = selectedOption == Option.PUBLIC,
-            onClick = {onOptionSelected(Option.PUBLIC)})
-        Spacer(
-            modifier = Modifier
-                .width(64.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        CreateLive(
-            onClick = { onEvent(HomeEvents.CreateLive) },
-            imageUrl =   "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxw" +
-                    "aG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2073&q=80"
-        )
-        Spacer(
-            modifier = Modifier
-                .width(8.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        LiveUserItem(
-            text = "Quick trip?",
-            imageUrl ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScGQQPJTeRXYxfbXVhLLXPl4aCJCexZ4dS7Q&usqp=CAU"
-
-        )
-        Spacer(
-            modifier = Modifier
-                .width(8.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        LiveUserItem(imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdMOgc-WqbgagnyjIGnPOvsxypn_bNVODFaQ&usqp=CAU")
-        Spacer(
-            modifier = Modifier
-                .width(8.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        LiveUserItem(imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf686xJRtWDvGxXHISwA9QBWLPi-EVW3PFIw&usqp=CAU")
-        Spacer(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-    }
-
-
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionButton(option: Option, isSelected: Boolean, onClick: () -> Unit) {
@@ -777,22 +592,21 @@ fun ActionButton(option: Option, isSelected: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun buttonsRow(modifier: Modifier,
-               onEvent:(ActivityEvents)->Unit,id:String,joined:Boolean=false) {
+               onEvent:(ActivityEvents)->Unit,id:String,joined:Boolean=false,joinChanged: (Boolean)->Unit) {
     var bookmarked by remember { mutableStateOf(false) }
     val bookmarkColor: Color by animateColorAsState(
         if (bookmarked) Color(0xFF00CCDF) else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
-    var switch by remember { mutableStateOf(joined) }
     val alpha: Float by animateFloatAsState(
-        if (switch) 1f else 0f,
+        if (joined) 1f else 0f,
         animationSpec = tween(1000, easing = LinearEasing)
     )
 
     val bgColor: Color=SocialTheme.colors.uiBorder
 
     val iconColor: Color by animateColorAsState(
-        if (switch) SocialTheme.colors.textInteractive else SocialTheme.colors.iconPrimary,
+        if (joined) SocialTheme.colors.textInteractive else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
     Box(modifier = Modifier.fillMaxWidth().background(SocialTheme.colors.uiBackground)){
@@ -810,18 +624,24 @@ fun buttonsRow(modifier: Modifier,
                     .background(color = bgColor)
             )
             eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
-                onEvent(ActivityEvents.Join(id))
-                switch = !switch
-            }, iconColor = iconColor, selected = switch, iconFilled = R.drawable.ic_check_filled)
+                if(joined){
+                    onEvent(ActivityEvents.Leave(id))
+                    joinChanged(false)
+
+                }
+                else{
+                    onEvent(ActivityEvents.Join(id))
+                    joinChanged(true)
+
+                }
+
+            }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_check_filled)
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
                     .height(
-                        if (switch) {
-                            1.dp
-                        } else {
+
                             0.5.dp
-                        }
                     )
                     .background(color = bgColor)
             )
@@ -861,15 +681,6 @@ fun buttonsRow(modifier: Modifier,
                         )
                         .background(SocialTheme.colors.uiBorder)
                 )
-                if (switch) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(fraction = alpha)
-                            .height((alpha * 1).dp)
-                            .background(bgColor)
-                    )
-
-                }
 
 
             }

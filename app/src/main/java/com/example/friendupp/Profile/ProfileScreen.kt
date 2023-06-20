@@ -179,6 +179,8 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
@@ -195,6 +197,8 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         when(event){
                             is ActivityEvents.Expand->{
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{  }
                         }
@@ -226,6 +230,8 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                                 Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{ }
                         }
@@ -243,6 +249,8 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         when(event){
                             is ActivityEvents.Expand->{
                             }
+                            is ActivityEvents.Leave->{ }
+
                             is ActivityEvents.Join->{  }
                             is ActivityEvents.OpenChat->{  }
                         }
@@ -620,6 +628,8 @@ fun ProfileCalendar(modifier:Modifier,joinedActivities:MutableList<Activity>){
                             Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
 
                         }
+                        is ActivityEvents.Leave->{ }
+
                         is ActivityEvents.Join->{  }
                         is ActivityEvents.OpenChat->{ }
                     }

@@ -41,6 +41,7 @@ import com.example.friendupp.Home.Option
 import com.example.friendupp.Login.EmailState
 import com.example.friendupp.Login.PasswordState
 import com.example.friendupp.Login.TextFieldState
+import com.example.friendupp.R
 import com.example.friendupp.model.Activity
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -227,11 +228,42 @@ hour:Int,minute:Int,
     dateState: HorizontalDateState2,
 ) {
 
-    Column {
+    Column (horizontalAlignment = Alignment.CenterHorizontally){
         CreateHeading("Date", icon = com.example.friendupp.R.drawable.ic_date)
         CalendarComponent(dateState)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically){
+        Row(modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(
+                BorderStroke(1.dp, SocialTheme.colors.uiBorder.copy(0.4f)),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .background(SocialTheme.colors.uiBackground)
+            .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically){
 
+            androidx.compose.material.Text(
+                text = "15:00",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = SocialTheme.colors.textPrimary.copy(0.6f)
+            )
+            Spacer(modifier = Modifier.width(24.dp))
+
+            Icon(painter = painterResource(id = R.drawable.ic_long_right), contentDescription = null, tint = SocialTheme.colors.textPrimary.copy(0.8f))
+            Spacer(modifier = Modifier.width(24.dp))
+            androidx.compose.material.Text(
+                text = "17:00",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily = Lexend,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = SocialTheme.colors.textPrimary.copy(0.6f)
+            )
+        }
+       /* Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically){
             Box(
                 Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -256,7 +288,7 @@ hour:Int,minute:Int,
          /*   TimePicker(hour,minute, includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute ->  })
             TimePicker(hour+1,minute,includeAllHours =  !isToday(dateState.selectedYear,dateState.selectedMonth,dateState.selectedDay), onTimeSelected = {hour, minute -> })*/
 
-        }
+        }*/
 
     }
 }
