@@ -35,7 +35,7 @@ https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80
 ## Features
 | Main Screen | Chat | Map |
 | :---------: | :-------------: | :-------------: |
-|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2d355d8e-527b-4cce-8c13-3d3e1c2f20e5)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5b1387e1-dd14-4216-9a50-e2d87d15ea4e)| ![Screenshot_2023-06-19-15-22-51-407_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/060e06d4-834e-4e52-9c52-46e7c25938f9)
+|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2d355d8e-527b-4cce-8c13-3d3e1c2f20e5)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5b1387e1-dd14-4216-9a50-e2d87d15ea4e)|![Screenshot_2023-06-21-13-21-04-848_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/7053a6a6-8486-4c0c-9a9b-6acf0480a357)
 |
 
 | Create | Profile | Settings |
