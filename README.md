@@ -4,8 +4,8 @@ FriendUpp is a dynamic Android application designed to enhance social interactio
 
 ## Table of Contents
 - [Project Overview](#project-overview)
-- [Demo](#demo)
 - [Features](#features)
+- [Demo](#demo)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Technologies Used](#technologies-used)
@@ -15,27 +15,14 @@ FriendUpp is a dynamic Android application designed to enhance social interactio
 ## Project Overview
 FriendUpp is an Android app designed to bring friends closer together by simplifying event planning and promoting social interactions. The app allows users to create personalized events, invite friends, and explore public events in their local area. With features like real-time chat, activity maps, user profiles, groups, activity filters, and live activities, FriendUpp offers a comprehensive platform for users to connect, discover new activities, and enjoy memorable experiences with their social circle.
 
-## Demo
-<h2>Different filter options</h2>
 
 
-https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173
-
-<h2>Flexible jetpack compose layout for tablets aswell</h2>
-
-
-
-https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80cc-d3ed2db7b3aa
-
-
-
-<h2>Flexible jetpack compose designed on Tablet aswell</h2>
 
 
 ## Features
 | Main Screen | Chat | Map |
 | :---------: | :-------------: | :-------------: |
-|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2d355d8e-527b-4cce-8c13-3d3e1c2f20e5)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5b1387e1-dd14-4216-9a50-e2d87d15ea4e)| ![Screenshot_2023-06-19-15-22-51-407_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/060e06d4-834e-4e52-9c52-46e7c25938f9)
+|![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2d355d8e-527b-4cce-8c13-3d3e1c2f20e5)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5b1387e1-dd14-4216-9a50-e2d87d15ea4e)|![Screenshot_2023-06-21-13-21-04-848_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/7053a6a6-8486-4c0c-9a9b-6acf0480a357)
 |
 
 | Create | Profile | Settings |
@@ -53,6 +40,17 @@ https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80
 | Dark theme | | |
 | :---------: | :---------: | :---------: |
 |![Screenshot_2023-06-19-16-29-01-140_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/f253b581-4f7e-4930-8d48-9b5039febea1)| ![Screenshot_2023-06-19-16-28-58-619_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8a6ae1b6-7d7d-40a3-aa9b-3831047fe1f3)|![Screenshot_2023-06-19-16-28-54-284_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/cd846e3e-8e21-4535-920a-8db940e1faf3)|
+
+## Demo
+<h2>Different filter options</h2>
+
+
+https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173
+
+
+<h2>Flexible jetpack compose for tablets aswell</h2>
+
+https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80cc-d3ed2db7b3aa
 
 
 
