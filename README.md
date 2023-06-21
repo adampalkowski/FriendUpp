@@ -21,15 +21,15 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 
 https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173
 
-<h2>Flexible jetpack compose layout for tablets aswell</h2>
 
-
+|tablets | filters |
+| :---------: | :-------------: | 
+|https://github.com/adampalkowski/FriendUpp/assets/50372825/9dd495a2-4fbf-40ed-a3a2-9b7dce270173|https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80cc-d3ed2db7b3aa|
 
 https://github.com/adampalkowski/FriendUpp/assets/50372825/14cae24b-1199-46d5-80cc-d3ed2db7b3aa
 
 
 
-<h2>Flexible jetpack compose designed on Tablet aswell</h2>
 
 
 ## Features
