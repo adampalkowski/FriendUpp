@@ -97,8 +97,15 @@ fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: Mutab
                 activityViewModel.getClosestFilteredActivities(currentLocation.latitude,currentLocation.longitude,tags,
                     50.0*10000.0f)
             }
-        }
+        }else{
+                if(currentLocation!=null){
+                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude, 50.0*10000.0f)
+                    activitiesFetched.value = true
+                }
+            }
     }
+
+
     activityViewModel.closestActivitiesListState.value.let { response ->
         when (response) {
             is Response.Success -> {

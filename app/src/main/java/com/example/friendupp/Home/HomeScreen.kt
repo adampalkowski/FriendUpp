@@ -93,12 +93,9 @@ fun HomeScreen(
     }
 
     if (selectedOption == Option.FRIENDS) {
-
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
         loadMoreFriendsActivities(activityViewModel, moreActivities)
-
     } else {
-
         loadPublicActivities(
             activityViewModel,
             publicActivities,

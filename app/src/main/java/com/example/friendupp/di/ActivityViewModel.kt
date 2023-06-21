@@ -660,5 +660,82 @@ class ActivityViewModel @Inject constructor(
     }
 
 
+    fun getClosestFilteredDateActivities(lat:Double,lng:Double,date:String,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            repo.getClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            Log.d("getClosestActimivities",it.toString())
+                            list_without_removed_activites.add(it)
+                            /* val time_left: String = calculateTimeLeft(
+                                 it.date,
+                                 it.start_time,
+                                 deleteActivity = { event ->
+                                     Log.d("getClosestActivities", "delete activity")
+                                     deleteActivity(it.id)
+                                     it.participants_ids.forEach{user_id->
+                                         deleteActivityFromUser(user_id,it.id)
+                                     }
+                                     list_without_removed_activites.remove(it)
+                                 })
+                             it.time_left = time_left*/
 
+                            Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
+                            _closestActivitiesListState.value =
+                                Response.Success(list_without_removed_activites as List<Activity>)
+                        }
+                    }
+                    is Response.Failure -> {
+                        _closestActivitiesListState.value = response
+                    }
+                    is Response.Loading -> {
+                        _closestActivitiesListState.value = response
+                    }
+                }
+
+
+            }
+        }
+    }
+    fun getMoreClosestFilteredDateActivities(lat:Double,lng:Double,date:String,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            repo.getMoreClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            Log.d("getClosestActimivities",it.toString())
+                            list_without_removed_activites.add(it)
+                            /* val time_left: String = calculateTimeLeft(
+                                 it.date,
+                                 it.start_time,
+                                 deleteActivity = { event ->
+                                     Log.d("getClosestActivities", "delete activity")
+                                     deleteActivity(it.id)
+                                     it.participants_ids.forEach{user_id->
+                                         deleteActivityFromUser(user_id,it.id)
+                                     }
+                                     list_without_removed_activites.remove(it)
+                                 })
+                             it.time_left = time_left*/
+
+                            Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
+                            _closestActivitiesListState.value =
+                                Response.Success(list_without_removed_activites as List<Activity>)
+                        }
+                    }
+                    is Response.Failure -> {
+                        _closestActivitiesListState.value = response
+                    }
+                    is Response.Loading -> {
+                        _closestActivitiesListState.value = response
+                    }
+                }
+
+
+            }
+        }
+    }
 }

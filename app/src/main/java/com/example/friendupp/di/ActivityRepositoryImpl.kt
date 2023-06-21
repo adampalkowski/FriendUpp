@@ -1091,5 +1091,159 @@ class ActivityRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getClosestFilteredDateActivities(
+        lat: Double,
+        lng: Double,
+        date:String,
+        radius: Double,
+    ): Flow<Response<List<Activity>>> = callbackFlow {
+
+
+        Log.d("HOMESCREENTEST", "DB getClosestFilteredActivities")
+        lastVisibleFilteredClosestData = null
+        val center = GeoLocation(lat, lng)
+        val radiusInM = radius
+        Log.d("getMoreClosestActivites", "settings null")
+        val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
+        val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
+        for (b in bounds) {
+            val q = activitiesRef.whereEqualTo("public", true).whereGreaterThanOrEqualTo("start_time", date)
+                .orderBy("geoHash")
+                .startAt(b.startHash)
+                .endAt(b.endHash)
+                .limit(2)
+            tasks.add(q.get())
+        }
+
+        // Collect all the query results together into a single list
+        Tasks.whenAllComplete(tasks)
+            .addOnCompleteListener {
+                val matchingDocs: MutableList<DocumentSnapshot> = ArrayList()
+                for (task in tasks) {
+                    val snap = task.result
+
+
+
+                    for (doc in snap!!.documents) {
+                        val lat = doc.getDouble("lat")!!
+                        val lng = doc.getDouble("lng")!!
+
+                        // We have to filter out a few false positives due to GeoHash
+                        // accuracy, but most will match
+                        val docLocation = GeoLocation(lat, lng)
+                        val distanceInM = GeoFireUtils.getDistanceBetween(docLocation, center)
+                        if (distanceInM <= radiusInM) {
+                            matchingDocs.add(doc)
+                        }
+                    }
+                }
+
+                if (matchingDocs != null && matchingDocs.isNotEmpty()) {
+                    val newActivities = ArrayList<Activity>()
+                    for (document in matchingDocs) {
+                        val activity = document.toObject<Activity>()
+                        Log.d("ActivityRepositoryImpl", activity.toString())
+
+                        if (activity != null) {
+                            newActivities.add(activity)
+                        }
+                    }
+                    lastVisibleFilteredClosestData = matchingDocs[matchingDocs.size - 1]
+
+                    trySend(Response.Success(newActivities))
+
+                }
+            }.addOnFailureListener() {
+                trySend(
+                    Response.Failure(
+                        e = SocialException(
+                            message = "Nearby activity download failure",
+                            e = Exception()
+                        )
+                    )
+                )
+
+            }
+
+        awaitClose {
+        }
+    }
+
+    override suspend fun getMoreFilteredDateClosestActivities(
+        lat: Double,
+        lng: Double,
+        date:String,
+        radius: Double,
+    ): Flow<Response<List<Activity>>> = callbackFlow {
+        val center = GeoLocation(lat, lng)
+        val radiusInM = radius
+        Log.d("HOMESCREENTEST", "DB getMoreFilteredClosestActivities")
+
+
+        val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
+        val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
+        for (b in bounds) {
+            val q = activitiesRef.whereEqualTo("public", true).whereGreaterThanOrEqualTo("start_time", date)
+                .orderBy("geoHash")
+                .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))
+                .endAt(b.endHash)
+                .limit(2)
+            tasks.add(q.get())
+        }
+        // Collect all the query results together into a single list
+        Tasks.whenAllComplete(tasks)
+            .addOnCompleteListener {
+                val matchingDocs: MutableList<DocumentSnapshot> = ArrayList()
+                for (task in tasks) {
+                    val snap = task.result
+
+
+                    for (doc in snap!!.documents) {
+                        val lat = doc.getDouble("lat")!!
+                        val lng = doc.getDouble("lng")!!
+
+                        // We have to filter out a few false positives due to GeoHash
+                        // accuracy, but most will match
+                        val docLocation = GeoLocation(lat, lng)
+                        val distanceInM = GeoFireUtils.getDistanceBetween(docLocation, center)
+                        if (distanceInM <= radiusInM) {
+                            matchingDocs.add(doc)
+                        }
+                    }
+                }
+
+                if (matchingDocs != null && matchingDocs.isNotEmpty()) {
+                    val newActivities = ArrayList<Activity>()
+                    for (document in matchingDocs) {
+                        val activity = document.toObject<Activity>()
+                        Log.d("getMoreClosestActivities", activity.toString())
+
+                        if (activity != null) {
+                            newActivities.add(activity)
+                        }
+                    }
+                    lastVisibleFilteredClosestData = matchingDocs[matchingDocs.size - 1]
+                    loaded_public_activities.addAll(newActivities)
+                    val new_instance = ArrayList<Activity>()
+                    Log.d("ActivityRepositoryImpl", loaded_public_activities.toString())
+                    new_instance.addAll(loaded_public_activities)
+                    trySend(Response.Success(new_instance))
+
+                }
+            }.addOnFailureListener() {
+                trySend(
+                    Response.Failure(
+                        e = SocialException(
+                            message = "Nearby activity download failure",
+                            e = Exception()
+                        )
+                    )
+                )
+
+            }
+
+        awaitClose {
+        }
+    }
 
 }
