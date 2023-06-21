@@ -1,5 +1,8 @@
 package com.example.friendupp.Home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -23,8 +26,9 @@ enum class Option(val label: String, val icon: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSelected:(Option)->Unit) {
-    val context = LocalContext.current
+fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onClick: () -> Unit,
+                 calendarClicked: Boolean,
+                 filterClicked: Boolean,displayFilters:Boolean=true) {
     val dividerColor = SocialTheme.colors.uiBorder
     Row(
         horizontalArrangement = Arrangement.Start,
@@ -40,24 +44,34 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,selectedOption:Option,onOptionSel
                 .height(1.dp)
                 .background(dividerColor)
         )
-        ActionButton(option = Option.FRIENDS,
-            isSelected = selectedOption == Option.FRIENDS,
-            onClick = {onOptionSelected(Option.FRIENDS)})
-        Spacer(
-            modifier = Modifier
-                .width(8.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
-        ActionButton(option = Option.PUBLIC,
-            isSelected = selectedOption == Option.PUBLIC,
-            onClick = {onOptionSelected(Option.PUBLIC)})
-        Spacer(
-            modifier = Modifier
-                .width(64.dp)
-                .height(1.dp)
-                .background(dividerColor)
-        )
+
+        AnimatedVisibility(visible = displayFilters, enter = slideInHorizontally(), exit = slideOutHorizontally()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SocialButtonNormal(
+                    icon = R.drawable.ic_filte_300,
+                    onClick = openFilter,
+                    filterClicked
+                )
+                Spacer(modifier = Modifier
+                    .width(12.dp)
+                    .height(1.dp)
+                    .background(dividerColor))
+                SocialButtonNormal(
+                    icon = R.drawable.ic_calendar_300,
+                    onClick = onClick,
+                    calendarClicked
+                )
+                Spacer(
+                    modifier = Modifier
+                        .width(24.dp)
+                        .height(1.dp)
+                        .background(dividerColor)
+                )
+            }
+
+        }
+
+
         CreateLive(
             onClick = { onEvent(HomeEvents.CreateLive) },
             imageUrl =   "https://images.unsplash.com/photo-1587691592099-24045742c181?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxw" +

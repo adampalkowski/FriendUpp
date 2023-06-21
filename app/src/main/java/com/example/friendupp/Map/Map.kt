@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +60,7 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
 
         }
     }
-    loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation)
+    loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation, selectedTags = SnapshotStateList())
     loadMorePublicActivities(activityViewModel,morePublicActivities)
 
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {

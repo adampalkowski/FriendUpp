@@ -62,7 +62,6 @@ fun FilterList(
     onSelected: (String) -> Unit,
     onDeSelected: (String) -> Unit,
 ) {
-    Log.d("CreateGraphActivity","NAAAILSSSSS"+tags.toString())
     val selectedTags = remember { mutableStateListOf<String>() }
 
     // Whenever the tags list changes, update the selectedTags list accordingly

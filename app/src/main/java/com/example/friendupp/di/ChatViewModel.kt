@@ -236,13 +236,7 @@ class ChatViewModel @Inject constructor(
     fun getMessages(id: String,current_time:String) {
         viewModelScope.launch {
             repo.getMessages(id,current_time).collect{response->
-                when(response){
-                    is Response.Success->{
                         _messagesState.value=response
-
-                    }
-                    else->{}
-                }
 
             }
 
@@ -251,13 +245,7 @@ class ChatViewModel @Inject constructor(
     fun getFirstMessages(id: String,current_time:String) {
         viewModelScope.launch {
             repo.getFirstMessages(id,current_time).collect{response->
-                when(response){
-                    is Response.Success->{
                         _firstMessagesState.value=response
-
-                    }
-                    else->{}
-                }
 
             }
 
@@ -267,14 +255,8 @@ class ChatViewModel @Inject constructor(
     fun getMoreMessages(id: String){
         viewModelScope.launch {
             repo.getMoreMessages(id).collect{response->
-                when(response){
-                    is Response.Success->{
-                        Log.d("ChatViewModel","getMoreMessages response"+response.data.size.toString())
                         _moreMessagesState.value=response
 
-                    }
-                    else->{}
-                }
 
             }
 

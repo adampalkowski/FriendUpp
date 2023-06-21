@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -338,13 +339,16 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedDateTime = dateFormat.format(currentDateTime)
 
+            val currentChatViewModel :ChatViewModel= hiltViewModel()
+
             val chatID = backStackEntry.arguments?.getString("chatID")
             LaunchedEffect(chatID) {
                 if (chatID != null) {
                     Log.d("CHATDEBUG","GET MESSAGES CALLED ")
-                    chatViewModel.getChatCollection(chatID)
+                    currentChatViewModel.getChatCollection(chatID)
                 }
             }
+
 
             ChatContent(
                 modifier = Modifier,
@@ -394,7 +398,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         else -> {}
                     }
 
-                },chatViewModel=chatViewModel)
+                },chatViewModel=currentChatViewModel)
 
             var uri by remember { mutableStateOf<Uri?>(null) }
             val uriFlow = chatViewModel.uri.collectAsState()

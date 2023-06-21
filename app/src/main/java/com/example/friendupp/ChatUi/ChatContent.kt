@@ -228,6 +228,9 @@ fun ChatContent(
 fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMessage>, dataNew: MutableList<ChatMessage>
                  ,chatViewModel:ChatViewModel
                  ,valueExist: MutableState<Boolean>,chatID:String) {
+
+
+    Log.d("CHATCONTENT","LOAD MESSGESS CALLED")
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
@@ -249,8 +252,12 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
                 fristData.addAll(it.data)
                 valueExist.value = true
             }
-            is Response.Loading -> {}
-            is Response.Failure -> {}
+            is Response.Loading -> {
+                fristData.clear()
+            }
+            is Response.Failure -> {
+                fristData.clear()
+            }
             else -> {}
         }
     }
@@ -260,9 +267,12 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
                 data.clear()
                 data.addAll(it.data)
             }
-            is Response.Loading -> {}
-            is Response.Failure -> {}
-            else -> {}
+            is Response.Loading -> {
+                data.clear()
+            }
+            is Response.Failure -> {
+                data.clear()
+            }
         }
     }
     chatViewModel.moreMessagesState.value.let {
@@ -271,8 +281,12 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
                 dataNew.clear()
                 dataNew.addAll(it.data)
             }
-            is Response.Loading -> {}
-            is Response.Failure -> {}
+            is Response.Loading -> {
+                data.clear()
+            }
+            is Response.Failure -> {
+                data.clear()
+            }
             else -> {}
         }
     }

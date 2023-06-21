@@ -1,8 +1,6 @@
 package com.example.friendupp.Home
 
 import android.util.Log
-import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -19,45 +17,35 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
-import com.example.friendupp.ActivityUi.activityItemCard
-import com.example.friendupp.Categories.Category
+import com.example.friendupp.Components.ActionButton
+import com.example.friendupp.Components.ActionButtonDefault
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.CalendarComponent
 import com.example.friendupp.Components.FilterList
-import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
-import com.example.friendupp.ui.theme.Lexend
-import com.example.friendupp.ui.theme.Pacifico
-import com.example.friendupp.ui.theme.SocialTheme
-import kotlinx.coroutines.launch
 import com.example.friendupp.R
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
-import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Pacifico
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.LatLng
-
-import java.net.CookieHandler
+import kotlinx.coroutines.launch
 
 sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
@@ -75,7 +63,7 @@ fun HomeScreen(
     activityViewModel: ActivityViewModel,
     mapViewModel: MapViewModel,
 ) {
-    Log.d("ActivityLoadInDebug", "Screen load")
+
     var calendarView by rememberSaveable {
         mutableStateOf(false)
     }
@@ -100,62 +88,105 @@ fun HomeScreen(
 
     // PUBLIC OR FRIENDS ACTIVITIEWS
     var selectedOption by rememberSaveable { mutableStateOf(Option.FRIENDS) }
-    if(selectedOption==Option.FRIENDS){
-        loadFriendsActivities(activityViewModel,activities, activitiesExist = activitiesExist)
-        loadMoreFriendsActivities(activityViewModel,moreActivities)
+    var selectedTags = remember {
+        mutableStateListOf<String>()
+    }
 
-    }else{
+    if (selectedOption == Option.FRIENDS) {
 
-        loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation)
-        loadMorePublicActivities(activityViewModel,morePublicActivities)
+        loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
+        loadMoreFriendsActivities(activityViewModel, moreActivities)
+
+    } else {
+
+        loadPublicActivities(
+            activityViewModel,
+            publicActivities,
+            activitiesExist = publicActivitiesExist,
+            currentLocation,
+            selectedTags
+        )
+        loadMorePublicActivities(activityViewModel, morePublicActivities)
     }
 
     Column() {
-        TopBar(modifier = Modifier, onClick = {
-            calendarView = !calendarView
-            if (filterView) {
-                filterView = !filterView
-            }
-
-        }, openFilter = {
-            filterView = !filterView
-            if (calendarView) {
-                calendarView = !calendarView
-            }
-        }, calendarView, filterView, openDrawer = { onEvent(HomeEvents.OpenDrawer) })
+        TopBar(
+            modifier = Modifier,
+            onOptionSelected = { option -> selectedOption = option },
+            selectedOption = selectedOption,
+            openDrawer = { onEvent(HomeEvents.OpenDrawer) })
         val lazyListState = rememberLazyListState()
         LazyColumn(
-            modifier ,
+            modifier,
             state = lazyListState
         ) {
 
             item {
-                AnimatedVisibility(visible = calendarView, enter = slideInVertically(animationSpec = tween(800)), exit = slideOutVertically(animationSpec = tween(0)) ) {
+                AnimatedVisibility(
+                    visible = calendarView && selectedOption==Option.PUBLIC,
+                    enter = slideInVertically(animationSpec = tween(800)),
+                    exit = slideOutVertically(animationSpec = tween(0))
+                ) {
                     val state = rememberHorizontalDatePickerState2()
                     CalendarComponent(state)
 
                 }
-                AnimatedVisibility(visible = filterView, enter = slideInVertically(animationSpec = tween(800)), exit = slideOutVertically(animationSpec = tween(0)) ) {
-                    FilterList(tags = SnapshotStateList(), onSelected = {}, onDeSelected = {})
+                AnimatedVisibility(
+                    visible = filterView && selectedOption==Option.PUBLIC,
+                    enter = slideInVertically(animationSpec = tween(800)),
+                    exit = slideOutVertically(animationSpec = tween(0))
+                ) {
+                    FilterList(tags = selectedTags, onSelected =
+                    {
+
+                        Log.d("HOMESCREEN", "addedd tags")
+                        selectedTags.add(it)
+                    }, onDeSelected = {
+                        selectedTags.remove(it)
+                    })
 
                 }
-                OptionPicker(onEvent = onEvent, onOptionSelected = {option->selectedOption=option}, selectedOption = selectedOption)
+                OptionPicker(onEvent = onEvent,
+                    onClick = {
+                        calendarView = !calendarView
+                        if (filterView) {
+                            filterView = !filterView
+                        }
+
+                    },
+                    openFilter = {
+                        filterView = !filterView
+                        if (calendarView) {
+                            calendarView = !calendarView
+                        }
+                    },
+                    calendarClicked = calendarView,
+                    filterClicked = filterView,
+                    displayFilters = selectedOption == Option.PUBLIC
+                )
             }
-            if(selectedOption==Option.FRIENDS){
+
+            if (selectedOption == Option.FRIENDS) {
                 items(activities) { activity ->
                     activityItem(
                         activity,
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
+                        onEvent = { event ->
+                            when (event) {
+                                is ActivityEvents.Expand -> {
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
-                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
-                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
-                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                                is ActivityEvents.Join -> {
+                                    onEvent(HomeEvents.JoinActivity(event.id))
+                                }
+                                is ActivityEvents.Leave -> {
+                                    onEvent(HomeEvents.LeaveActivity(event.id))
+                                }
+                                is ActivityEvents.OpenChat -> {
+                                    onEvent(HomeEvents.OpenChat(event.id))
+                                }
                             }
                         }
                     )
@@ -167,15 +198,21 @@ fun HomeScreen(
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
+                        onEvent = { event ->
+                            when (event) {
+                                is ActivityEvents.Expand -> {
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
-                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+                                is ActivityEvents.Leave -> {
+                                    onEvent(HomeEvents.LeaveActivity(event.id))
+                                }
 
-                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
-                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                                is ActivityEvents.Join -> {
+                                    onEvent(HomeEvents.JoinActivity(event.id))
+                                }
+                                is ActivityEvents.OpenChat -> {
+                                    onEvent(HomeEvents.OpenChat(event.id))
+                                }
                             }
                         }
                     )
@@ -191,22 +228,28 @@ fun HomeScreen(
                         }
                     }
                 }
-            }else{
+            } else {
                 items(publicActivities) { activity ->
                     activityItem(
                         activity,
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
+                        onEvent = { event ->
+                            when (event) {
+                                is ActivityEvents.Expand -> {
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
-                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+                                is ActivityEvents.Leave -> {
+                                    onEvent(HomeEvents.LeaveActivity(event.id))
+                                }
 
-                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
-                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                                is ActivityEvents.Join -> {
+                                    onEvent(HomeEvents.JoinActivity(event.id))
+                                }
+                                is ActivityEvents.OpenChat -> {
+                                    onEvent(HomeEvents.OpenChat(event.id))
+                                }
                             }
                         }
                     )
@@ -218,15 +261,21 @@ fun HomeScreen(
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
+                        onEvent = { event ->
+                            when (event) {
+                                is ActivityEvents.Expand -> {
                                     onEvent(HomeEvents.ExpandActivity(event.activity))
                                 }
-                                is ActivityEvents.Leave->{  onEvent(HomeEvents.LeaveActivity(event.id))}
+                                is ActivityEvents.Leave -> {
+                                    onEvent(HomeEvents.LeaveActivity(event.id))
+                                }
 
-                                is ActivityEvents.Join->{  onEvent(HomeEvents.JoinActivity(event.id))}
-                                is ActivityEvents.OpenChat->{  onEvent(HomeEvents.OpenChat(event.id))}
+                                is ActivityEvents.Join -> {
+                                    onEvent(HomeEvents.JoinActivity(event.id))
+                                }
+                                is ActivityEvents.OpenChat -> {
+                                    onEvent(HomeEvents.OpenChat(event.id))
+                                }
                             }
                         }
                     )
@@ -238,9 +287,13 @@ fun HomeScreen(
                 item {
                     LaunchedEffect(true) {
                         if (activitiesExist.value) {
-                            activityViewModel.location.value.let {location->
-                                if(location!=null){
-                                    activityViewModel.getMoreClosestActivities(location.latitude,location.longitude, 50.0*1000.0)
+                            activityViewModel.location.value.let { location ->
+                                if (location != null) {
+                                    activityViewModel.getMoreClosestActivities(
+                                        location.latitude,
+                                        location.longitude,
+                                        50.0 * 1000.0
+                                    )
                                 }
 
                             }
@@ -257,16 +310,11 @@ fun HomeScreen(
 }
 
 
-
-
-
 @Composable
 fun TopBar(
     modifier: Modifier,
-    onClick: () -> Unit,
-    openFilter: () -> Unit,
-    calendarClicked: Boolean,
-    filterClicked: Boolean, openDrawer: () -> Unit,
+    selectedOption: Option, onOptionSelected: (Option) -> Unit,
+    openDrawer: () -> Unit,
 ) {
     Column() {
         Box(
@@ -276,7 +324,12 @@ fun TopBar(
                 .padding(vertical = 12.dp, horizontal = 24.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SocialButtonNormal(icon = R.drawable.ic_menu_300, onClick = openDrawer)
+                ActionButtonDefault(
+                    icon = R.drawable.ic_menu_300,
+                    isSelected = false,
+                    onClick = openDrawer
+                )
+                /*   SocialButtonNormal(icon = R.drawable.ic_menu_300, onClick = openDrawer)*/
                 Spacer(modifier = Modifier.width(24.dp))
                 Text(
                     text = "FriendUpp",
@@ -288,18 +341,19 @@ fun TopBar(
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
+                ActionButton(option = Option.FRIENDS,
+                    isSelected = selectedOption == Option.FRIENDS,
+                    onClick = { onOptionSelected(Option.FRIENDS) })
+                Spacer(
+                    modifier = Modifier
+                        .width(8.dp)
+                        .height(1.dp)
+                        .background(SocialTheme.colors.uiBorder)
+                )
+                ActionButton(option = Option.PUBLIC,
+                    isSelected = selectedOption == Option.PUBLIC,
+                    onClick = { onOptionSelected(Option.PUBLIC) })
 
-                SocialButtonNormal(
-                    icon = R.drawable.ic_filte_300,
-                    onClick = openFilter,
-                    filterClicked
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                SocialButtonNormal(
-                    icon = R.drawable.ic_calendar_300,
-                    onClick = onClick,
-                    calendarClicked
-                )
 
             }
         }
@@ -485,114 +539,14 @@ fun SocialButton(icon: Int, onClick: () -> Unit, clicked: Boolean = false) {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActionButton(option: Option, isSelected: Boolean, onClick: () -> Unit) {
-    val backColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            SocialTheme.colors.iconInteractive
-        } else {
-            SocialTheme.colors.uiBorder
-        }, tween(300)
-    )
-    val frontColor by animateColorAsState(
-        if (isSelected) {
-            SocialTheme.colors.textInteractive
-        } else {
-            SocialTheme.colors.uiBackground
-        }, tween(300)
-    )
-    var border = if (isSelected) {
-        null
-
-    } else {
-        BorderStroke(1.dp, SocialTheme.colors.uiBorder)
-
-    }
-
-    val iconColor by animateColorAsState(
-        if (isSelected) {
-            Color.White
-        } else {
-            SocialTheme.colors.iconPrimary
-        }, tween(300)
-    )
-
-
-    val interactionSource = MutableInteractionSource()
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val scale = remember {
-        Animatable(1f)
-    }
-
-
-    Box(
-        modifier = Modifier
-            .clickable(interactionSource = interactionSource, indication = null) {
-                coroutineScope.launch {
-                    scale.animateTo(
-                        0.8f,
-                        animationSpec = tween(300),
-                    )
-                    scale.animateTo(
-                        1f,
-                        animationSpec = tween(100),
-                    )
-                    onClick()
-                }
-
-            }
-            .scale(scale = scale.value),
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            modifier = Modifier
-                .height(52.dp)
-                .width(52.dp)
-                .zIndex(1f),
-            colors = CardDefaults.cardColors(
-                contentColor = Color.Transparent,
-                containerColor = backColor
-            ),
-            border = border,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            // Content of the bottom Card
-            Card(
-                modifier = Modifier
-                    .height(52.dp)
-                    .width(52.dp)
-                    .zIndex(2f)
-                    .graphicsLayer {
-                        translationY = -5f
-                    },
-                colors = CardDefaults.cardColors(
-                    contentColor = Color.Transparent,
-                    containerColor = frontColor
-                ),
-                shape = RoundedCornerShape(12.dp),
-                border = border
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = option.icon),
-                        contentDescription = null,
-                        tint = iconColor
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun buttonsRow(modifier: Modifier,
-               onEvent:(ActivityEvents)->Unit,id:String,joined:Boolean=false,joinChanged: (Boolean)->Unit) {
+fun buttonsRow(
+    modifier: Modifier,
+    onEvent: (ActivityEvents) -> Unit,
+    id: String,
+    joined: Boolean = false,
+    joinChanged: (Boolean) -> Unit,
+) {
     var bookmarked by remember { mutableStateOf(false) }
     val bookmarkColor: Color by animateColorAsState(
         if (bookmarked) Color(0xFF00CCDF) else SocialTheme.colors.iconPrimary,
@@ -603,33 +557,37 @@ fun buttonsRow(modifier: Modifier,
         animationSpec = tween(1000, easing = LinearEasing)
     )
 
-    val bgColor: Color=SocialTheme.colors.uiBorder
+    val bgColor: Color = SocialTheme.colors.uiBorder
 
     val iconColor: Color by animateColorAsState(
         if (joined) SocialTheme.colors.textInteractive else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
     )
-    Box(modifier = Modifier.fillMaxWidth().background(SocialTheme.colors.uiBackground)){
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SocialTheme.colors.uiBackground)
+    ) {
         Row(
-            modifier.align(Alignment.TopCenter)
-                .fillMaxWidth()
-               , verticalAlignment = Alignment.CenterVertically) {
+            modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        ) {
             Spacer(
                 modifier = Modifier
                     .width(32.dp)
                     .height(
 
-                            0.5.dp
+                        0.5.dp
                     )
                     .background(color = bgColor)
             )
             eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
-                if(joined){
+                if (joined) {
                     onEvent(ActivityEvents.Leave(id))
                     joinChanged(false)
 
-                }
-                else{
+                } else {
                     onEvent(ActivityEvents.Join(id))
                     joinChanged(true)
 
@@ -641,17 +599,19 @@ fun buttonsRow(modifier: Modifier,
                     .width(12.dp)
                     .height(
 
-                            0.5.dp
+                        0.5.dp
                     )
                     .background(color = bgColor)
             )
-            eButtonSimple(icon = R.drawable.ic_chat_300, onClick = {onEvent(ActivityEvents.OpenChat(id))})
+            eButtonSimple(
+                icon = R.drawable.ic_chat_300,
+                onClick = { onEvent(ActivityEvents.OpenChat(id)) })
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
                     .height(
 
-                            0.5.dp
+                        0.5.dp
                     )
                     .background(color = bgColor)
             )
@@ -676,7 +636,7 @@ fun buttonsRow(modifier: Modifier,
                         .fillMaxWidth()
                         .height(
 
-                                0.5.dp
+                            0.5.dp
 
                         )
                         .background(SocialTheme.colors.uiBorder)

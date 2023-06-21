@@ -50,12 +50,16 @@ class ActivityViewModel @Inject constructor(
 
     private val _closestActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val closestActivitiesListState: State<Response<List<Activity>>> = _closestActivitiesListState
+
     private val _closestFilteredActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val closestFilteredActivitiesListState: State<Response<List<Activity>>> = _closestFilteredActivitiesListState
+
     private val _closestMoreFilteredActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val closestMoreFilteredActivitiesListState: State<Response<List<Activity>>> = _closestMoreFilteredActivitiesListState
+
     private val _moreclosestActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val moreclosestActivitiesListState: State<Response<List<Activity>>> = _moreclosestActivitiesListState
+
     private val _moreclosestActivitiesListStateError = mutableStateOf<Response<Void?>?>(null)
     val moreclosestActivitiesListStateError: State<Response<Void?>?> = _moreclosestActivitiesListStateError
 
@@ -106,6 +110,12 @@ class ActivityViewModel @Inject constructor(
     private val _isActivityInvitesUpdated =
         mutableStateOf<Response<Void?>?>(Response.Success(null))
     val isActivityInvitesUpdated: State<Response<Void?>?> = _isActivityInvitesUpdated
+
+    private val _friendsActivitiesByTagsState = mutableStateOf<Response<List<Activity>>?>(null)
+    val friendsActivitiesByTagsState: State<Response<List<Activity>>?> = _friendsActivitiesByTagsState
+
+
+
     init {
         // getActivities()
     }
@@ -185,15 +195,15 @@ class ActivityViewModel @Inject constructor(
                             it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
-                            _closestMoreFilteredActivitiesListState.value =
+                            _closestActivitiesListState.value =
                                 Response.Success(list_without_removed_activites as List<Activity>)
                         }
                     }
                     is Response.Failure -> {
-                        _closestMoreFilteredActivitiesListState.value = response
+                        _closestActivitiesListState.value = response
                     }
                     is Response.Loading -> {
-                        _closestMoreFilteredActivitiesListState.value = response
+                        _closestActivitiesListState.value = response
                     }
                 }
 
@@ -224,15 +234,15 @@ class ActivityViewModel @Inject constructor(
                             it.time_left = time_left*/
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
-                            _closestFilteredActivitiesListState.value =
+                            _closestActivitiesListState.value =
                                 Response.Success(list_without_removed_activites as List<Activity>)
                         }
                     }
                     is Response.Failure -> {
-                        _closestFilteredActivitiesListState.value = response
+                        _closestActivitiesListState.value = response
                     }
                     is Response.Loading -> {
-                        _closestFilteredActivitiesListState.value = response
+                        _closestActivitiesListState.value = response
                     }
                 }
 

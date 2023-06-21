@@ -74,7 +74,7 @@ fun loadMorePublicActivities(activityViewModel: ActivityViewModel, activities: M
 
 @Composable
 fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>
-                         , activitiesExist: MutableState<Boolean>,currentLocation:LatLng?) {
+                         , activitiesExist: MutableState<Boolean>,currentLocation:LatLng?,selectedTags:MutableList<String>) {
     Log.d("getClosestActimivities","load public ")
 
     //call get activities only once
@@ -82,14 +82,23 @@ fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: Mutab
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
                 if(currentLocation!=null){
-                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude,
-                        50.0*10000.0f)
+                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude, 50.0*10000.0f)
                     activitiesFetched.value = true
                 }
-
         }
     }
-
+    LaunchedEffect(selectedTags.toList()) {
+        if (selectedTags.isNotEmpty()){
+            val tags :ArrayList<String> = arrayListOf()
+            tags.addAll(selectedTags)
+            Log.d("HOMESCREEN","get friends by tags")
+            Log.d("HOMESCREEN",tags.toString())
+            if(currentLocation!=null){
+                activityViewModel.getClosestFilteredActivities(currentLocation.latitude,currentLocation.longitude,tags,
+                    50.0*10000.0f)
+            }
+        }
+    }
     activityViewModel.closestActivitiesListState.value.let { response ->
         when (response) {
             is Response.Success -> {
