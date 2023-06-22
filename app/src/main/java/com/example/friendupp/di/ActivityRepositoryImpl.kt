@@ -23,7 +23,7 @@ import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
+val TAG= "ActivityRepositoryImpl"
 @Singleton
 @ExperimentalCoroutinesApi
 class ActivityRepositoryImpl @Inject constructor(
@@ -49,11 +49,10 @@ class ActivityRepositoryImpl @Inject constructor(
         tags: ArrayList<String>,
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
-        Log.d("HOMESCREENTEST", "DB getClosestFilteredActivities")
+        Log.d(TAG, "getClosestFilteredActivities")
         lastVisibleFilteredClosestData = null
         val center = GeoLocation(lat, lng)
         val radiusInM = radius
-        Log.d("getMoreClosestActivites", "settings null")
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
@@ -92,7 +91,6 @@ class ActivityRepositoryImpl @Inject constructor(
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
-                        Log.d("ActivityRepositoryImpl", activity.toString())
 
                         if (activity != null) {
                             newActivities.add(activity)
@@ -201,9 +199,7 @@ class ActivityRepositoryImpl @Inject constructor(
         lng: Double,
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
-        Log.d("getClosestActivities", "DB getClosestActivities")
-        Log.d("getClosestActivities",lat.toString())
-        Log.d("getClosestActivities",lng.toString())
+        Log.d(TAG, "getClosestActivities")
 
         lastVisibleClosestData = null
         val center = GeoLocation(lat, lng)
@@ -244,7 +240,6 @@ class ActivityRepositoryImpl @Inject constructor(
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
-                        Log.d("getClosestActivities", activity.toString())
 
                         if (activity != null) {
                             newActivities.add(activity)
@@ -1098,17 +1093,17 @@ class ActivityRepositoryImpl @Inject constructor(
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
 
+        Log.d(TAG, "getClosestFilteredDateActivities")
+        Log.d(TAG, date.toString())
 
-        Log.d("HOMESCREENTEST", "DB getClosestFilteredActivities")
         lastVisibleFilteredClosestData = null
         val center = GeoLocation(lat, lng)
         val radiusInM = radius
-        Log.d("getMoreClosestActivites", "settings null")
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public", true).whereGreaterThanOrEqualTo("start_time", date)
-                .orderBy("geoHash")
+            val q = activitiesRef.whereEqualTo("public",true).whereEqualTo("date",date)
+              .orderBy("geoHash")
                 .startAt(b.startHash)
                 .endAt(b.endHash)
                 .limit(2)
@@ -1121,8 +1116,6 @@ class ActivityRepositoryImpl @Inject constructor(
                 val matchingDocs: MutableList<DocumentSnapshot> = ArrayList()
                 for (task in tasks) {
                     val snap = task.result
-
-
 
                     for (doc in snap!!.documents) {
                         val lat = doc.getDouble("lat")!!
@@ -1142,7 +1135,7 @@ class ActivityRepositoryImpl @Inject constructor(
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
-                        Log.d("ActivityRepositoryImpl", activity.toString())
+                        Log.d(TAG, activity.toString())
 
                         if (activity != null) {
                             newActivities.add(activity)
@@ -1165,6 +1158,7 @@ class ActivityRepositoryImpl @Inject constructor(
 
             }
 
+
         awaitClose {
         }
     }
@@ -1183,7 +1177,9 @@ class ActivityRepositoryImpl @Inject constructor(
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public", true).whereGreaterThanOrEqualTo("start_time", date)
+            val q = activitiesRef.whereEqualTo("public",true)
+                .whereGreaterThan("start_time",date)
+                .orderBy("start_time", Query.Direction.ASCENDING)
                 .orderBy("geoHash")
                 .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)

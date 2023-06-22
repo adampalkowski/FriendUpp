@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotMutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,28 +41,42 @@ import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 
 
-sealed class MapEvent{
-    class PreviewActivity(val activity:Activity):MapEvent()
+sealed class MapEvent {
+    class PreviewActivity(val activity: Activity) : MapEvent()
 }
 
 @Composable
-fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEvent:(MapEvent)->Unit) {
+fun MapScreen(
+    mapViewModel: MapViewModel,
+    activityViewModel: ActivityViewModel,
+    onEvent: (MapEvent) -> Unit,
+) {
     val publicActivities = remember { mutableStateListOf<Activity>() }
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
     var publicActivitiesExist = remember { mutableStateOf(false) }
 
     val flow = mapViewModel.currentLocation.collectAsState()
-    val context= LocalContext.current
+    val context = LocalContext.current
     var currentLocation by remember { mutableStateOf(LatLng(50.0, 20.0)) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var datePicked = remember {
+        mutableStateOf<String?>(null)
+    }
     flow.value.let { latLng ->
         if (latLng != null) {
             currentLocation = latLng
 
         }
     }
-    loadPublicActivities(activityViewModel,publicActivities, activitiesExist = publicActivitiesExist,currentLocation, selectedTags = SnapshotStateList())
-    loadMorePublicActivities(activityViewModel,morePublicActivities)
+    loadPublicActivities(
+        activityViewModel,
+        publicActivities,
+        activitiesExist = publicActivitiesExist,
+        currentLocation,
+        selectedTags = SnapshotStateList(),
+        date = datePicked.value
+    )
+    loadMorePublicActivities(activityViewModel, morePublicActivities)
 
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 11f)
@@ -75,7 +90,6 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
             )
         )
     }
-
 
 
     var isMapLoaded by remember { mutableStateOf(false) }
@@ -100,7 +114,7 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
             uiSettings = uiSettings
         ) {
 
-            val bitmap = getBitmapDescriptor(context,R.drawable.ic_puck)
+            val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
             selectedLocation.let { selectedLatLng ->
                 if (selectedLatLng != null) {
 
@@ -115,24 +129,26 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
             }
 
             publicActivities.forEach { activity ->
-                if(activity.lat!=null){
-                    val latLng = LatLng(activity.lat!!,activity.lng!!)
-                    MarkerInfoWindow(alpha=0.8f,
+                if (activity.lat != null) {
+                    val latLng = LatLng(activity.lat!!, activity.lng!!)
+                    MarkerInfoWindow(
+                        alpha = 0.8f,
                         state = MarkerState(
                             position = latLng,
                         )
                     ) {
-                            activityToScroll.value=activity
+                        activityToScroll.value = activity
                     }
                 }
 
             }
 
             currentLocation.let { latLng ->
-                MarkerInfoWindow(alpha=0.8f,
+                MarkerInfoWindow(
+                    alpha = 0.8f,
                     state = MarkerState(
                         position = latLng
-                    ),icon=bitmap
+                    ), icon = bitmap
                 ) {
 
                 }
@@ -140,16 +156,24 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
 
         }
 
-        MapActivitiesDisplay(modifier=Modifier.align(Alignment.BottomCenter), publicActivities = publicActivities, morePublicActivities = morePublicActivities, CenterOnPoint = {
-            latLng ->
-            cameraPositionState.position =
-                CameraPosition.fromLatLngZoom(latLng, 13f)
+        MapActivitiesDisplay(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            publicActivities = publicActivities,
+            morePublicActivities = morePublicActivities,
+            CenterOnPoint = { latLng ->
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(latLng, 13f)
 
-        },activityToScroll=activityToScroll, onEvent = onEvent)
+            },
+            activityToScroll = activityToScroll,
+            onEvent = onEvent
+        )
 
-        Row(modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(24.dp)){
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(24.dp)
+        ) {
 
             Box(
                 Modifier
@@ -193,14 +217,12 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
             Spacer(modifier = Modifier.width(12.dp))
             SocialButtonNormal(
                 icon = R.drawable.ic_calendar_300,
-                onClick = {  },
+                onClick = { },
                 false
             )
 
 
-
         }
-
 
 
     }
@@ -209,20 +231,25 @@ fun MapScreen(mapViewModel:MapViewModel,activityViewModel:ActivityViewModel,onEv
 }
 
 @Composable
-fun MapActivitiesDisplay(activityToScroll:MutableState<Activity?>,
-                         modifier:Modifier,publicActivities: MutableList<Activity>
-                         ,morePublicActivities: MutableList<Activity>
-                         ,CenterOnPoint:(LatLng)->Unit,onEvent:(MapEvent)->Unit) {
+fun MapActivitiesDisplay(
+    activityToScroll: MutableState<Activity?>,
+    modifier: Modifier, publicActivities: MutableList<Activity>,
+    morePublicActivities: MutableList<Activity>,
+    CenterOnPoint: (LatLng) -> Unit, onEvent: (MapEvent) -> Unit,
+) {
     val lazyListState = rememberLazyListState()
 
 
-    LazyRow(modifier=modifier,
-        state = lazyListState){
-        items(publicActivities){ activity ->
+    LazyRow(
+        modifier = modifier,
+        state = lazyListState
+    ) {
+        items(publicActivities) { activity ->
             MapActivityItem(onClick = {
-                val latLng= LatLng(activity.lat!!,activity.lng!!)
+                val latLng = LatLng(activity.lat!!, activity.lng!!)
 
-                CenterOnPoint(latLng)},activity=activity, onEvent = onEvent)
+                CenterOnPoint(latLng)
+            }, activity = activity, onEvent = onEvent)
             Spacer(modifier = Modifier.width(16.dp))
         }
     }
@@ -237,9 +264,9 @@ fun MapActivitiesDisplay(activityToScroll:MutableState<Activity?>,
 }
 
 
-private fun getBitmapDescriptor(context:Context,id: Int): BitmapDescriptor? {
+private fun getBitmapDescriptor(context: Context, id: Int): BitmapDescriptor? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        val vectorDrawable = getDrawable(context,id) as VectorDrawable
+        val vectorDrawable = getDrawable(context, id) as VectorDrawable
         val h = vectorDrawable.intrinsicHeight
         val w = vectorDrawable.intrinsicWidth
         vectorDrawable.setBounds(0, 0, w, h)
@@ -251,6 +278,7 @@ private fun getBitmapDescriptor(context:Context,id: Int): BitmapDescriptor? {
         BitmapDescriptorFactory.fromResource(id)
     }
 }
+
 fun loadIcon(
     context: Context,
     url: String?,

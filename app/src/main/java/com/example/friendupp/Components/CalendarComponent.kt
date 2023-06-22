@@ -19,7 +19,10 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarComponent(state: HorizontalDateState2 = rememberHorizontalDatePickerState2()) {
+fun CalendarComponent(state: HorizontalDateState2 = rememberHorizontalDatePickerState2() , monthIncreased: () -> Unit={},
+                      monthDecreased: () -> Unit={},
+                      yearDecreased: () -> Unit={},
+                      yearIncreased: () -> Unit={}, onDayClick: (Int) -> Unit={}) {
 
     Box(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp))
     {
@@ -32,7 +35,7 @@ fun CalendarComponent(state: HorizontalDateState2 = rememberHorizontalDatePicker
                 modifier = Modifier.fillMaxWidth(),
 
                 ) {
-                HorizontalDatePicker(state)
+                HorizontalDatePicker(state,monthDecreased=monthDecreased, monthIncreased = monthIncreased, yearDecreased = yearDecreased, yearIncreased = yearIncreased, onDayClick = onDayClick)
 
             }
 

@@ -45,7 +45,11 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
@@ -55,7 +59,7 @@ sealed class HomeEvents {
     class LeaveActivity(val id: String) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
 }
-
+val TAG ="HOMESCREENDEBUG"
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -91,6 +95,30 @@ fun HomeScreen(
     var selectedTags = remember {
         mutableStateListOf<String>()
     }
+    var datePicked = remember {
+        mutableStateOf<String?>(null)
+    }
+
+    /**
+    set the Date state and look for cahnges
+     */
+    val state = rememberHorizontalDatePickerState2()
+    var year = state.selectedYear
+    var month = state.selectedMonth
+    var day = state.selectedDay
+    var startDate = LocalDateTime.of(year, month, day, 0, 0)
+    var startOfDay = startDate.with(LocalTime.MIN)
+
+    var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    var formattedDate = startOfDay.format(formatter)
+
+    LaunchedEffect(state.selectedDay, state.selectedMonth, state.selectedYear) {
+        Log.d(TAG,"changed date ")
+        val startDate = LocalDateTime.of(state.selectedYear, state.selectedMonth, state.selectedDay, 0, 0)
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formattedDate = startOfDay.format(formatter)
+        datePicked.value = formattedDate
+    }
 
     if (selectedOption == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
@@ -101,10 +129,12 @@ fun HomeScreen(
             publicActivities,
             activitiesExist = publicActivitiesExist,
             currentLocation,
-            selectedTags
+            selectedTags,
+            date = datePicked.value
         )
         loadMorePublicActivities(activityViewModel, morePublicActivities)
     }
+    val lazyListState = rememberLazyListState()
 
     Column() {
         TopBar(
@@ -112,7 +142,6 @@ fun HomeScreen(
             onOptionSelected = { option -> selectedOption = option },
             selectedOption = selectedOption,
             openDrawer = { onEvent(HomeEvents.OpenDrawer) })
-        val lazyListState = rememberLazyListState()
         LazyColumn(
             modifier,
             state = lazyListState
@@ -120,16 +149,20 @@ fun HomeScreen(
 
             item {
                 AnimatedVisibility(
-                    visible = calendarView && selectedOption==Option.PUBLIC,
+                    visible = calendarView && selectedOption == Option.PUBLIC,
                     enter = slideInVertically(animationSpec = tween(800)),
                     exit = slideOutVertically(animationSpec = tween(0))
                 ) {
-                    val state = rememberHorizontalDatePickerState2()
-                    CalendarComponent(state)
-
+                    CalendarComponent(
+                        state,
+                        monthIncreased = { state.increaseMonth() },
+                        monthDecreased = { state.decreaseMonth() },
+                        yearIncreased = { state.increaseYear() },
+                        yearDecreased = { state.decreaseYear() },
+                        onDayClick = { state.setSelectedDay(it) })
                 }
                 AnimatedVisibility(
-                    visible = filterView && selectedOption==Option.PUBLIC,
+                    visible = filterView && selectedOption == Option.PUBLIC,
                     enter = slideInVertically(animationSpec = tween(800)),
                     exit = slideOutVertically(animationSpec = tween(0))
                 ) {
@@ -143,7 +176,8 @@ fun HomeScreen(
                     })
 
                 }
-                OptionPicker(onEvent = onEvent,
+                OptionPicker(
+                    onEvent = onEvent,
                     onClick = {
                         calendarView = !calendarView
                         if (filterView) {

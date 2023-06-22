@@ -247,8 +247,10 @@ fun NavGraphBuilder.createGraph(
                         val id: String = uuid.toString()
                         currentActivity.value = currentActivity.value.copy(id = id)
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val formatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                         val current = LocalDateTime.now().format(formatter)
-                        currentActivity.value = currentActivity.value.copy(creation_time = current)
+                        val date = LocalDateTime.now().format(formatterDate)
+                        currentActivity.value = currentActivity.value.copy(creation_time = current,date=date)
                        if(currentActivity.value.location!=null){
 
                            val lat= currentActivity.value.location!!.latitude

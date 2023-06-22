@@ -667,7 +667,6 @@ class ActivityViewModel @Inject constructor(
                 when (response) {
                     is Response.Success -> {
                         response.data.forEach {
-                            Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
                             /* val time_left: String = calculateTimeLeft(
                                  it.date,
@@ -682,7 +681,7 @@ class ActivityViewModel @Inject constructor(
                                  })
                              it.time_left = time_left*/
 
-                            Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
+                            Log.d("getClosestActivities","getClosestActivities"+"list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
                                 Response.Success(list_without_removed_activites as List<Activity>)
                         }
@@ -702,7 +701,7 @@ class ActivityViewModel @Inject constructor(
     fun getMoreClosestFilteredDateActivities(lat:Double,lng:Double,date:String,radius:Double){
         viewModelScope.launch {
             val list_without_removed_activites: ArrayList<Activity> = ArrayList()
-            repo.getMoreClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
+            repo.getMoreFilteredDateClosestActivities(lat,lng,date,radius).collect { response ->
                 when (response) {
                     is Response.Success -> {
                         response.data.forEach {

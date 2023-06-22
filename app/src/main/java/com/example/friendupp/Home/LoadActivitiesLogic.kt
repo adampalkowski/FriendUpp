@@ -11,7 +11,10 @@ import com.example.friendupp.model.UserData
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
-fun loadMoreFriendsActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>) {
+fun loadMoreFriendsActivities(
+    activityViewModel: ActivityViewModel,
+    activities: MutableList<Activity>,
+) {
     activityViewModel.moreActivitiesListState.value.let {
         when (it) {
             is Response.Success -> {
@@ -26,7 +29,11 @@ fun loadMoreFriendsActivities(activityViewModel: ActivityViewModel, activities: 
 }
 
 @Composable
-fun loadFriendsActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>, activitiesExist: MutableState<Boolean>) {
+fun loadFriendsActivities(
+    activityViewModel: ActivityViewModel,
+    activities: MutableList<Activity>,
+    activitiesExist: MutableState<Boolean>,
+) {
     //call get activities only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
@@ -49,7 +56,7 @@ fun loadFriendsActivities(activityViewModel: ActivityViewModel, activities: Muta
             }
             is Response.Loading -> {
             }
-            null->{
+            null -> {
 
             }
         }
@@ -58,7 +65,10 @@ fun loadFriendsActivities(activityViewModel: ActivityViewModel, activities: Muta
 
 
 @Composable
-fun loadMorePublicActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>) {
+fun loadMorePublicActivities(
+    activityViewModel: ActivityViewModel,
+    activities: MutableList<Activity>,
+) {
     activityViewModel.moreclosestActivitiesListState.value.let {
         when (it) {
             is Response.Success -> {
@@ -73,39 +83,65 @@ fun loadMorePublicActivities(activityViewModel: ActivityViewModel, activities: M
 }
 
 @Composable
-fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: MutableList<Activity>
-                         , activitiesExist: MutableState<Boolean>,currentLocation:LatLng?,selectedTags:MutableList<String>) {
-    Log.d("getClosestActimivities","load public ")
+fun loadPublicActivities(
+    activityViewModel: ActivityViewModel,
+    activities: MutableList<Activity>,
+    activitiesExist: MutableState<Boolean>,
+    currentLocation: LatLng?,
+    selectedTags: MutableList<String>,
+    date:String?
+) {
 
     //call get activities only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
-                if(currentLocation!=null){
-                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude, 50.0*10000.0f)
-                    activitiesFetched.value = true
-                }
+            if (currentLocation != null) {
+                activityViewModel.getClosestActivities(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    50.0 * 10000.0f
+                )
+                activitiesFetched.value = true
+            }
         }
     }
     LaunchedEffect(selectedTags.toList()) {
-        if (selectedTags.isNotEmpty()){
-            val tags :ArrayList<String> = arrayListOf()
+        if (selectedTags.isNotEmpty()) {
+            val tags: ArrayList<String> = arrayListOf()
             tags.addAll(selectedTags)
-            Log.d("HOMESCREEN","get friends by tags")
-            Log.d("HOMESCREEN",tags.toString())
-            if(currentLocation!=null){
-                activityViewModel.getClosestFilteredActivities(currentLocation.latitude,currentLocation.longitude,tags,
-                    50.0*10000.0f)
+            Log.d("HOMESCREEN", "get friends by tags")
+            Log.d("HOMESCREEN", tags.toString())
+            if (currentLocation != null) {
+                activityViewModel.getClosestFilteredActivities(
+                    currentLocation.latitude, currentLocation.longitude, tags,
+                    50.0 * 10000.0f
+                )
             }
-        }else{
-                if(currentLocation!=null){
-                    activityViewModel.getClosestActivities(currentLocation.latitude,currentLocation.longitude, 50.0*10000.0f)
-                    activitiesFetched.value = true
-                }
+        } else {
+            if (currentLocation != null) {
+                activityViewModel.getClosestActivities(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    50.0 * 10000.0f
+                )
+                activitiesFetched.value = true
             }
+        }
     }
 
+    LaunchedEffect(date) {
+        Log.d("Loadactivities","date changed"+date.toString())
+            if(date!=null){
+                if(currentLocation!=null){
+                    Log.d("Loadactivities","date call")
+                    activityViewModel.getClosestFilteredDateActivities(  currentLocation.latitude
+                        , currentLocation.longitude,date,
+                        50.0 * 10000.0f)
+                }
 
+            }
+    }
     activityViewModel.closestActivitiesListState.value.let { response ->
         when (response) {
             is Response.Success -> {
@@ -120,7 +156,7 @@ fun loadPublicActivities(activityViewModel: ActivityViewModel, activities: Mutab
             }
             is Response.Loading -> {
             }
-            null->{
+            null -> {
 
             }
         }
