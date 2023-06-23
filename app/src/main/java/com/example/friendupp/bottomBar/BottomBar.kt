@@ -99,7 +99,7 @@ fun BottomBar(modifier: Modifier,onClick: (BottomBarOption) -> Unit,selectedOpti
 fun BottomBarButton(modifier:Modifier=Modifier,option: BottomBarOption, isSelected: Boolean, onClick: () -> Unit) {
     val BackColor by animateColorAsState(
         targetValue = if (isSelected) {
-            SocialTheme.colors.textInteractive
+            SocialTheme.colors.textPrimary.copy(0.8f)
         } else {
             Color(0xFFCACACA)
         },
@@ -157,7 +157,8 @@ fun BottomBarButton(modifier:Modifier=Modifier,option: BottomBarOption, isSelect
                 tint =BackColor
             )
             AnimatedVisibility(visible = isSelected, enter = slideInVertically(), exit = slideOutVertically () ) {
-                Text(text = option.label,color=BackColor, style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Light, fontSize = 12.sp))
+                Text(text = option.label,color=BackColor,
+                    style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Medium, fontSize = 12.sp))
 
             }
 

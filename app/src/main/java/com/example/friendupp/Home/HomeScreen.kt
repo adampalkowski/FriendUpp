@@ -14,6 +14,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -30,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Components.ActionButton
@@ -45,6 +52,7 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -60,6 +68,7 @@ sealed class HomeEvents {
     class OpenChat(val id: String) : HomeEvents()
 }
 val TAG ="HOMESCREENDEBUG"
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -136,205 +145,224 @@ fun HomeScreen(
     }
     val lazyListState = rememberLazyListState()
 
-    Column() {
+    val refreshScope = rememberCoroutineScope()
+    var refreshing by remember { mutableStateOf(false) }
+    var itemCount by remember { mutableStateOf(15) }
+    fun refresh() = refreshScope.launch {
+        refreshing = true
+        delay(1000)
+        /*
+        todo call for acitivites
+        */
+        itemCount += 5
+        refreshing = false
+    }
+    val pState = rememberPullRefreshState(refreshing, ::refresh)
+
+        Column{
         TopBar(
             modifier = Modifier,
             onOptionSelected = { option -> selectedOption = option },
             selectedOption = selectedOption,
-            openDrawer = { onEvent(HomeEvents.OpenDrawer) })
-        LazyColumn(
-            modifier,
-            state = lazyListState
-        ) {
-
-            item {
-                AnimatedVisibility(
-                    visible = calendarView && selectedOption == Option.PUBLIC,
-                    enter = slideInVertically(animationSpec = tween(800)),
-                    exit = slideOutVertically(animationSpec = tween(0))
+            openDrawer = { onEvent(HomeEvents.OpenDrawer) } )
+        Box(Modifier.pullRefresh(pState)){
+            Column() {
+                LazyColumn(
+                    modifier,
+                    state = lazyListState
                 ) {
-                    CalendarComponent(
-                        state,
-                        monthIncreased = { state.increaseMonth() },
-                        monthDecreased = { state.decreaseMonth() },
-                        yearIncreased = { state.increaseYear() },
-                        yearDecreased = { state.decreaseYear() },
-                        onDayClick = { state.setSelectedDay(it) })
-                }
-                AnimatedVisibility(
-                    visible = filterView && selectedOption == Option.PUBLIC,
-                    enter = slideInVertically(animationSpec = tween(800)),
-                    exit = slideOutVertically(animationSpec = tween(0))
-                ) {
-                    FilterList(tags = selectedTags, onSelected =
-                    {
+                    item {
+                        AnimatedVisibility(
+                            visible = calendarView && selectedOption == Option.PUBLIC,
+                            enter = slideInVertically(animationSpec = tween(800)),
+                            exit = slideOutVertically(animationSpec = tween(0))
+                        ) {
+                            CalendarComponent(
+                                state,
+                                monthIncreased = { state.increaseMonth() },
+                                monthDecreased = { state.decreaseMonth() },
+                                yearIncreased = { state.increaseYear() },
+                                yearDecreased = { state.decreaseYear() },
+                                onDayClick = { state.setSelectedDay(it) })
+                        }
+                        AnimatedVisibility(
+                            visible = filterView && selectedOption == Option.PUBLIC,
+                            enter = slideInVertically(animationSpec = tween(800)),
+                            exit = slideOutVertically(animationSpec = tween(0))
+                        ) {
+                            FilterList(tags = selectedTags, onSelected =
+                            {
 
-                        Log.d("HOMESCREEN", "addedd tags")
-                        selectedTags.add(it)
-                    }, onDeSelected = {
-                        selectedTags.remove(it)
-                    })
+                                Log.d("HOMESCREEN", "addedd tags")
+                                selectedTags.add(it)
+                            }, onDeSelected = {
+                                selectedTags.remove(it)
+                            })
 
-                }
-                OptionPicker(
-                    onEvent = onEvent,
-                    onClick = {
-                        calendarView = !calendarView
-                        if (filterView) {
-                            filterView = !filterView
+                        }
+                        OptionPicker(
+                            onEvent = onEvent,
+                            onClick = {
+                                calendarView = !calendarView
+                                if (filterView) {
+                                    filterView = !filterView
+                                }
+
+                            },
+                            openFilter = {
+                                filterView = !filterView
+                                if (calendarView) {
+                                    calendarView = !calendarView
+                                }
+                            },
+                            calendarClicked = calendarView,
+                            filterClicked = filterView,
+                            displayFilters = selectedOption == Option.PUBLIC
+                        )
+                    }
+
+                    if (selectedOption == Option.FRIENDS) {
+                        items(activities) { activity ->
+                            activityItem(
+                                activity,
+                                onClick = {
+                                    // Handle click event
+                                },
+                                onEvent = { event ->
+                                    when (event) {
+                                        is ActivityEvents.Expand -> {
+                                            onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        }
+                                        is ActivityEvents.Join -> {
+                                            onEvent(HomeEvents.JoinActivity(event.id))
+                                        }
+                                        is ActivityEvents.Leave -> {
+                                            onEvent(HomeEvents.LeaveActivity(event.id))
+                                        }
+                                        is ActivityEvents.OpenChat -> {
+                                            onEvent(HomeEvents.OpenChat(event.id))
+                                        }
+                                    }
+                                }
+                            )
                         }
 
-                    },
-                    openFilter = {
-                        filterView = !filterView
-                        if (calendarView) {
-                            calendarView = !calendarView
-                        }
-                    },
-                    calendarClicked = calendarView,
-                    filterClicked = filterView,
-                    displayFilters = selectedOption == Option.PUBLIC
-                )
-            }
+                        items(moreActivities) { activity ->
+                            activityItem(
+                                activity,
+                                onClick = {
+                                    // Handle click event
+                                },
+                                onEvent = { event ->
+                                    when (event) {
+                                        is ActivityEvents.Expand -> {
+                                            onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        }
+                                        is ActivityEvents.Leave -> {
+                                            onEvent(HomeEvents.LeaveActivity(event.id))
+                                        }
 
-            if (selectedOption == Option.FRIENDS) {
-                items(activities) { activity ->
-                    activityItem(
-                        activity,
-                        onClick = {
-                            // Handle click event
-                        },
-                        onEvent = { event ->
-                            when (event) {
-                                is ActivityEvents.Expand -> {
-                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        is ActivityEvents.Join -> {
+                                            onEvent(HomeEvents.JoinActivity(event.id))
+                                        }
+                                        is ActivityEvents.OpenChat -> {
+                                            onEvent(HomeEvents.OpenChat(event.id))
+                                        }
+                                    }
                                 }
-                                is ActivityEvents.Join -> {
-                                    onEvent(HomeEvents.JoinActivity(event.id))
-                                }
-                                is ActivityEvents.Leave -> {
-                                    onEvent(HomeEvents.LeaveActivity(event.id))
-                                }
-                                is ActivityEvents.OpenChat -> {
-                                    onEvent(HomeEvents.OpenChat(event.id))
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(64.dp))
+
+                        }
+                        item {
+                            LaunchedEffect(true) {
+                                if (activitiesExist.value) {
+                                    activityViewModel.getMoreActivitiesForUser(UserData.user!!.id)
                                 }
                             }
                         }
-                    )
-                }
+                    } else {
+                        items(publicActivities) { activity ->
+                            activityItem(
+                                activity,
+                                onClick = {
+                                    // Handle click event
+                                },
+                                onEvent = { event ->
+                                    when (event) {
+                                        is ActivityEvents.Expand -> {
+                                            onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        }
+                                        is ActivityEvents.Leave -> {
+                                            onEvent(HomeEvents.LeaveActivity(event.id))
+                                        }
 
-                items(moreActivities) { activity ->
-                    activityItem(
-                        activity,
-                        onClick = {
-                            // Handle click event
-                        },
-                        onEvent = { event ->
-                            when (event) {
-                                is ActivityEvents.Expand -> {
-                                    onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        is ActivityEvents.Join -> {
+                                            onEvent(HomeEvents.JoinActivity(event.id))
+                                        }
+                                        is ActivityEvents.OpenChat -> {
+                                            onEvent(HomeEvents.OpenChat(event.id))
+                                        }
+                                    }
                                 }
-                                is ActivityEvents.Leave -> {
-                                    onEvent(HomeEvents.LeaveActivity(event.id))
-                                }
+                            )
+                        }
 
-                                is ActivityEvents.Join -> {
-                                    onEvent(HomeEvents.JoinActivity(event.id))
+                        items(morePublicActivities) { activity ->
+                            activityItem(
+                                activity,
+                                onClick = {
+                                    // Handle click event
+                                },
+                                onEvent = { event ->
+                                    when (event) {
+                                        is ActivityEvents.Expand -> {
+                                            onEvent(HomeEvents.ExpandActivity(event.activity))
+                                        }
+                                        is ActivityEvents.Leave -> {
+                                            onEvent(HomeEvents.LeaveActivity(event.id))
+                                        }
+
+                                        is ActivityEvents.Join -> {
+                                            onEvent(HomeEvents.JoinActivity(event.id))
+                                        }
+                                        is ActivityEvents.OpenChat -> {
+                                            onEvent(HomeEvents.OpenChat(event.id))
+                                        }
+                                    }
                                 }
-                                is ActivityEvents.OpenChat -> {
-                                    onEvent(HomeEvents.OpenChat(event.id))
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(64.dp))
+
+                        }
+                        item {
+                            LaunchedEffect(true) {
+                                if (activitiesExist.value) {
+                                    activityViewModel.location.value.let { location ->
+                                        if (location != null) {
+                                            activityViewModel.getMoreClosestActivities(
+                                                location.latitude,
+                                                location.longitude,
+                                                50.0 * 1000.0
+                                            )
+                                        }
+
+                                    }
                                 }
                             }
-                        }
-                    )
-                }
-                item {
-                    Spacer(modifier = Modifier.height(64.dp))
-
-                }
-                item {
-                    LaunchedEffect(true) {
-                        if (activitiesExist.value) {
-                            activityViewModel.getMoreActivitiesForUser(UserData.user!!.id)
                         }
                     }
-                }
-            } else {
-                items(publicActivities) { activity ->
-                    activityItem(
-                        activity,
-                        onClick = {
-                            // Handle click event
-                        },
-                        onEvent = { event ->
-                            when (event) {
-                                is ActivityEvents.Expand -> {
-                                    onEvent(HomeEvents.ExpandActivity(event.activity))
-                                }
-                                is ActivityEvents.Leave -> {
-                                    onEvent(HomeEvents.LeaveActivity(event.id))
-                                }
 
-                                is ActivityEvents.Join -> {
-                                    onEvent(HomeEvents.JoinActivity(event.id))
-                                }
-                                is ActivityEvents.OpenChat -> {
-                                    onEvent(HomeEvents.OpenChat(event.id))
-                                }
-                            }
-                        }
-                    )
-                }
 
-                items(morePublicActivities) { activity ->
-                    activityItem(
-                        activity,
-                        onClick = {
-                            // Handle click event
-                        },
-                        onEvent = { event ->
-                            when (event) {
-                                is ActivityEvents.Expand -> {
-                                    onEvent(HomeEvents.ExpandActivity(event.activity))
-                                }
-                                is ActivityEvents.Leave -> {
-                                    onEvent(HomeEvents.LeaveActivity(event.id))
-                                }
-
-                                is ActivityEvents.Join -> {
-                                    onEvent(HomeEvents.JoinActivity(event.id))
-                                }
-                                is ActivityEvents.OpenChat -> {
-                                    onEvent(HomeEvents.OpenChat(event.id))
-                                }
-                            }
-                        }
-                    )
-                }
-                item {
-                    Spacer(modifier = Modifier.height(64.dp))
-
-                }
-                item {
-                    LaunchedEffect(true) {
-                        if (activitiesExist.value) {
-                            activityViewModel.location.value.let { location ->
-                                if (location != null) {
-                                    activityViewModel.getMoreClosestActivities(
-                                        location.latitude,
-                                        location.longitude,
-                                        50.0 * 1000.0
-                                    )
-                                }
-
-                            }
-                        }
-                    }
                 }
             }
-
-
+            PullRefreshIndicator(refreshing, pState, Modifier.align(Alignment.TopCenter), backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.textPrimary)
         }
+
     }
 
 
@@ -347,12 +375,11 @@ fun TopBar(
     selectedOption: Option, onOptionSelected: (Option) -> Unit,
     openDrawer: () -> Unit,
 ) {
-    Column() {
         Box(
             modifier
                 .fillMaxWidth()
                 .background(SocialTheme.colors.uiBackground)
-                .padding(vertical = 12.dp, horizontal = 24.dp)
+                .padding(vertical = 12.dp, horizontal = 24.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ActionButtonDefault(
@@ -389,7 +416,6 @@ fun TopBar(
             }
         }
 
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -577,6 +603,7 @@ fun buttonsRow(
     id: String,
     joined: Boolean = false,
     joinChanged: (Boolean) -> Unit,
+    profilePictures :HashMap<String,String>
 ) {
     var bookmarked by remember { mutableStateOf(false) }
     val bookmarkColor: Color by animateColorAsState(
@@ -655,27 +682,44 @@ fun buttonsRow(
                 selected = bookmarked,
                 iconFilled = R.drawable.ic_bookmark_filled
             )
-
-
-            Box(
+            Spacer(
                 modifier = Modifier
                     .weight(1f)
-                    .height(4.dp), contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(
+                    .height(
 
-                            0.5.dp
+                        0.5.dp
+                    )
+                    .background(color = bgColor)
+            )
+            Row(      horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
+                profilePictures.values.toList().take(4).reversed().forEachIndexed { index, it ->
+                    AsyncImage(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .zIndex(profilePictures.values.toList().size - index.toFloat()),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(it)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(R.drawable.ic_profile_300),
+                        contentDescription = "participant picture",
+                        contentScale = ContentScale.Crop,
 
                         )
-                        .background(SocialTheme.colors.uiBorder)
-                )
-
-
+                }
             }
 
+
+            Spacer(
+                modifier = Modifier
+                    .width(24.dp)
+                    .height(
+
+                        0.5.dp
+                    )
+                    .background(color = bgColor)
+            )
 
         }
     }

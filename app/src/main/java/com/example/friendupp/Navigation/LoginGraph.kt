@@ -37,6 +37,7 @@ import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.OneTapResponse
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -144,78 +145,81 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                     }
                 }
             )
-            LoginScreen(
-                modifier = Modifier,
-                onEvent = {event->
-                          when(event) {
-                              is LoginEvents.GoBack->{
-                                  navController.popBackStack()
-                              }
-                              is LoginEvents.Login->{
-                                  authViewModel.signin(event.email,event.password)
-                              }
-                              is LoginEvents.Register->{
-                                  navController.navigate("Registration")
-                              }
-                              is LoginEvents.GoToHome->{
-                                  navController.navigate("Home")
-                              }
-                              is LoginEvents.LoginWithGoogle->{
-                                  authViewModel.oneTapSignIn()
-                              }
-                              else->{}
-                          }
-                },authViewModel,
-           )
+            Box(modifier = Modifier.fillMaxSize()){
+                LoginScreen(
+                    modifier = Modifier,
+                    onEvent = {event->
+                        when(event) {
+                            is LoginEvents.GoBack->{
+                                navController.popBackStack()
+                            }
+                            is LoginEvents.Login->{
+                                authViewModel.signin(event.email,event.password)
+                            }
+                            is LoginEvents.Register->{
+                                navController.navigate("Registration")
+                            }
+                            is LoginEvents.GoToHome->{
+                                navController.navigate("Home")
+                            }
+                            is LoginEvents.LoginWithGoogle->{
+                                authViewModel.oneTapSignIn()
+                            }
+                            else->{}
+                        }
+                    },authViewModel,
+                )
 
-            /* wait for login success then go to validate*/
-            loginFLow.value?.let {
-                when(it){
-                    is Response.Success->{
-                        userViewModel.validateUser(it.data)
-                        userFlow.value.let {
-                                validationResponse ->
-                            when(validationResponse){
-                                is Response.Success->{
-                                    if(validationResponse.data){
-                                        LaunchedEffect(Unit){
-                                            /*sucessfully validated user */
-                                            Log.d(TAG,"Login success validation")
+                /* wait for login success then go to validate*/
+                loginFLow.value?.let {
+                    when(it){
+                        is Response.Success->{
+                            userViewModel.validateUser(it.data)
+                            userFlow.value.let {
+                                    validationResponse ->
+                                when(validationResponse){
+                                    is Response.Success->{
+                                        if(validationResponse.data){
+                                            LaunchedEffect(Unit){
+                                                /*sucessfully validated user */
+                                                Log.d(TAG,"Login success validation")
 
-                                            navController.navigate("Home")
-                                        }
-                                    }else{
-                                        /*user doestn have username assigned*/
-                                        LaunchedEffect(Unit){
-                                            Log.d(TAG,"Login no username")
-                                            userViewModel.resetUserValidation()
-                                            navController.navigate("pickUsername")
+                                                navController.navigate("Home")
+                                            }
+                                        }else{
+                                            /*user doestn have username assigned*/
+                                            LaunchedEffect(Unit){
+                                                Log.d(TAG,"Login no username")
+                                                userViewModel.resetUserValidation()
+                                                navController.navigate("pickUsername")
+                                            }
                                         }
                                     }
+                                    is Response.Failure->{
+                                        val context = LocalContext.current
+                                        userViewModel.resetUserValidation()
+                                        Toast.makeText(context,"Failed to validate user code 102",
+                                            Toast.LENGTH_LONG).show()
+                                        /*user not inDB*/
+                                    }
+                                    else->{}
                                 }
-                                is Response.Failure->{
-                                    val context = LocalContext.current
-                                    userViewModel.resetUserValidation()
-                                    Toast.makeText(context,"Failed to validate user code 102",
-                                        Toast.LENGTH_LONG).show()
-                                    /*user not inDB*/
-                                }
-                                else->{}
                             }
-                        }
 
+                        }
+                        is Response.Loading ->{
+                            CircularProgressIndicator(Modifier.align(Alignment.Center), color = SocialTheme.colors.textPrimary)
+                        }
+                        is Response.Failure ->{
+                            val context = LocalContext.current
+                            Toast.makeText(context,"Failed to login, account doesn't exist, check if input email and password are correct.",Toast.LENGTH_LONG).show()
+                            authViewModel.resetLoginFlow()
+                        }
+                        else->{}
                     }
-                    is Response.Loading ->{
-                        CircularProgressIndicator()
-                    }
-                    is Response.Failure ->{
-                        val context = LocalContext.current
-                        Toast.makeText(context,"Failed to login, account doesn't exist, check if input email and password are correct.",Toast.LENGTH_LONG).show()
-                        authViewModel.resetLoginFlow()
-                    }
-                    else->{}
                 }
             }
+
         }
         composable("Splash_screen", enterTransition = {
             when (initialState.destination.route) {

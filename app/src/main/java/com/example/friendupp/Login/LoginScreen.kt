@@ -101,7 +101,7 @@ fun LoginScreen (modifier: Modifier,onEvent:(LoginEvents)->Unit,authViewModel:Au
             }
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Card(modifier = Modifier, onClick = { onEvent(LoginEvents.Login(emailState.text,passwordState.text)) }, shape = RoundedCornerShape(8.dp)) {
+        Card(modifier = Modifier, onClick = { onEvent(LoginEvents.Login(emailState.text.trim(),passwordState.text.trim())) }, shape = RoundedCornerShape(8.dp)) {
             Box(modifier = Modifier.background(SocialTheme.colors.textInteractive), contentAlignment = Alignment.Center){
                 Text(modifier=modifier.padding(vertical = 12.dp, horizontal = 120.dp),text = "Sign in", style = TextStyle(
                     fontFamily = Lexend,

@@ -65,7 +65,6 @@ fun MapScreen(
     flow.value.let { latLng ->
         if (latLng != null) {
             currentLocation = latLng
-
         }
     }
     loadPublicActivities(

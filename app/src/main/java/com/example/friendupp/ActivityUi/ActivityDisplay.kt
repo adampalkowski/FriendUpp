@@ -175,7 +175,7 @@ fun activityItem(
 
                 buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=switch,joinChanged={it->
                     switch=it
-                })
+                },activity.participants_profile_pictures)
 
             }
         }

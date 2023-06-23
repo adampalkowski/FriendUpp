@@ -1,5 +1,6 @@
 package com.example.friendupp.Settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -50,18 +51,29 @@ fun LanguageScreen(onEvent:(LanguageEvents)->Unit){
     Column() {
         ScreenHeading(title = "Language", backButton = true, onBack = {onEvent(LanguageEvents.GoBack)}) { }
         Spacer(modifier = Modifier.height(24.dp))
-        languages.forEach { language ->
-            LanguageItem(
-                label = language.label,
-                onClick = {},
-                selected = selectedLanguage.value == language,
-                onSelected = { isSelected ->
-                    if (isSelected) {
-                        selectedLanguage.value = language
-                    }
+        Box(modifier = Modifier.fillMaxSize()){
+            Column() {
+                languages.forEach { language ->
+                    LanguageItem(
+                        label = language.label,
+                        onClick = {},
+                        selected = selectedLanguage.value == language,
+                        onSelected = { isSelected ->
+                            if (isSelected) {
+                                selectedLanguage.value = language
+                            }
+                        }
+                    )
                 }
-            )
+            }
+
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(SocialTheme.colors.uiBorder.copy(0.4f))){
+                Text(text = "Different languages coming soon", style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 18.sp), modifier = Modifier.align(Alignment.Center))
+            }
         }
+
     }
 }
 

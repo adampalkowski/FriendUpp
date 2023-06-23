@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.Components.ActionButtonDefault
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -38,6 +39,7 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Profile.ProfileDisplaySettingsItem
 import com.example.friendupp.Profile.ProfilePickerItem
 import com.example.friendupp.Profile.TagDivider
+import com.example.friendupp.TimeFormat.getFormattedDateNoSeconds
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -61,14 +63,19 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
     var displaySettings by remember {
         mutableStateOf(false)
     }
-    activityData.value.let {activity->
+    var displayMap by remember {
+        mutableStateOf(false)
+    }
 
+    activityData.value.let {activity->
         Box(
             Modifier
                 .fillMaxSize()
                 .background(color = SocialTheme.colors.uiBackground)){
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                Box(modifier = Modifier.fillMaxWidth()){
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(0.dp, 300.dp)){
                     if(activity!!.image!=null){
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -78,13 +85,24 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                             contentDescription =null,
                             contentScale = ContentScale.FillWidth,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(150.dp, 300.dp)
+                                .fillMaxSize()
+
                         )
+                    }else if (activity.lat!=null){
+                        displayMap=true
+                    }
+                    if(displayMap){
+                        ActivityPreviewLocation(Modifier.fillMaxSize(),LatLng(activity.lat!!,activity.lng!!))
                     }
 
                     TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
-                    },onSettings={displaySettings=true})
+                    },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
+                    {
+                        displayMap=true
+                    }, closeMap = {
+                        displayMap=false
+
+                    },mapIsDisplay=displayMap,imageAvaiable=activity.image!=null)
                 }
 
                     Column(    modifier = Modifier
@@ -101,7 +119,18 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 
                         TagDivider()
                         Spacer(modifier = Modifier.height(12.dp))
-                        ActivityPreviewOption()
+                        Spacer(modifier = Modifier
+                            .height(1.dp)
+                            .fillMaxWidth()
+                            .background(SocialTheme.colors.uiBorder.copy(0.5f)))
+                        DatePreview(activity.start_time,activity.end_time)
+                        Spacer(modifier = Modifier
+                            .height(1.dp)
+                            .fillMaxWidth()
+                            .background(SocialTheme.colors.uiBorder.copy(0.5f)))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures)
+                       /* ActivityPreviewOption()*/
 
                     }
 
@@ -125,6 +154,44 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                 })
         }
     }
+}
+
+@Composable
+fun ParticipantsPreview(participantsIds: ArrayList<String>, participantsUsernames: HashMap<String, String>, participantsProfilePictures: HashMap<String, String>) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painter = painterResource(id = R.drawable.ic_group), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
+        Spacer(modifier = Modifier.width(24.dp))
+        Column() {
+            Text(text ="Participants", style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(painter = painterResource(id = R.drawable.arrow_right), contentDescription =null , tint = SocialTheme.colors.iconPrimary)
+
+    }
+
+}
+
+@Composable
+fun DatePreview(startTime: String, endTime: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painter = painterResource(id = R.drawable.ic_date), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
+        Spacer(modifier = Modifier.width(24.dp))
+        Column() {
+            Text(text ="From: "+ getFormattedDateNoSeconds(startTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text ="To: "+ getFormattedDateNoSeconds(endTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+            
+        }
+        
+    }
+    
 }
 
 @Composable
@@ -181,7 +248,6 @@ fun ActivityPreviewOption() {
             DataAndTimeComponent()
         }
         AnimatedVisibility(visible = ifLocation) {
-            ActivityPreviewLocation(LatLng(50.0,20.0))
         }
         AnimatedVisibility(visible = ifParticipants) {
         }
@@ -267,12 +333,27 @@ fun ActivityInformation(name:String,username:String,profilePictureUrl:String,des
 }
 
 @Composable
-fun TopButtons(modifier:Modifier=Modifier,onClose: () -> Unit, onSettings: () -> Unit) {
+fun TopButtons(modifier:Modifier=Modifier,onClose: () -> Unit, onSettings: () -> Unit
+               ,mapAvailable:Boolean,closeMap:()->Unit,openMap:()->Unit,mapIsDisplay:Boolean,imageAvaiable:Boolean) {
     Row(modifier = modifier
         .fillMaxWidth()
         .padding(vertical = 24.dp, horizontal = 24.dp)
-        .background(Color.Transparent), horizontalArrangement = Arrangement.SpaceBetween ){
+        .background(Color.Transparent) ){
         TransButton(onClick=onClose,icon=R.drawable.ic_x)
+        Spacer(modifier = Modifier.weight(1f))
+        if(mapAvailable){
+            if(mapIsDisplay){
+                if(imageAvaiable){
+                    TransButton(onClick=closeMap,icon=R.drawable.ic_image_300)
+
+                }
+            }else{
+                TransButton(onClick=openMap,icon=R.drawable.ic_location)
+
+            }
+
+        }
+        Spacer(modifier = Modifier.width(16.dp))
         TransButton(onClick=onSettings,icon=R.drawable.ic_more)
     }
 }
@@ -296,20 +377,34 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
     var joined by remember { mutableStateOf(false) }
 
     Column(modifier.background(Color.Transparent)) {
-        Card(elevation = CardDefaults.cardElevation(4.dp), shape = RoundedCornerShape(100.dp), colors = CardDefaults.cardColors(contentColor = SocialTheme.colors.uiBackground, containerColor = SocialTheme.colors.uiBackground)) {
-            Row( modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center){
+            Row( modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center){
+                Spacer(modifier = Modifier.height(1.dp).weight(1f).background(SocialTheme.colors.uiBorder))
+                ActionButtonDefault(
+                    icon = R.drawable.ic_check_300,
+                    isSelected = false,
+                    onClick =  {joined=!joined}
+                )
+               /* ActivityPreviewButtonRowItem(icon=R.drawable.ic_check_300, onClick = {joined=!joined}, selected = joined )*/
+                Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
+                ActionButtonDefault(
+                    icon = R.drawable.ic_chat_300,
+                    isSelected = false,
+                    onClick =  {joined=!joined}
+                )
+              /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
+                Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
 
-                ActivityPreviewButtonRowItem(icon=R.drawable.ic_check_300, onClick = {joined=!joined}, selected = joined )
-                Spacer(modifier = Modifier.width(24.dp))
-                ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})
-                Spacer(modifier = Modifier.width(24.dp))
-
-                ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)
-
-
+                ActionButtonDefault(
+                    icon = R.drawable.ic_bookmark_300,
+                    isSelected = false,
+                    onClick =  {joined=!joined}
+                )
+          /*      ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)*/
+                Spacer(modifier = Modifier.height(1.dp).width(24.dp).background(SocialTheme.colors.uiBorder))
 
             }
-        }
         Spacer(modifier = Modifier.height(24.dp))
     }
 
@@ -435,22 +530,7 @@ fun DateItem(month: String, dayNumber: String, dayLabel: String) {
 
 
 @Composable
-fun ActivityPreviewLocation(latLng: LatLng) {
-        LocationPicker(latLng)
-}
-@Composable
-fun LocationPicker(latLng:LatLng) {
-    var extend by rememberSaveable {
-        mutableStateOf(false)
-
-    }
-    BackHandler(true) {
-        if(extend){
-            extend=!extend
-        }else{
-
-        }
-    }
+fun ActivityPreviewLocation(modifier:Modifier,latLng: LatLng) {
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(latLng, 11f)
     }
@@ -470,78 +550,37 @@ fun LocationPicker(latLng:LatLng) {
     }
 
     val configuration = LocalConfiguration.current
-    val animateHeight by animateDpAsState(
-        targetValue = if (extend) configuration.screenHeightDp.dp - 200.dp else 300.dp,
-        animationSpec = tween(700)
-    )
 
-    val mapModifier = Modifier
-        .padding(horizontal = if (extend) 6.dp else 24.dp)
-        .clip(RoundedCornerShape(24.dp))
-        .height(animateHeight)
 
     val locationPicker = rememberSaveable {
         mutableStateOf<LatLng?>(null)
     }
 
-    Box(modifier = mapModifier){
         GoogleMap(
-            Modifier.fillMaxSize(), cameraPositionState,
+            modifier.fillMaxSize(), cameraPositionState,
             properties = properties, onMapLoaded = {
                 isMapLoaded = true
             }, onMapLongClick = { latLng ->
-                locationPicker.value=latLng
 
             }, onMapClick = {
             },
             uiSettings = uiSettings
         ) {
-            locationPicker.value.let {
-                if (it!=null){
                     MarkerInfoWindow(
                         zIndex = 0.5f,
                         state = MarkerState(
-                            position = locationPicker.value!!
+                            position = latLng
                         )
 
                     ) {
 
-
                     }
-                }
-
-            }
 
 
         }
-        Box(modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(end = 12.dp, top = 12.dp)
-            .clip(
-                CircleShape
-            )
-            .background(Color.Black.copy(0.5f))
-            .clickable(onClick = { extend = !extend })){
-            Icon(modifier = Modifier.padding(6.dp), painter = painterResource(id = R.drawable.ic_expand), contentDescription =null, tint = Color.White.copy(0.8f) )
-        }
 
-        locationPicker.value.let {
-            if (it!=null){
-                Box(modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(bottom = 12.dp, start = 12.dp)
-                    .clip(
-                        RoundedCornerShape(8.dp)
-                    )
-                    .background(Color.Black.copy(0.5f))
-                    .clickable(onClick = { locationPicker.value = null })){
-                    Text(modifier = Modifier.padding(6.dp), text = "Remove marker", style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 16.sp), color = Color.White)
-                }
-            }}
 
-    }
 }
-
 
 @Composable
 fun ActivityPreviewCustomLocation(customLocation:String){
