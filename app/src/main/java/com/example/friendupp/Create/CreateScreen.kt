@@ -30,6 +30,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.*
+import com.example.friendupp.Components.Calendar.HorizontalDatePicker
 import com.example.friendupp.Components.Calendar.HorizontalDateState2
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.TimePicker.TimeState
@@ -218,13 +219,8 @@ fun DateAndTime(startTimeState: TimeState,endTimeState: TimeState,
     dateState: HorizontalDateState2,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CreateHeading("Date", icon = com.example.friendupp.R.drawable.ic_date)
-        CalendarComponent(dateState    ,
-            monthIncreased = { dateState.increaseMonth() },
-            monthDecreased = { dateState.decreaseMonth() },
-            yearIncreased = { dateState.increaseYear() },
-            yearDecreased = { dateState.decreaseYear() },
-            onDayClick = { dateState.setSelectedDay(it) })
+        CreateHeading("Date & time", icon = com.example.friendupp.R.drawable.ic_date)
+
         TimeComponent(Modifier.fillMaxWidth(),dateState,startTimeState,endTimeState)
 
     }

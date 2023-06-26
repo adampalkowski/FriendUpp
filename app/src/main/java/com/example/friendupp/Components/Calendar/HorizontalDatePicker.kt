@@ -123,7 +123,7 @@ fun HorizontalDatePicker(state: HorizontalDateState2 = rememberHorizontalDatePic
                          monthDecreased: () -> Unit,
                          yearDecreased: () -> Unit,
                          yearIncreased: () -> Unit, onDayClick: (Int) -> Unit,) {
-    val locale = Locale.ENGLISH
+    val locale = Locale.getDefault()
     //month year
         Column() {
             MonthYearPicker(

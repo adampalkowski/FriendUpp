@@ -1,10 +1,11 @@
 package com.example.friendupp.Create
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -14,8 +15,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.example.friendupp.Components.Calendar.HorizontalDatePicker
 import com.example.friendupp.Components.Calendar.HorizontalDateState2
-import com.example.friendupp.Components.TimePicker.TimeState
+import com.example.friendupp.Components.TimePicker.*
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.marosseleng.compose.material3.datetimepickers.time.domain.TimePickerDefaults
@@ -35,6 +38,7 @@ fun TimeComponent(
 ) {
     var showTimePickerStart by remember { mutableStateOf(false) }
     var showTimePickerEnd by remember { mutableStateOf(false) }
+    var showDatePickerStart by remember { mutableStateOf(false) }
     var showTimePicker = remember {
         mutableStateOf(false)
     }
@@ -46,40 +50,50 @@ fun TimeComponent(
     val formattedDate = selectedDate.format(formatter)
 
 
-    Column(modifier = modifier.padding(horizontal = 48.dp)) {
+    Column(modifier = modifier) {
 
+        Row(modifier = modifier.padding(horizontal = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(     modifier = Modifier
+                .clickable(onClick = { showDatePickerStart =!showDatePickerStart })
+                .padding(12.dp),
 
-        Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "From:",
+                text =formattedDate,
                 color = SocialTheme.colors.textPrimary,
-                style = TextStyle(
-                    fontFamily = Lexend,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal
-                )
+                style = TextStyle(fontFamily = Lexend, fontSize = 18.sp)
             )
 
+
             Text(     modifier = Modifier
-                .clickable(onClick = { showTimePickerStart = true })
+                .clickable(onClick = { showTimePickerStart =! showTimePickerStart })
                 .padding(12.dp),
 
                 text = startTimeState.hours.toString()+":"+startTimeState.minutes,
                 color = SocialTheme.colors.textPrimary,
                 style = TextStyle(fontFamily = Lexend, fontSize = 18.sp)
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(painter = painterResource(id = com.example.friendupp.R.drawable.ic_long_right), contentDescription =null, tint = SocialTheme.colors.iconPrimary )
-            Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = "To:",
+
+
+        }
+        AnimatedVisibility(visible = showTimePickerStart) {
+            WheelTimePicker(selectorProperties = WheelPickerDefaults.selectorProperties(color = SocialTheme.colors.uiBackground, border = null)) {
+
+            }
+        }
+        AnimatedVisibility(visible = showDatePickerStart) {
+            HorizontalDatePicker(dateState2,monthDecreased= {  dateState2.decreaseMonth()}, monthIncreased =  {  dateState2.increaseMonth()} , yearDecreased =  {dateState2.decreaseYear()  }  , yearIncreased = {dateState2.increaseYear()  } , onDayClick =  {  dateState2.setSelectedDay(it)
+            showDatePickerStart=false})
+
+        }
+
+        Row(modifier = modifier.padding(horizontal = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(     modifier = Modifier
+                .clickable(onClick = { showTimePickerStart = true })
+                .padding(12.dp),
+
+                text =formattedDate,
                 color = SocialTheme.colors.textPrimary,
-                style = TextStyle(
-                    fontFamily = Lexend,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal
-                )
+                style = TextStyle(fontFamily = Lexend, fontSize = 18.sp)
             )
             Text(
                 modifier = Modifier
@@ -89,7 +103,9 @@ fun TimeComponent(
                 color = SocialTheme.colors.textPrimary,
                 style = TextStyle(fontFamily = Lexend, fontSize = 18.sp)
             )
+
         }
+
 
 
 
@@ -103,7 +119,7 @@ fun TimeComponent(
         color = SocialTheme.colors.textPrimary
     )
 
-    if (showTimePickerStart) {
+   /* if (showTimePickerStart) {
         TimePickerDialog(
             onDismissRequest = { showTimePickerStart = false },
             onTimeChange = {
@@ -132,7 +148,7 @@ fun TimeComponent(
                 digitsMinute = textStylePicked
             )
         )
-    }
+    }*/
 
     if (showTimePickerEnd) {
         TimePickerDialog(

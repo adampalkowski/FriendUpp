@@ -22,7 +22,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 fun CalendarComponent(state: HorizontalDateState2 = rememberHorizontalDatePickerState2() , monthIncreased: () -> Unit={},
                       monthDecreased: () -> Unit={},
                       yearDecreased: () -> Unit={},
-                      yearIncreased: () -> Unit={}, onDayClick: (Int) -> Unit={}) {
+                      yearIncreased: () -> Unit={}, onDayClick: (Int) -> Unit={}, onDayClick2: (Int) -> Unit={}) {
 
     Box(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp))
     {

@@ -187,7 +187,8 @@ fun HomeScreen(
                                 monthDecreased = { state.decreaseMonth() },
                                 yearIncreased = { state.increaseYear() },
                                 yearDecreased = { state.decreaseYear() },
-                                onDayClick = { state.setSelectedDay(it) })
+                                onDayClick = { state.setSelectedDay(it) },
+                                onDayClick2= { state.setSelectedDay(it) })
                         }
                         AnimatedVisibility(
                             visible = filterView && selectedOption == Option.PUBLIC,
