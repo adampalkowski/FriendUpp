@@ -62,7 +62,6 @@ fun NumberEditText(
         },
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = SocialTheme.colors.textLink,
-            textColor = SocialTheme.colors.textPrimary,
             unfocusedBorderColor = SocialTheme.colors.uiBorder,
             focusedLabelColor = SocialTheme.colors.textLink,
             cursorColor = SocialTheme.colors.textPrimary,

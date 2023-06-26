@@ -67,7 +67,9 @@ sealed class HomeEvents {
     class LeaveActivity(val id: String) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
 }
-val TAG ="HOMESCREENDEBUG"
+
+val TAG = "HOMESCREENDEBUG"
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
@@ -122,8 +124,9 @@ fun HomeScreen(
     var formattedDate = startOfDay.format(formatter)
 
     LaunchedEffect(state.selectedDay, state.selectedMonth, state.selectedYear) {
-        Log.d(TAG,"changed date ")
-        val startDate = LocalDateTime.of(state.selectedYear, state.selectedMonth, state.selectedDay, 0, 0)
+        Log.d(TAG, "changed date ")
+        val startDate =
+            LocalDateTime.of(state.selectedYear, state.selectedMonth, state.selectedDay, 0, 0)
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val formattedDate = startOfDay.format(formatter)
         datePicked.value = formattedDate
@@ -157,15 +160,16 @@ fun HomeScreen(
         itemCount += 5
         refreshing = false
     }
+
     val pState = rememberPullRefreshState(refreshing, ::refresh)
 
-        Column{
+    Column {
         TopBar(
             modifier = Modifier,
             onOptionSelected = { option -> selectedOption = option },
             selectedOption = selectedOption,
-            openDrawer = { onEvent(HomeEvents.OpenDrawer) } )
-        Box(Modifier.pullRefresh(pState)){
+            openDrawer = { onEvent(HomeEvents.OpenDrawer) })
+        Box(Modifier.pullRefresh(pState)) {
             Column() {
                 LazyColumn(
                     modifier,
@@ -360,7 +364,13 @@ fun HomeScreen(
 
                 }
             }
-            PullRefreshIndicator(refreshing, pState, Modifier.align(Alignment.TopCenter), backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.textPrimary)
+            PullRefreshIndicator(
+                refreshing,
+                pState,
+                Modifier.align(Alignment.TopCenter),
+                backgroundColor = SocialTheme.colors.uiBackground,
+                contentColor = SocialTheme.colors.textPrimary
+            )
         }
 
     }
@@ -375,46 +385,46 @@ fun TopBar(
     selectedOption: Option, onOptionSelected: (Option) -> Unit,
     openDrawer: () -> Unit,
 ) {
-        Box(
-            modifier
-                .fillMaxWidth()
-                .background(SocialTheme.colors.uiBackground)
-                .padding(vertical = 12.dp, horizontal = 24.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ActionButtonDefault(
-                    icon = R.drawable.ic_menu_300,
-                    isSelected = false,
-                    onClick = openDrawer
+    Box(
+        modifier
+            .fillMaxWidth()
+            .background(SocialTheme.colors.uiBackground)
+            .padding(vertical = 12.dp, horizontal = 24.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ActionButtonDefault(
+                icon = R.drawable.ic_menu_300,
+                isSelected = false,
+                onClick = openDrawer
+            )
+            /*   SocialButtonNormal(icon = R.drawable.ic_menu_300, onClick = openDrawer)*/
+            Spacer(modifier = Modifier.width(24.dp))
+            Text(
+                text = "FriendUpp",
+                style = TextStyle(
+                    fontFamily = Pacifico,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 24.sp,
+                    color = SocialTheme.colors.textPrimary.copy(0.8f)
                 )
-                /*   SocialButtonNormal(icon = R.drawable.ic_menu_300, onClick = openDrawer)*/
-                Spacer(modifier = Modifier.width(24.dp))
-                Text(
-                    text = "FriendUpp",
-                    style = TextStyle(
-                        fontFamily = Pacifico,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 24.sp,
-                        color = SocialTheme.colors.textPrimary.copy(0.8f)
-                    )
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                ActionButton(option = Option.FRIENDS,
-                    isSelected = selectedOption == Option.FRIENDS,
-                    onClick = { onOptionSelected(Option.FRIENDS) })
-                Spacer(
-                    modifier = Modifier
-                        .width(8.dp)
-                        .height(1.dp)
-                        .background(SocialTheme.colors.uiBorder)
-                )
-                ActionButton(option = Option.PUBLIC,
-                    isSelected = selectedOption == Option.PUBLIC,
-                    onClick = { onOptionSelected(Option.PUBLIC) })
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            ActionButton(option = Option.FRIENDS,
+                isSelected = selectedOption == Option.FRIENDS,
+                onClick = { onOptionSelected(Option.FRIENDS) })
+            Spacer(
+                modifier = Modifier
+                    .width(8.dp)
+                    .height(1.dp)
+                    .background(SocialTheme.colors.uiBorder)
+            )
+            ActionButton(option = Option.PUBLIC,
+                isSelected = selectedOption == Option.PUBLIC,
+                onClick = { onOptionSelected(Option.PUBLIC) })
 
 
-            }
         }
+    }
 
 }
 
@@ -603,7 +613,7 @@ fun buttonsRow(
     id: String,
     joined: Boolean = false,
     joinChanged: (Boolean) -> Unit,
-    profilePictures :HashMap<String,String>
+    profilePictures: HashMap<String, String>,
 ) {
     var bookmarked by remember { mutableStateOf(false) }
     val bookmarkColor: Color by animateColorAsState(
@@ -691,7 +701,7 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            Row(      horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
                 profilePictures.values.toList().take(4).reversed().forEachIndexed { index, it ->
                     AsyncImage(
                         modifier = Modifier

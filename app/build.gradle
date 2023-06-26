@@ -60,6 +60,12 @@ android {
 }
 
 dependencies {
+
+    implementation("com.marosseleng.android:compose-material3-datetime-pickers:0.7.1")
+    //snapper
+    implementation "dev.chrisbanes.snapper:snapper:v0.3.0"
+    implementation 'com.github.commandiron:WheelPickerCompose:1.1.11'
+
     implementation 'com.firebase:geofire-android-common:3.2.0'
     implementation "com.google.dagger:hilt-android:2.44"
     kapt "com.google.dagger:hilt-compiler:2.44.2"
