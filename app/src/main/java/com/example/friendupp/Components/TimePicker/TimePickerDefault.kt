@@ -25,7 +25,7 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun WheelTimePicker(
     modifier: Modifier = Modifier,
-    startTime: LocalTime = LocalTime.now(),
+    startTime: LocalTime = LocalTime.now().plusHours(1),
     minTime: LocalTime = LocalTime.MIN,
     maxTime: LocalTime = LocalTime.MAX,
     timeFormat:TimeFormat =TimeFormat.HOUR_24,

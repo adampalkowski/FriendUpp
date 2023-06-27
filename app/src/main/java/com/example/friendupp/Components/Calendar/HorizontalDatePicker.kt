@@ -264,13 +264,13 @@ fun MonthYearPicker(
     yearDecreased: () -> Unit,
     yearIncreased: () -> Unit,
     monthTextStyle: TextStyle = TextStyle.Default.copy(
-        fontSize = 16.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
         fontFamily = Lexend,
         color = SocialTheme.colors.textPrimary
     ),
     yearTextStyle: TextStyle = TextStyle.Default.copy(
-        fontSize = 16.sp,
+        fontSize =12.sp,
         fontWeight = FontWeight.SemiBold,
         fontFamily = Lexend,
         color = SocialTheme.colors.textPrimary
@@ -322,7 +322,7 @@ fun CardButton(
     @DrawableRes icon: Int,
     onClick: () -> Unit,
     iconTint: Color =SocialTheme.colors.iconPrimary,
-    cardShape: Shape = RoundedCornerShape(6.dp),
+    cardShape: Shape = RoundedCornerShape(100.dp),
     borderColor: Color =Color(0xFFEAEAEA),
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     cardPadding: Dp = 8.dp
@@ -331,8 +331,7 @@ fun CardButton(
         modifier = modifier,
         onClick = onClick,
         shape = cardShape,
-        border = BorderStroke(1.dp, color = borderColor),
-        colors = CardDefaults.cardColors(containerColor =  Color.Transparent, contentColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor =  SocialTheme.colors.uiBorder.copy(0.1f), contentColor = Color.Transparent)
         ) {
         Box(
             modifier = modifier

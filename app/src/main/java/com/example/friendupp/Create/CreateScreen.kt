@@ -44,7 +44,9 @@ import com.example.friendupp.model.Activity
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -72,10 +74,29 @@ sealed class CreateEvents {
 @Composable
 fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activity: Activity) {
 
-    val titleState by rememberSaveable(stateSaver = TitleStateSaver) {
-        mutableStateOf(TitleState())
+    var errorMessage by rememberSaveable {
+        mutableStateOf("")
     }
-    titleState.text = activity.title
+    var progressBlocked by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var hasAssignedTitle by remember { mutableStateOf(false) }
+
+
+    val titleState by rememberSaveable(stateSaver = TitleStateSaver) {
+        mutableStateOf(TitleState().apply {
+            if (!hasAssignedTitle) {
+                text = activity.title
+                hasAssignedTitle = true
+            }
+        })
+    }
+    titleState.showErrors().let {
+        if(!it){
+            progressBlocked=true
+        }
+    }
+
     val descriptionState by rememberSaveable(stateSaver = DescriptionStateSaver) {
         mutableStateOf(DescriptionState())
     }
@@ -93,28 +114,52 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
         onEvent(CreateEvents.GoBack)
     }
 
-    val dateState = rememberHorizontalDatePickerState2()
+    val startDateState = rememberHorizontalDatePickerState2()
+    val endDateState = rememberHorizontalDatePickerState2()
     val timeStartState = rememberTimeState(initialHours =LocalTime.now().hour, initialMinutes = LocalTime.now().minute)
     val timeEndState = rememberTimeState(initialHours =LocalTime.now().hour.plus(1), initialMinutes = LocalTime.now().minute)
 
 
-    val startTime = connectTimeAndDate(
-        year = dateState.selectedYear,
-        month = dateState.selectedMonth,
-        day = dateState.selectedDay,
+    var startTime = connectTimeAndDate(
+        year = startDateState.selectedYear,
+        month = startDateState.selectedMonth,
+        day = startDateState.selectedDay,
         hour = timeStartState.hours,
         minute = timeStartState.minutes
     )
-    val endTime = connectTimeAndDate(
-        year = dateState.selectedYear,
-        month = dateState.selectedMonth,
-        day = dateState.selectedDay,
+    var endTime = connectTimeAndDate(
+        year = endDateState.selectedYear,
+        month = endDateState.selectedMonth,
+        day = endDateState.selectedDay,
         hour = timeEndState.hours,
         minute = timeEndState.minutes
     )
 
-    var progressBlocked by rememberSaveable {
-        mutableStateOf(false)
+    /* CHECK IF START TIME IS AFTER NOW AND IF END TIME IS AFTER START TIME*/
+
+    var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    var startTimeCheck = LocalDateTime.parse(startTime, formatter)
+    var endTimeCheck = LocalDateTime.parse(endTime, formatter)
+    var now = LocalDateTime.now()
+
+    var isEndTimeAfterStartTime = endTimeCheck.isAfter(startTimeCheck)
+    if(!isEndTimeAfterStartTime){
+        errorMessage="Invalid time: End time of activity is before the start time"
+    }
+    Log.d("DATEDEBUG","end time after start time"+isEndTimeAfterStartTime.toString())
+
+
+    var isStartTimeInFuture = startTimeCheck.isAfter(now)
+    Log.d("DATEDEBUG"," start time in future"+isStartTimeInFuture.toString())
+    if(!isStartTimeInFuture){
+        errorMessage="Invalid time: Start time should take place in the future"
+    }
+    if (!isEndTimeAfterStartTime || !isStartTimeInFuture) {
+        Log.d("DATEDEBUG"," progres blocked")
+        progressBlocked = true
+    }else{
+        progressBlocked = false
+
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -136,10 +181,11 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                 Spacer(modifier = Modifier.height(8.dp))
 
                 DateAndTime(startTimeState=timeStartState,endTimeState=timeEndState,
-                    dateState = dateState,
-                    onProgressBlocked = {
-                    })
-
+                    startDateState = startDateState,
+                    endDateState = endDateState)
+                if(progressBlocked){
+                    TextFieldError(textError = errorMessage)
+                }
             }
 
 
@@ -215,13 +261,13 @@ fun isToday(year: Int, month: Int, day: Int): Boolean {
 fun DateAndTime(startTimeState: TimeState,endTimeState: TimeState,
     lockStartTime: Boolean = false,
     focusRequester: FocusRequester = FocusRequester(),
-    onProgressBlocked: (Boolean) -> Unit,
-    dateState: HorizontalDateState2,
+                startDateState: HorizontalDateState2,
+                endDateState: HorizontalDateState2,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         CreateHeading("Date & time", icon = com.example.friendupp.R.drawable.ic_date)
-
-        TimeComponent(Modifier.fillMaxWidth(),dateState,startTimeState,endTimeState)
+        StartTimePicker(Modifier.fillMaxWidth(),startDateState,startTimeState)
+        StartTimePicker(Modifier.fillMaxWidth(),endDateState,endTimeState, label = "End", endTime = true)
 
     }
 
@@ -258,10 +304,14 @@ fun BottomBarCreate(
             ButtonAdd(onClick = openCamera, icon = com.example.friendupp.R.drawable.ic_add_image)
 
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_filte_300)
+        Spacer(modifier = Modifier.width(12.dp))
+        ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_add_location)
         Spacer(modifier = Modifier.weight(1f))
-        CreateButton("Create", createClicked = createClicked, disabled = disabled)
+
+        BlueButton  (onClick=createClicked,icon=R.drawable.ic_long_right,disabled=disabled)
+
     }
 }
 
