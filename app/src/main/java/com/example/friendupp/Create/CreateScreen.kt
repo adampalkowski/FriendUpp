@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.ActivityUi.ActivityState
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.*
 import com.example.friendupp.Components.Calendar.HorizontalDatePicker
@@ -37,7 +38,6 @@ import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Components.TimePicker.WheelPickerDefaults
 import com.example.friendupp.Components.TimePicker.WheelTimePicker
 import com.example.friendupp.Components.TimePicker.rememberTimeState
-import com.example.friendupp.Home.Option
 import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.R
 import com.example.friendupp.model.Activity
@@ -71,9 +71,36 @@ sealed class CreateEvents {
     object GoBack : CreateEvents()
 }
 
-@Composable
-fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activity: Activity) {
+data class Date(
+    val year: String,
+    val month: String,
+    val day: String,
+    val hour: String,
+    val minute: String,
+)
 
+fun parseDateTime(dateTimeString: String): Date {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val dateTime = LocalDateTime.parse(dateTimeString, formatter)
+
+    val year = dateTime.year.toString()
+    val month = dateTime.monthValue.toString()
+    val day = dateTime.dayOfMonth.toString()
+    val hour = dateTime.hour.toString()
+    val minute = dateTime.minute.toString()
+
+    return Date(year, month, day, hour, minute)
+}
+
+@Composable
+fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activity: Activity,activityState: ActivityState) {
+    val titleState = activityState.titleState
+    val descriptionState = activityState.descriptionState
+    val selectedOption = activityState.selectedOptionState
+    val timeStartState = activityState.timeStartState
+    val timeEndState = activityState.timeEndState
+    val startDateState = activityState.startDateState
+    val endDateState = activityState.endDateState
     var errorMessage by rememberSaveable {
         mutableStateOf("")
     }
@@ -81,57 +108,26 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
         mutableStateOf(false)
     }
     var hasAssignedTitle by remember { mutableStateOf(false) }
+    var hasAssignedDescription by remember { mutableStateOf(false) }
 
 
-    val titleState by rememberSaveable(stateSaver = TitleStateSaver) {
-        mutableStateOf(TitleState().apply {
-            if (!hasAssignedTitle) {
-                text = activity.title
-                hasAssignedTitle = true
-            }
-        })
-    }
-    titleState.showErrors().let {
-        if(!it){
-            progressBlocked=true
-        }
-    }
-
-    val descriptionState by rememberSaveable(stateSaver = DescriptionStateSaver) {
-        mutableStateOf(DescriptionState())
-    }
-    descriptionState.text = activity.description
-    var selectedOption by rememberSaveable {
-        mutableStateOf(
-            if (activity.public) {
-                Option.PUBLIC
-            } else {
-                Option.FRIENDS
-            }
-        )
-    }
     BackHandler(true) {
         onEvent(CreateEvents.GoBack)
     }
 
-    val startDateState = rememberHorizontalDatePickerState2()
-    val endDateState = rememberHorizontalDatePickerState2()
-    val timeStartState = rememberTimeState(initialHours =LocalTime.now().hour, initialMinutes = LocalTime.now().minute)
-    val timeEndState = rememberTimeState(initialHours =LocalTime.now().hour.plus(1), initialMinutes = LocalTime.now().minute)
-
 
     var startTime = connectTimeAndDate(
-        year = startDateState.selectedYear,
+        year = startDateState!!.selectedYear,
         month = startDateState.selectedMonth,
         day = startDateState.selectedDay,
-        hour = timeStartState.hours,
+        hour = timeStartState!!.hours,
         minute = timeStartState.minutes
     )
     var endTime = connectTimeAndDate(
-        year = endDateState.selectedYear,
+        year = endDateState!!.selectedYear,
         month = endDateState.selectedMonth,
         day = endDateState.selectedDay,
-        hour = timeEndState.hours,
+        hour = timeEndState!!.hours,
         minute = timeEndState.minutes
     )
 
@@ -143,23 +139,23 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
     var now = LocalDateTime.now()
 
     var isEndTimeAfterStartTime = endTimeCheck.isAfter(startTimeCheck)
-    if(!isEndTimeAfterStartTime){
-        errorMessage="Invalid time: End time of activity is before the start time"
+    if (!isEndTimeAfterStartTime) {
+        errorMessage = "Invalid time: End time of activity is before the start time"
     }
-    Log.d("DATEDEBUG","end time after start time"+isEndTimeAfterStartTime.toString())
-
 
     var isStartTimeInFuture = startTimeCheck.isAfter(now)
-    Log.d("DATEDEBUG"," start time in future"+isStartTimeInFuture.toString())
-    if(!isStartTimeInFuture){
-        errorMessage="Invalid time: Start time should take place in the future"
+    Log.d("DATEDEBUG", " start time in future" + isStartTimeInFuture.toString())
+    if (!isStartTimeInFuture) {
+        errorMessage = "Invalid time: Start time should take place in the future"
     }
-    if (!isEndTimeAfterStartTime || !isStartTimeInFuture) {
-        Log.d("DATEDEBUG"," progres blocked")
+    if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid) {
+        Log.d("DATEDEBUG", " progres blocked")
         progressBlocked = true
-    }else{
+    } else {
         progressBlocked = false
-
+    }
+    if (! titleState!!.isValid) {
+        errorMessage = "Title isn't valid"
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -169,47 +165,50 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                     .verticalScroll(rememberScrollState())
                     .weight(1f)
             ) {
-
                 CreateTopBar(
                     onClick = {
                         onEvent(CreateEvents.GoBack)
                     },
-                    selectedOption = selectedOption,
-                    onPublic = { selectedOption = Option.PUBLIC },
-                    onFriends = { selectedOption = Option.FRIENDS })
-                TitleAndDescription(titleState, descriptionState)
+                    selectedOption = selectedOption!!.option,
+                    onPublic = {
+                        selectedOption.option=Option.PUBLIC
+                     },
+                    onFriends = {          selectedOption!!.option=Option.FRIENDS
+                    })
+                TitleAndDescription(titleState!!, descriptionState!!)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                DateAndTime(startTimeState=timeStartState,endTimeState=timeEndState,
+                DateAndTime(
+                    startTimeState = timeStartState, endTimeState = timeEndState,
                     startDateState = startDateState,
-                    endDateState = endDateState)
-                if(progressBlocked){
+                    endDateState = endDateState
+                )
+                if (progressBlocked) {
                     TextFieldError(textError = errorMessage)
                 }
             }
 
 
-            BottomBarCreate(photo = activity.image,
+            BottomBarCreate(
+                photo = activity.image,
                 onClick = {
                     onEvent(
                         CreateEvents.Settings(
-                            description = descriptionState.text,
-                            title = titleState.text,
-                            startTime = startTime.toString(),
+                            description = descriptionState!!.text,
+                            title = titleState!!.text,
+                            startTime = startTime,
                             endTime = endTime,
-                            public = selectedOption == Option.PUBLIC
-                        )
-                    )
-                },
+                            public = selectedOption!!.option == Option.PUBLIC
+                        ) ) },
                 createClicked = {
                     Log.d("CREATESCREENEVENTS", "CREATE")
                     onEvent(
                         CreateEvents.Create(
-                            description = descriptionState.text,
-                            title = titleState.text,
+                            description = descriptionState!!.text,
+                            title = titleState!!.text,
                             startTime = startTime,
                             endTime = endTime,
-                            public = selectedOption == Option.PUBLIC
+                            public = selectedOption!!.option == Option.PUBLIC
                         )
                     )
                 },
@@ -258,21 +257,27 @@ fun isToday(year: Int, month: Int, day: Int): Boolean {
 }
 
 @Composable
-fun DateAndTime(startTimeState: TimeState,endTimeState: TimeState,
+fun DateAndTime(
+    startTimeState: TimeState, endTimeState: TimeState,
     lockStartTime: Boolean = false,
     focusRequester: FocusRequester = FocusRequester(),
-                startDateState: HorizontalDateState2,
-                endDateState: HorizontalDateState2,
+    startDateState: HorizontalDateState2,
+    endDateState: HorizontalDateState2,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         CreateHeading("Date & time", icon = com.example.friendupp.R.drawable.ic_date)
-        StartTimePicker(Modifier.fillMaxWidth(),startDateState,startTimeState)
-        StartTimePicker(Modifier.fillMaxWidth(),endDateState,endTimeState, label = "End", endTime = true)
+        StartTimePicker(Modifier.fillMaxWidth(), startDateState, startTimeState)
+        StartTimePicker(
+            Modifier.fillMaxWidth(),
+            endDateState,
+            endTimeState,
+            label = "End",
+            endTime = true
+        )
 
     }
 
 }
-
 
 
 @Composable
@@ -284,7 +289,6 @@ fun BottomBarCreate(
     disabled: Boolean,
 ) {
     Row(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)) {
-        Log.d("CreateGraphActivity", photo.toString())
         if (photo != null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -300,7 +304,6 @@ fun BottomBarCreate(
             )
 
         } else {
-            Log.d("CreateGraphActivity", "add button")
             ButtonAdd(onClick = openCamera, icon = com.example.friendupp.R.drawable.ic_add_image)
 
         }
@@ -310,7 +313,7 @@ fun BottomBarCreate(
         ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_add_location)
         Spacer(modifier = Modifier.weight(1f))
 
-        BlueButton  (onClick=createClicked,icon=R.drawable.ic_long_right,disabled=disabled)
+        BlueButton(onClick = createClicked, icon = R.drawable.ic_long_right, disabled = disabled)
 
     }
 }
@@ -399,7 +402,6 @@ fun BottomBarSettings(onClick: () -> Unit) {
         ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_checkl)
     }
 }
-
 
 
 @Composable

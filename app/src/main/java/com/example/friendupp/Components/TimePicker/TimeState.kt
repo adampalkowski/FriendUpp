@@ -1,14 +1,10 @@
 package com.example.friendupp.Components.TimePicker
 
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.text.intl.Locale
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 
@@ -47,10 +43,15 @@ class TimeState(hours: Int, minutes: Int) {
 }
 
 @Composable
-fun rememberTimeState(initialHours: Int, initialMinutes: Int): TimeState =
-    rememberSaveable(saver = TimeState.Saver) {
+fun rememberTimeState(initialHours: Int, initialMinutes: Int): TimeState {
+    val savedState = rememberSaveable(saver = TimeState.Saver) {
         TimeState(
             hours = initialHours,
             minutes = initialMinutes
         )
     }
+
+    val state = remember { mutableStateOf(savedState) }
+
+    return state.value
+}

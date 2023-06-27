@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.example.friendupp.Home.Option
 import com.example.friendupp.ui.theme.SocialTheme
 import kotlinx.coroutines.launch
 

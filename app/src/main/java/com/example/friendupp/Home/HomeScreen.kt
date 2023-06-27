@@ -44,6 +44,8 @@ import com.example.friendupp.Components.ActionButtonDefault
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.CalendarComponent
 import com.example.friendupp.Components.FilterList
+import com.example.friendupp.Create.Option
+import com.example.friendupp.Create.rememberSelectedOptionState
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.R
 import com.example.friendupp.di.ActivityViewModel
@@ -102,7 +104,9 @@ fun HomeScreen(
     var publicActivitiesExist = remember { mutableStateOf(false) }
 
     // PUBLIC OR FRIENDS ACTIVITIEWS
-    var selectedOption by rememberSaveable { mutableStateOf(Option.FRIENDS) }
+    val selectedOption = rememberSelectedOptionState(
+            Option.PUBLIC
+    )
     var selectedTags = remember {
         mutableStateListOf<String>()
     }
@@ -132,7 +136,7 @@ fun HomeScreen(
         datePicked.value = formattedDate
     }
 
-    if (selectedOption == Option.FRIENDS) {
+    if (selectedOption.option == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
         loadMoreFriendsActivities(activityViewModel, moreActivities)
     } else {
@@ -166,8 +170,8 @@ fun HomeScreen(
     Column {
         TopBar(
             modifier = Modifier,
-            onOptionSelected = { option -> selectedOption = option },
-            selectedOption = selectedOption,
+            onOptionSelected = { option -> selectedOption.option = option },
+            selectedOption = selectedOption.option,
             openDrawer = { onEvent(HomeEvents.OpenDrawer) })
         Box(Modifier.pullRefresh(pState)) {
             Column() {
@@ -177,7 +181,7 @@ fun HomeScreen(
                 ) {
                     item {
                         AnimatedVisibility(
-                            visible = calendarView && selectedOption == Option.PUBLIC,
+                            visible = calendarView && selectedOption.option == Option.PUBLIC,
                             enter = slideInVertically(animationSpec = tween(800)),
                             exit = slideOutVertically(animationSpec = tween(0))
                         ) {
@@ -191,7 +195,7 @@ fun HomeScreen(
                                 onDayClick2= { state.setSelectedDay(it) })
                         }
                         AnimatedVisibility(
-                            visible = filterView && selectedOption == Option.PUBLIC,
+                            visible = filterView && selectedOption.option == Option.PUBLIC,
                             enter = slideInVertically(animationSpec = tween(800)),
                             exit = slideOutVertically(animationSpec = tween(0))
                         ) {
@@ -222,11 +226,11 @@ fun HomeScreen(
                             },
                             calendarClicked = calendarView,
                             filterClicked = filterView,
-                            displayFilters = selectedOption == Option.PUBLIC
+                            displayFilters = selectedOption.option == Option.PUBLIC
                         )
                     }
 
-                    if (selectedOption == Option.FRIENDS) {
+                    if (selectedOption.option == Option.FRIENDS) {
                         items(activities) { activity ->
                             activityItem(
                                 activity,

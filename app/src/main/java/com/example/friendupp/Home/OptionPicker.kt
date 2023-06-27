@@ -19,10 +19,6 @@ import com.example.friendupp.R
 import com.example.friendupp.ui.theme.SocialTheme
 
 
-enum class Option(val label: String, val icon: Int) {
-    FRIENDS("Friends", R.drawable.ic_hand_300),
-    PUBLIC("Public", R.drawable.ic_public_300)
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

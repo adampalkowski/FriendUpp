@@ -15,8 +15,11 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
+import com.example.friendupp.ActivityUi.ActivityState
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
+import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
+import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Create.*
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.di.ActivityViewModel
@@ -35,6 +38,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.firestore.GeoPoint
 import java.io.File
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executor
@@ -45,6 +49,7 @@ import kotlin.collections.ArrayList
 fun NavGraphBuilder.createGraph(
     navController: NavController, currentActivity: MutableState<Activity>, outputDirectory: File,
     executor: Executor, activityViewModel: ActivityViewModel,chatViewModel:ChatViewModel,userViewModel:UserViewModel,
+activityState:ActivityState
 
 ) {
 
@@ -351,6 +356,8 @@ fun NavGraphBuilder.createGraph(
                 }
             }
         ) {
+
+
             CreateScreen(
                 onEvent = { event ->
                     when (event) {
@@ -383,7 +390,8 @@ fun NavGraphBuilder.createGraph(
                         }
                     }
                 },
-                modifier = Modifier, activity = currentActivity.value
+                modifier = Modifier, activity = currentActivity.value, activityState = activityState
+
             )
         }
 

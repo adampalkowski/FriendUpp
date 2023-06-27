@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.*
-import com.example.friendupp.Home.Option
 import com.example.friendupp.R
 
 sealed class GroupCreateEvents{

@@ -1,5 +1,6 @@
 package com.example.friendupp.Create
 
+import android.util.Log
 import android.widget.Space
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -7,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -52,7 +54,7 @@ fun StartTimePicker(modifier: Modifier, dateState: HorizontalDateState2, startTi
             Spacer(modifier = Modifier.height(1.dp).background(SocialTheme.colors.uiBorder).width(24.dp))
             Text(     modifier = Modifier.padding(bottom = 4.dp).padding(horizontal = 4.dp),
                 text =label,
-                color = SocialTheme.colors.uiBorder,
+                color = SocialTheme.colors.iconPrimary,
                 style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Light)
             )
             Spacer(modifier = Modifier.height(1.dp).background(SocialTheme.colors.uiBorder).weight(1f))
@@ -66,7 +68,15 @@ fun StartTimePicker(modifier: Modifier, dateState: HorizontalDateState2, startTi
 
 
             Spacer(modifier = Modifier.height(1.dp).background(SocialTheme.colors.uiBorder).weight(1f))
-            WheelTimePicker(selectorProperties = WheelPickerDefaults.selectorProperties(color = SocialTheme.colors.uiBackground, border = null), startTime = if(endTime) LocalTime.now().plusHours(2) else LocalTime.now().plusHours(1),textStyle=timeTextStyle, size =  DpSize(100.dp, 100.dp)) {
+            WheelTimePicker(
+                selectorProperties = WheelPickerDefaults.selectorProperties(
+                    color = SocialTheme.colors.uiBackground,
+                    border = null
+                ),
+                startTime = LocalTime.of(startTimeState.hours, startTimeState.minutes),
+                textStyle = timeTextStyle,
+                size = DpSize(100.dp, 100.dp)
+            ) {
                 startTimeState.hours=it.hour
                 startTimeState.minutes=it.minute
             }
