@@ -1,6 +1,7 @@
 package com.example.friendupp.FriendPicker
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -144,8 +145,8 @@ fun FriendPickerScreen(
                     )
                     Switch(
                         checked = allFriends,
-                        onCheckedChange = { allFriends = !allFriends },
-                        modifier = Modifier.padding(start = 6.dp),
+                        onCheckedChange = {allFriends=!allFriends},
+                        modifier = Modifier.padding(start = 16.dp),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = SocialTheme.colors.textInteractive,
                             checkedTrackColor = grayColor, uncheckedTrackColor = grayColor,
@@ -155,8 +156,13 @@ fun FriendPickerScreen(
                             uncheckedBorderColor = grayColor,
                             checkedBorderColor = grayColor
                         )
+                        ,thumbContent={
+                            AnimatedVisibility(visible = allFriends) {
 
+                                Icon(painter = painterResource(id = com.example.friendupp.R.drawable.ic_done),tint= Color.White, contentDescription =null )
+                            } }
                     )
+
                     Spacer(modifier = Modifier.width(12.dp))
                 }
 

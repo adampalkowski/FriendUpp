@@ -1,5 +1,7 @@
 package com.example.friendupp.Settings
 
+import android.content.Context
+import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
@@ -11,10 +13,12 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -45,13 +49,43 @@ sealed class SettingsEvents {
 }
 
 
+// Function to get the saved range value from SharedPreferences
+private fun getSavedRangeValue(context:Context): Float {
+    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    val rangeValueKey = "rangeValue"
+    return preferences.getFloat(rangeValueKey, 0.05f)
+}
+
+// Function to save the range value to SharedPreferences
+private fun saveRangeValue(value: Float,context: Context) {
+    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    val rangeValueKey = "rangeValue"
+    preferences.edit().putFloat(rangeValueKey, value).apply()
+}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val confirmAction = remember { mutableStateOf<SettingsEvents?>(null) }
+    val context = LocalContext.current
 
+    var sliderValue by rememberSaveable {
+        mutableStateOf(getSavedRangeValue(context))
+    }
+    LaunchedEffect(Unit) {
+        sliderValue = getSavedRangeValue(context)
+    }
+    DisposableEffect(Unit) {
+
+        // Load the range value from SharedPreferences
+        sliderValue = getSavedRangeValue(context)
+
+        onDispose {
+            saveRangeValue(sliderValue,context)
+        }
+
+    }
     BackHandler(true) {
         settingsEvents(SettingsEvents.GoBack)
     }
@@ -119,9 +153,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
         sheetElevation = 16.dp
     ) {
 
-        var sliderValue = remember {
-            mutableStateOf(0f)
-        }
+
         Column(Modifier.verticalScroll(rememberScrollState())) {
             ScreenHeading(
                 title = "Settings",
@@ -129,14 +161,13 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 onBack = { settingsEvents(SettingsEvents.GoBack) }) {
 
             }
-                SettingsLabel("Search Range")
-
+           SettingsLabel("Search Range")
 
 
             RangeItem(
                 label = "Change range",
                 icon = R.drawable.ic_ruler,
-                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) },sliderValue=sliderValue.value, onValueChange = {value->sliderValue.value=value})
+                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) },sliderValue=sliderValue, onValueChange = {value->sliderValue=value})
 
             SettingsLabel("Account")
             SettingsItem(
