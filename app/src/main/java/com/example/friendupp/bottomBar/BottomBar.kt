@@ -38,7 +38,6 @@ enum class BottomBarOption(val label: String, val icon: Int) {
 }
 @Composable
 fun BottomBar(modifier: Modifier,onClick: (BottomBarOption) -> Unit,selectedOption:String?) {
-    val context = LocalContext.current
 
     Column(modifier .fillMaxWidth()) {
         Box(modifier = Modifier
@@ -99,7 +98,7 @@ fun BottomBar(modifier: Modifier,onClick: (BottomBarOption) -> Unit,selectedOpti
 fun BottomBarButton(modifier:Modifier=Modifier,option: BottomBarOption, isSelected: Boolean, onClick: () -> Unit) {
     val BackColor by animateColorAsState(
         targetValue = if (isSelected) {
-            SocialTheme.colors.textPrimary.copy(0.8f)
+            SocialTheme.colors.textInteractive.copy(0.8f)
         } else {
             Color(0xFFCACACA)
         },

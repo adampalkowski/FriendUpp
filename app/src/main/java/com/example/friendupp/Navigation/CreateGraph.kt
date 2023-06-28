@@ -22,6 +22,7 @@ import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerSta
 import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Create.*
 import com.example.friendupp.FriendPicker.FriendPickerScreen
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.AuthViewModel
 import com.example.friendupp.di.ChatViewModel
@@ -35,6 +36,7 @@ import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.GeoPoint
 import java.io.File
 import java.time.LocalDateTime
@@ -48,7 +50,7 @@ import kotlin.collections.ArrayList
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.createGraph(
     navController: NavController, currentActivity: MutableState<Activity>, outputDirectory: File,
-    executor: Executor, activityViewModel: ActivityViewModel,chatViewModel:ChatViewModel,userViewModel:UserViewModel,
+    executor: Executor, activityViewModel: ActivityViewModel,chatViewModel:ChatViewModel,userViewModel:UserViewModel,mapViewModel:MapViewModel,
 activityState:ActivityState
 
 ) {
@@ -108,17 +110,13 @@ activityState:ActivityState
         ) { backStackEntry ->
             var photoUri by rememberSaveable {
                 mutableStateOf<Uri?>(
-                    if(currentActivity.value.image!=null){
-                        currentActivity.value.image!!.toUri()
+                    if(activityState.imageUrl.isNotEmpty()){
+                        activityState.imageUrl.toUri()
                     }else{
                         null
                     }
-
-
-
                 )
             }
-
 
 
             CameraView(
@@ -126,19 +124,17 @@ activityState:ActivityState
                 executor = executor,
                 onImageCaptured = { uri ->
                     photoUri = uri
-                    /*todo handle the image uri*/
                 },
                 onError = {},
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
-                            currentActivity.value = currentActivity.value.copy(image = null)
                             navController.navigate("Create")
                         }
                         is CameraEvent.AcceptPhoto -> {
                             if (photoUri != null) {
                                 val photo: String = photoUri.toString()
-                                currentActivity.value = currentActivity.value.copy(image = photo)
+                                activityState.imageUrl=photo
                                 Log.d("CreateGraphActivity", "SETTING")
                                 Log.d("CreateGraphActivity", photo)
                                 navController.navigate("Create")
@@ -149,12 +145,13 @@ activityState:ActivityState
                         }
                         is CameraEvent.DeletePhoto -> {
                             Log.d("CreateGraphActivity", "dElete photo")
+                            activityState.imageUrl=""
                             photoUri=null
                         }
                         else -> {}
                     }
                 },
-                photoUri = photoUri
+                photoUri = photoUri,
             )
 
         }
@@ -238,6 +235,32 @@ activityState:ActivityState
                 createActivity = {
                     val user = UserData.user
                     if (user != null) {
+                        // Assuming the provided values are stored in variables as follows:
+                        val selectedStartDay = activityState.startDateState.selectedDay
+                        val selectedStartMonth = activityState.startDateState.selectedMonth
+                        val selectedStartYear = activityState.startDateState.selectedYear
+                        val startHours = activityState.timeStartState.hours
+                        val startMinutes = activityState.timeStartState.minutes
+
+                        val selectedEndDay = activityState.endDateState.selectedDay
+                        val selectedEndMonth = activityState.endDateState.selectedMonth
+                        val selectedEndYear = activityState.endDateState.selectedYear
+                        val endHours = activityState.timeEndState.hours
+                        val endMinutes = activityState.timeEndState.minutes
+
+                    // Formatting the start time
+                        val startTime = String.format("%04d-%02d-%02d %02d:%02d", selectedStartYear, selectedStartMonth, selectedStartDay, startHours, startMinutes)
+
+                    // Formatting the end time
+                        val endTime = String.format("%04d-%02d-%02d %02d:%02d", selectedEndYear, selectedEndMonth, selectedEndDay, endHours, endMinutes)
+
+                        currentActivity.value = currentActivity.value.copy(start_time = startTime,
+                        image=activityState.imageUrl, end_time = endTime
+                        )
+
+
+
+
                         //Add current user to invited list
                         selectedUsers.add(user.id)
                         currentActivity.value = currentActivity.value.copy(
@@ -258,8 +281,8 @@ activityState:ActivityState
                         currentActivity.value = currentActivity.value.copy(creation_time = current,date=date)
                        if(currentActivity.value.location!=null){
 
-                           val lat= currentActivity.value.location!!.latitude
-                           val lng=  currentActivity.value.location!!.longitude
+                           val lat=activityState.location.latitude
+                           val lng=  activityState.location.longitude
                            //Create geohash
                            val geoHash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
 
@@ -362,27 +385,17 @@ activityState:ActivityState
                 onEvent = { event ->
                     when (event) {
                         is CreateEvents.Settings -> {
-                            currentActivity.value = currentActivity.value.copy(
-                                title = event.title,
-                                description = event.description,
-                                start_time = event.startTime,
-                                public = event.public,
-                                end_time = event.endTime
-                            )
                             Log.d("CreateGraphActivity", currentActivity.toString())
                             navController.navigate("CreateSettings")
                         }
                         is CreateEvents.OpenCamera -> {
                             navController.navigate("Camera")
                         }
+                        is CreateEvents.LocationPicker->{
+                            navController.navigate("LocationPicker")
+                        }
                         is CreateEvents.Create -> {
-                            currentActivity.value = currentActivity.value.copy(
-                                title = event.title,
-                                description = event.description,
-                                start_time = event.startTime,
-                                public = event.public,
-                                end_time = event.endTime
-                            )
+
                             navController.navigate("FriendPicker")
                         }
                         is CreateEvents.GoBack -> {
@@ -393,6 +406,86 @@ activityState:ActivityState
                 modifier = Modifier, activity = currentActivity.value, activityState = activityState
 
             )
+        }
+
+        composable(
+            "LocationPicker",
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+
+                    else -> null
+                }
+            }
+        ) {
+            LocationPickerScreen(onEvent = { event ->
+                when (event) {
+                    is LocationPickerEvent.GoBack -> {
+
+                        navController.navigate("Create")
+                    }
+                    is LocationPickerEvent.DeleteLocation->{
+                        activityState.location= LatLng(0.0,0.0)
+                    }
+                    is LocationPickerEvent.ConfirmLocation->{
+                        activityState.location=event.latLng
+                        navController.navigate("Create")
+                    }
+
+                }
+            },activityState=activityState, mapViewModel = mapViewModel)
+
         }
 
         composable(
@@ -453,7 +546,6 @@ activityState:ActivityState
                         val location = event.location
                         if(location==null){
                             currentActivity.value = currentActivity.value.copy(
-                                tags = event.tags,
                                 custom_location = event.customLocation,
                                 location =null,
                                 minUserCount = event.minUserCount,
@@ -465,7 +557,6 @@ activityState:ActivityState
                             )
                         }else{
                             currentActivity.value = currentActivity.value.copy(
-                                tags = event.tags,
                                 custom_location = event.customLocation,
                                 location = GeoPoint(
                                     event.location.latitude,
@@ -487,7 +578,7 @@ activityState:ActivityState
 
                     }
                 }
-            }, activity = currentActivity.value)
+            }, activity = currentActivity.value,activityState=activityState)
 
         }
 

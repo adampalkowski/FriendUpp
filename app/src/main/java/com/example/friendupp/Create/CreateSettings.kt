@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import com.example.friendupp.ActivityUi.ActivityState
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Components.NameEditText
@@ -50,7 +51,6 @@ import org.w3c.dom.Text
 sealed class CreateSettingsEvents {
 
     class GoBack(
-        val tags: ArrayList<String>,
         val customLocation: String?,
         val location: LatLng?,
         val minUserCount: Int,
@@ -66,21 +66,13 @@ sealed class CreateSettingsEvents {
 }
 
 @Composable
-fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) {
+fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,activityState:ActivityState) {
     val focusRequester = remember { FocusRequester() }
     var locationState by remember {
         mutableStateOf<LatLng?>(null)
     }
     val customLocationState by rememberSaveable(stateSaver = DescriptionStateSaver) {
         mutableStateOf(DescriptionState())
-    }
-
-    Log.d("CreateGraphActivity", activity.toString())
-
-    val tags = remember {
-        val initialTags = mutableListOf<String>() // Initialize with your desired value
-        initialTags.addAll(activity.tags) // Add the desired tags to the initial list
-        initialTags
     }
 
     var activitySharing by remember { mutableStateOf(false) }
@@ -105,7 +97,6 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) 
         BackHandler(true) {
             onEvent(
                 CreateSettingsEvents.GoBack(
-                    tags = arrayListOf(),
                     customLocation = customLocationState.text,
                     location = locationState,
                     minUserCount = minUserCount,
@@ -126,7 +117,6 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) 
                 ScreenHeading(onBack = {
                     onEvent(
                         CreateSettingsEvents.GoBack(
-                            tags = ArrayList(tags),
                             customLocation = customLocationState.text,
                             location = locationState,
                             minUserCount = minUserCount,
@@ -138,15 +128,15 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) 
                     )
                 }, backButton = true, title = "Additional settings") {}
                 Spacer(modifier = Modifier.height(8.dp))
-                LocationSettings(locationPicked={
+             /*   LocationSettings(locationPicked={
                      latLng->
                      locationState=latLng
-                 })
+                 })*/
                 CustomLocationSettings(focusRequester, customLocationState)
                 TagsSettings(
-                    tags = tags,
-                    onSelected = { tags.add(it) },
-                    onDeSelected = { tags.remove(it) })
+                    tags = activityState.tags,
+                    onSelected = { activityState.tags.add(it) },
+                    onDeSelected = { activityState.tags.remove(it) })
                 ParticipantsLimitsSettings(focusRequester,minState=minParticipantsState,maxState=maxParticipantsState)
                 Customize(activitySharing,
                     onActivitySharingChanged = { newValue -> activitySharing = newValue },
@@ -164,7 +154,6 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity) 
             BottomBarSettings(onClick = {
                 onEvent(
                     CreateSettingsEvents.GoBack(
-                        tags = ArrayList(tags),
                         customLocation = customLocationState.text,
                         location = locationState,
                         minUserCount = minUserCount,
@@ -242,7 +231,7 @@ fun CustomLocationSettings(focusRequester: FocusRequester, customLocationState: 
 
 @Composable
 fun TagsSettings(
-    tags: MutableList<String>,
+    tags: List<String>,
     onSelected: (String) -> Unit,
     onDeSelected: (String) -> Unit,
 ) {

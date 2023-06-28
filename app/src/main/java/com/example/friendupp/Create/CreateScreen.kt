@@ -60,6 +60,7 @@ sealed class CreateEvents {
     ) : CreateEvents()
 
     object OpenCamera : CreateEvents()
+    object LocationPicker : CreateEvents()
     class Settings(
         val title: String,
         val description: String,
@@ -190,7 +191,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
 
 
             BottomBarCreate(
-                photo = activity.image,
+                photo = activityState.imageUrl,
                 onClick = {
                     onEvent(
                         CreateEvents.Settings(
@@ -211,7 +212,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                             public = selectedOption!!.option == Option.PUBLIC
                         )
                     )
-                },
+                }, locationPicker = {onEvent(CreateEvents.LocationPicker)},
                 openCamera = { onEvent(CreateEvents.OpenCamera) }, disabled = progressBlocked
             )
         }
@@ -285,11 +286,12 @@ fun BottomBarCreate(
     onClick: () -> Unit,
     createClicked: () -> Unit = {},
     openCamera: () -> Unit = {},
-    photo: String?,
+    locationPicker: () -> Unit = {},
+    photo: String,
     disabled: Boolean,
 ) {
     Row(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)) {
-        if (photo != null) {
+        if (photo.isNotEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(photo)
@@ -310,7 +312,7 @@ fun BottomBarCreate(
         Spacer(modifier = Modifier.width(12.dp))
         ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_filte_300)
         Spacer(modifier = Modifier.width(12.dp))
-        ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_add_location)
+        ButtonAdd(onClick = locationPicker, icon = com.example.friendupp.R.drawable.ic_add_location)
         Spacer(modifier = Modifier.weight(1f))
 
         BlueButton(onClick = createClicked, icon = R.drawable.ic_long_right, disabled = disabled)
@@ -398,8 +400,7 @@ fun BottomBarSettings(onClick: () -> Unit) {
             .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
             .fillMaxWidth(), horizontalArrangement = Arrangement.End
     ) {
-
-        ButtonAdd(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_checkl)
+        BlueButton(onClick = onClick, icon = com.example.friendupp.R.drawable.ic_checkl)
     }
 }
 

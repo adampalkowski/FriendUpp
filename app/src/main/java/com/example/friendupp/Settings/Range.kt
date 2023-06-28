@@ -29,7 +29,6 @@ fun RangeScreen(onEvent:(RangeEvents)->Unit){
     var sliderValue by remember {
         mutableStateOf(0f)
     }
-
     Column() {
         ScreenHeading(title = "Range", backButton = true, onBack = {onEvent(RangeEvents.GoBack)}) {
 
@@ -41,6 +40,7 @@ fun RangeScreen(onEvent:(RangeEvents)->Unit){
             color = SocialTheme.colors.textPrimary.copy(0.5f))
         Spacer(modifier = Modifier.height(24.dp))
         Text(modifier=Modifier.fillMaxWidth(), textAlign = TextAlign.Center,text = format("%.1f", sliderValue)+" km", style = TextStyle(fontFamily = Lexend, fontSize = 20.sp, fontWeight = FontWeight.SemiBold), color = SocialTheme.colors.textPrimary)
+
 
         Slider(modifier= Modifier
             .fillMaxWidth()

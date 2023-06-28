@@ -113,6 +113,92 @@ fun BlueButton(onClick: () -> Unit,disabled:Boolean=false,icon:Int) {
 }
 
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RedButton(onClick: () -> Unit,disabled:Boolean=false,icon:Int) {
+    val redColor = Color(0xFFFF0000)
+    val redColorBlack = Color(0xFF990000)
+
+    val frontColor =  if(disabled) redColor.copy(0.2f )else  redColor
+    var border = null
+    var backColor = if(disabled) redColorBlack.copy(0.2f )else redColorBlack
+
+    val iconColor =     Color.White
+
+
+    val interactionSource = MutableInteractionSource()
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scale = remember {
+        Animatable(1f)
+    }
+
+
+    Box(
+        modifier = Modifier
+            .clickable(interactionSource = interactionSource, indication = null) {
+                coroutineScope.launch {
+                    scale.animateTo(
+                        0.8f,
+                        animationSpec = tween(300),
+                    )
+                    scale.animateTo(
+                        1f,
+                        animationSpec = tween(100),
+                    )
+                    if(!disabled){
+                        onClick()
+                    }
+                }
+
+            }
+            .scale(scale = scale.value),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .height(52.dp)
+                .width(52.dp)
+                .zIndex(1f),
+            colors = CardDefaults.cardColors(
+                contentColor = Color.Transparent,
+                containerColor = backColor
+            ),
+            border = border,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            // Content of the bottom Card
+            Card(
+                modifier = Modifier
+                    .height(52.dp)
+                    .width(52.dp)
+                    .zIndex(2f)
+                    .graphicsLayer {
+                        translationY = -5f
+                    },
+                colors = CardDefaults.cardColors(
+                    contentColor = Color.Transparent,
+                    containerColor = frontColor
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = border
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(id = icon),
+                        contentDescription = null,
+                        tint = iconColor
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhiteButton(onClick: () -> Unit,disabled:Boolean=false,icon:Int) {

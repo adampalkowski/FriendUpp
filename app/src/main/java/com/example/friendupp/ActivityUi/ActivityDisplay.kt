@@ -142,7 +142,7 @@ fun activityItem(
             Column() {
                 TimeIndicator(time = activity.start_time,tags=activity.tags)
 
-                if(activity.image!=null){
+                if(!activity.image.isNullOrEmpty()){
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(modifier = Modifier.fillMaxWidth()) {
                         AsyncImage(

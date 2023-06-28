@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import coil.compose.rememberImagePainter
+import com.example.friendupp.ActivityUi.ActivityState
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -121,7 +122,7 @@ fun CameraView(
     executor: Executor,
     onImageCaptured: (Uri?) -> Unit,
     onError: (ImageCaptureException) -> Unit,
-    photoUri:Uri?
+    photoUri:Uri?,
 ) {
 
 

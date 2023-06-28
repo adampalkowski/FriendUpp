@@ -51,6 +51,7 @@ fun NameEditText(modifier: Modifier,focusRequester: FocusRequester, focus: Boole
 
     var borde2rColor =
         Color(0xFFD9D9D9)
+Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         OutlinedTextField(
             label = {
@@ -76,7 +77,8 @@ fun NameEditText(modifier: Modifier,focusRequester: FocusRequester, focus: Boole
                 errorLeadingIconColor = SocialTheme.colors.error
             ),
             modifier = Modifier
-                .focusRequester(focusRequester).widthIn(TextFieldDefaults.MinWidth,TextFieldDefaults.MinWidth+50.dp)
+                .focusRequester(focusRequester)
+                .widthIn(TextFieldDefaults.MinWidth, TextFieldDefaults.MinWidth + 50.dp)
                 .onFocusChanged { focusState ->
                     textState.onFocusChange(focusState.isFocused)
                     if (!focusState.isFocused) {
@@ -102,6 +104,7 @@ fun NameEditText(modifier: Modifier,focusRequester: FocusRequester, focus: Boole
         )
 
         textState.getError()?.let { error -> TextFieldError(textError = error) }
+}
 
 }
 @Composable
@@ -169,10 +172,10 @@ fun PasswordEditText(modifier: Modifier,focusRequester: FocusRequester
                 }
               }, isError = textState.showErrors(),
             modifier = Modifier
-                .align(Alignment.CenterStart).widthIn(TextFieldDefaults.MinWidth,TextFieldDefaults.MinWidth+50.dp)
+                .align(Alignment.CenterStart)
+                .widthIn(TextFieldDefaults.MinWidth, TextFieldDefaults.MinWidth + 50.dp)
                 .focusRequester(focusRequester)
-                .onFocusChanged {
-                        focusState ->
+                .onFocusChanged { focusState ->
                     textState.onFocusChange(focusState.isFocused)
                     if (!focusState.isFocused) {
                         textState.enableShowErrors()

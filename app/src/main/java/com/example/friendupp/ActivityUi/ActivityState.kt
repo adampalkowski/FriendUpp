@@ -1,5 +1,6 @@
 package com.example.friendupp.ActivityUi
 
+import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -7,33 +8,49 @@ import com.example.friendupp.Components.Calendar.HorizontalDateState2
 import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Create.*
+import com.example.friendupp.Login.TextFieldState
+import com.google.android.gms.maps.model.LatLng
 
 class ActivityState(
-    val titleState: TitleState,
-    val descriptionState: DescriptionState,
+    val titleState: TextFieldState,
+    val descriptionState: TextFieldState,
     val timeStartState: TimeState,
     val timeEndState: TimeState,
     val startDateState: HorizontalDateState2,
     val endDateState: HorizontalDateState2,
-    val selectedOptionState: SelectedOptionState
+    val selectedOptionState: SelectedOptionState,
+    val tags: ArrayList<String>,
+    var imageUrl: String,
+    var location:LatLng
+
 ) {
     companion object {
         val Saver: Saver<ActivityState, *> = Saver<ActivityState, String>(
             save = { state ->
                 listOf(
-                    state.titleState,
-                    state.timeStartState,
-                    state.timeEndState,
-                    state.startDateState,
-                    state.endDateState,
-                    state.selectedOptionState,
-                    state.descriptionState
+                    state.titleState.text,
+                    state.timeStartState.hours,
+                    state.timeStartState.minutes,
+                    state.timeEndState.hours,
+                    state.timeEndState.minutes,
+                    state.startDateState.selectedDay,
+                    state.startDateState.selectedMonth,
+                    state.startDateState.selectedYear,
+                    state.endDateState.selectedDay,
+                    state.endDateState.selectedMonth,
+                    state.endDateState.selectedYear,
+                    state.selectedOptionState.option,
+                    state.descriptionState.text,
+                    state.imageUrl,
+                    state.location.latitude,
+                    state.location.longitude,
+                    state.tags.joinToString(",")
                 ).joinToString(",")
             },
             restore = { savedStateString ->
                 val savedStates = savedStateString.split(",")
                 ActivityState(
-                    titleState = TitleState(),
+                    titleState = TitleState().apply { text=savedStates[0] },
                     timeStartState = TimeState(
                         hours = savedStates[1].toInt(),
                         minutes = savedStates[2].toInt()
@@ -55,7 +72,10 @@ class ActivityState(
                     selectedOptionState = SelectedOptionState(
                         initialOption = Option.valueOf(savedStates[11])
                     ),
-                    descriptionState = DescriptionState()
+                    descriptionState = DescriptionState().apply { text=savedStates[12] },
+                    imageUrl = savedStates[13],
+                    location =  LatLng(savedStates[14].toDouble(),savedStates[15].toDouble()),
+                    tags = ArrayList( savedStates.drop(16)) // Retrieve the tags from the saved state
                 )
             }
         )
@@ -75,10 +95,13 @@ fun rememberActivityState(
     initialEndMonth: Int,
     initialEndYear: Int,
     initialOption: Option,
-    initialDescription:String
+    initialDescription:String,
+    initialImageUrl:String,
+    initialLocation:LatLng,
+    initialTags: ArrayList<String>
+
 ): ActivityState {
-    val titleState = remember { TitleState() }
-    titleState.text = initialTitle
+    val titleState = rememberSaveable(saver = TitleStateSaver){ TitleState() }
 
     val timeStartState = rememberTimeState(initialStartHours, initialStartMinutes)
     val timeEndState = rememberTimeState(initialEndHours, initialEndMinutes)
@@ -90,7 +113,7 @@ fun rememberActivityState(
             selectedYear = initialStartYear
         )
     }
-    val descriptionState = remember{DescriptionState()}
+    val descriptionState = rememberSaveable(saver = DescriptionStateSaver){DescriptionState()}
 
     val endDateState = remember {
         HorizontalDateState2(
@@ -102,13 +125,20 @@ fun rememberActivityState(
 
     val selectedOptionState = rememberSelectedOptionState(initialOption)
 
-    return ActivityState(
-        titleState = titleState,
-        timeStartState = timeStartState,
-        timeEndState = timeEndState,
-        startDateState = startDateState,
-        endDateState = endDateState,
-        selectedOptionState = selectedOptionState,
-        descriptionState=descriptionState
-    )
+    val activityState = rememberSaveable(saver = ActivityState.Saver) {
+        ActivityState(
+            titleState = titleState,
+            timeStartState = timeStartState,
+            timeEndState = timeEndState,
+            startDateState = startDateState,
+            endDateState = endDateState,
+            selectedOptionState = selectedOptionState,
+            descriptionState = descriptionState,
+            imageUrl = initialImageUrl,
+            tags = initialTags,
+            location = initialLocation
+        )
+    }
+
+    return activityState
 }

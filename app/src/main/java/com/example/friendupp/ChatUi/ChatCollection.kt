@@ -130,11 +130,16 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ButtonAdd( onClick: () -> Unit,icon:Int){
+fun ButtonAdd( onClick: () -> Unit,disabled:Boolean=false,icon:Int) {
 
-        val backColor =SocialTheme.colors.uiBorder
+    val back =SocialTheme.colors.uiBorder
+    val front = SocialTheme.colors.uiBackground
 
-        val frontColor = SocialTheme.colors.uiBackground
+    val frontColor =  if(disabled) front.copy(0.2f )else front
+    var backColor = if(disabled) back.copy(0.2f )else back
+
+
+
 
         var border =
             BorderStroke(1.dp,SocialTheme.colors.uiBorder)
@@ -232,7 +237,7 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String, onCli
                         .data(image)
                         .crossfade(true)
                         .build(),
-                    placeholder = painterResource(R.drawable.ic_launcher_background),
+                    placeholder = painterResource(R.drawable.ic_profile_300),
                     contentDescription = "stringResource(R.string.description)",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

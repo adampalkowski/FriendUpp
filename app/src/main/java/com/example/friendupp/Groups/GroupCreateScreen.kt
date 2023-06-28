@@ -48,7 +48,7 @@ fun GroupsCreateScreen(modifier: Modifier=Modifier,onEvent:(GroupCreateEvents)->
         BottomBarCreate(photo ="",
             onClick = {
 
-            },
+            },locationPicker={},
             createClicked = {
 
             },

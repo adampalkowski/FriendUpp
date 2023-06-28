@@ -753,7 +753,7 @@ fun eButtonSimple(
     iconFilled: Int = R.drawable.ic_bookmark_filled,
 ) {
     val backColor = if (selected) {
-        SocialTheme.colors.textInteractive.copy(0.5f)
+        SocialTheme.colors.textInteractive
     } else {
         SocialTheme.colors.uiBorder.copy(0.1f)
     }

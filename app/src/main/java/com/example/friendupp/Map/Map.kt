@@ -263,7 +263,7 @@ fun MapActivitiesDisplay(
 }
 
 
-private fun getBitmapDescriptor(context: Context, id: Int): BitmapDescriptor? {
+fun getBitmapDescriptor(context: Context, id: Int): BitmapDescriptor? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         val vectorDrawable = getDrawable(context, id) as VectorDrawable
         val h = vectorDrawable.intrinsicHeight

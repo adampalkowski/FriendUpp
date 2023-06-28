@@ -151,7 +151,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                     onEvent = {event->
                         when(event) {
                             is LoginEvents.GoBack->{
-                                navController.popBackStack()
+                                navController.navigate("Login")
                             }
                             is LoginEvents.Login->{
                                 authViewModel.signin(event.email,event.password)

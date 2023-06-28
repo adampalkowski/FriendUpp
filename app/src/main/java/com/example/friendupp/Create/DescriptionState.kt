@@ -3,7 +3,7 @@ package com.example.friendupp.Create
 import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.Login.textFieldStateSaver
 
-class DescriptionState : TextFieldState(validator = ::isDescriptionValid, errorFor = ::descriptionValidationError)
+class DescriptionState() : TextFieldState(validator = ::isDescriptionValid, errorFor = ::descriptionValidationError)
 
 private fun descriptionValidationError(description: String): String {
     return if (description.length > 500) {

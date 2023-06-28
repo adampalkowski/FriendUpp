@@ -58,7 +58,7 @@ fun getExpandedTags(selectedTags: List<String>): List<Category> {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FilterList(
-    tags: MutableList<String>,
+    tags: List<String>,
     onSelected: (String) -> Unit,
     onDeSelected: (String) -> Unit,
 ) {

@@ -49,6 +49,7 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -198,7 +199,6 @@ fun NavigationComponent(
                             }
                             BottomBarOption.Home -> {
                                 navController.navigate("Home")
-
                             }
                             BottomBarOption.Create -> {
                                 navController.navigate("Create")
@@ -227,44 +227,6 @@ fun NavigationComponent(
             })
             //GET USER LOCATION CALL
             val context = LocalContext.current
-            val createViewModel = remember { CreateViewModel(context) }
-
-         /*   val timeStartState = rememberTimeState(
-                initialHours = LocalTime.now().hour,
-                initialMinutes = LocalTime.now().minute
-            )
-            val timeEndState = rememberTimeState(
-                initialHours = LocalTime.now().hour.plus(1),
-                initialMinutes = LocalTime.now().minute
-            )
-            val startDateState = rememberHorizontalDatePickerState2()
-            val endDateState = rememberHorizontalDatePickerState2()
-
-            val titleState by rememberSaveable(stateSaver = TitleStateSaver) {
-                mutableStateOf(TitleState())
-            }
-
-            val descriptionState by rememberSaveable(stateSaver = DescriptionStateSaver) {
-                mutableStateOf(DescriptionState())
-            }
-
-            val selectedOptionState = rememberSelectedOptionState(
-                if (currentActivity.value.public) {
-                    Option.PUBLIC
-                } else {
-                    Option.FRIENDS
-                }
-            )
-            LaunchedEffect(Unit) {
-                createViewModel.updateTitleState(titleState) // Update the title state
-                createViewModel.updateDescriptionState(descriptionState) // Update the description state
-                createViewModel.updateSelectedOption(selectedOptionState) // Update the selected option
-                createViewModel.updateTimeStartState(timeStartState) // Update the start time state
-                createViewModel.updateTimeEndState(timeEndState) // Update the end time state
-                createViewModel.updateStartDateState(startDateState) // Update the start date state
-                createViewModel.updateEndDateState(endDateState) // Update the end date state
-            }
-*/
 
             val calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault())
             val activityState= rememberActivityState(
@@ -280,7 +242,10 @@ fun NavigationComponent(
                 initialEndMonth = calendar.get(Calendar.MONTH)+1,
                 initialEndYear =calendar.get(Calendar.YEAR) ,
                 initialOption =Option.PUBLIC,
-                initialDescription="Init desc"
+                initialDescription="Init desc",
+                initialTags = arrayListOf(),
+                initialImageUrl = ""
+            , initialLocation =  LatLng(0.0,0.0)
             )
 
 
@@ -329,7 +294,7 @@ fun NavigationComponent(
                     chatViewModel = chatViewModel,
                     userViewModel = userViewModel,
                     activityState=activityState
-                )
+                , mapViewModel = mapViewModel)
                 settingsGraph(navController, authViewModel, userViewModel)
                 drawerGraph(navController, activityViewModel)
                 groupGraph(navController, chatViewModel)

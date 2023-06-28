@@ -18,10 +18,11 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 
 @Composable
-fun ScreenHeading(title:String,backButton:Boolean=false,onBack:()->Unit={},backIcon:Int=R.drawable.ic_back,content:@Composable ()->Unit,){
+fun ScreenHeading(modifier: Modifier=Modifier,title:String,backButton:Boolean=false,
+                  onBack:()->Unit={},backIcon:Int=R.drawable.ic_back,content:@Composable ()->Unit,){
 
     var padding =if(backButton){100.dp}else{64.dp}
-    Box(modifier = Modifier.fillMaxWidth()){
+    Box(modifier = modifier.fillMaxWidth()){
         Row(Modifier.align(Alignment.Center).padding(top = 12.dp),verticalAlignment = Alignment.CenterVertically){
             Spacer(modifier = Modifier
                 .background(SocialTheme.colors.uiBorder).height(1.dp)

@@ -1,14 +1,12 @@
 package com.example.friendupp.Settings
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -121,7 +119,9 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
         sheetElevation = 16.dp
     ) {
 
-
+        var sliderValue = remember {
+            mutableStateOf(0f)
+        }
         Column(Modifier.verticalScroll(rememberScrollState())) {
             ScreenHeading(
                 title = "Settings",
@@ -129,11 +129,14 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 onBack = { settingsEvents(SettingsEvents.GoBack) }) {
 
             }
-            SettingsLabel("Activities")
-            SettingsItem(
+                SettingsLabel("Search Range")
+
+
+
+            RangeItem(
                 label = "Change range",
                 icon = R.drawable.ic_ruler,
-                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) })
+                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) },sliderValue=sliderValue.value, onValueChange = {value->sliderValue.value=value})
 
             SettingsLabel("Account")
             SettingsItem(
@@ -218,7 +221,64 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
 
 
 }
+@Composable
+fun RangeItem(label: String, icon: Int, onClick: () -> Unit,sliderValue:Float,onValueChange:(Float)->Unit) {
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val rippleColor = SocialTheme.colors.iconPrimary.copy(0.2f)
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = rememberRipple(bounded = true, color = rippleColor),
+                onClick = onClick
+            )
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            tint = SocialTheme.colors.iconPrimary
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            androidx.compose.material.Text(
+                textAlign = TextAlign.Center,
+                text = java.lang.String.format("%.1f", sliderValue) + " km",
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = SocialTheme.colors.textPrimary
+            )
+            Slider(modifier= Modifier
+                .padding(horizontal = 6.dp),
+                value = sliderValue,
+                onValueChange =onValueChange,
+                onValueChangeFinished = {
+                    // this is called when the user completed selecting the value
+                    Log.d("MainActivity", "sliderValue = $sliderValue")
+                },
+                valueRange = 5f..150f,
+                colors = SliderDefaults.colors(
+                    thumbColor = SocialTheme.colors.textInteractive,
+                    activeTrackColor = SocialTheme.colors.textInteractive.copy(1f),
+                    inactiveTrackColor = SocialTheme.colors.uiBorder
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+
+
+    }
+}
 @Composable
 fun BottomSheetContent(
     onConfirm: () -> Unit,

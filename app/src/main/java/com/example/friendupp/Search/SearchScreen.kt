@@ -198,7 +198,7 @@ fun InviteItem(
                     .data(profilePictureUrl)
                     .crossfade(true)
                     .build(),
-                placeholder = painterResource(com.example.friendupp.R.drawable.ic_launcher_background),
+                placeholder = painterResource(com.example.friendupp.R.drawable.ic_profile_300),
                 contentDescription = "stringResource(R.string.description)",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
