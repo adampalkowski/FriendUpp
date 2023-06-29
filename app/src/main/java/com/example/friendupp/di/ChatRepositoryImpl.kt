@@ -31,6 +31,7 @@ class ChatRepositoryImpl @Inject constructor(
 ) : ChatRepository {
     private var lastVisibleData: DocumentSnapshot? = null
     private var lastVisibleDataGroup: DocumentSnapshot? = null
+    private var lastVisibleChatCollectionData: DocumentSnapshot? = null
     private  var loaded_messages: ArrayList<ChatMessage> = ArrayList()
     override suspend fun getChatCollection(id: String): Flow<Response<Chat>> = callbackFlow {
         chatCollectionsRef.document(id).get().addOnSuccessListener { documentSnapshot ->
@@ -303,75 +304,142 @@ class ChatRepositoryImpl @Inject constructor(
             }
     }
 
-    //todo ::PAGINATION
-    override suspend fun getMoreMessages(chat_collection_id: String): Flow<Response<ArrayList<ChatMessage>>> =
-        callbackFlow {
 
-           val callback= messagesRef.document(chat_collection_id).collection("messages")
-                .orderBy("sent_time", Query.Direction.DESCENDING).startAfter(lastVisibleData?.data?.get("sent_time"))
+
+    override suspend fun getMessages(chatCollectionId: String, currentTime: String): Flow<Response<ArrayList<ChatMessage>>> =
+        callbackFlow {
+            var messages: ArrayList<ChatMessage> = ArrayList()
+            Log.d("ChatDebug", "setting null")
+            Log.d("ChatDebug", "getMessages called")
+            val registration = messagesRef.document(chatCollectionId)
+                .collection("messages")
+                .orderBy("sent_time", Query.Direction.DESCENDING)
+                .endAt(currentTime)
+                .addSnapshotListener { snapshots, exception ->
+                    if (exception != null) {
+                        channel.close(exception)
+                        return@addSnapshotListener
+                    }
+
+
+
+                    for (dc in snapshots!!.documentChanges) {
+                        when (dc.type) {
+                            DocumentChange.Type.ADDED -> {
+                                val message = dc.document.toObject(ChatMessage::class.java)
+                                Log.d("NEW MESSAGES", message.toString() + "\n")
+                                messages.add(message)
+                            }
+                            DocumentChange.Type.MODIFIED -> {
+                                val message = dc.document.toObject(ChatMessage::class.java)
+                                messages.add(message)
+                            }
+                            DocumentChange.Type.REMOVED -> {
+                                val message = dc.document.toObject(ChatMessage::class.java)
+                                messages.remove(message)
+                            }
+                        }
+                    }
+                    trySend(Response.Success(ArrayList(messages)))
+                }
+
+            awaitClose {
+                registration.remove()
+            }
+        }
+
+    //todo ::PAGINATION
+    override suspend fun getFirstMessages(chatCollectionId: String, currentTime: String): Flow<Response<ArrayList<ChatMessage>>> =
+
+        callbackFlow {
+            Log.d("CHATDEBUG", "GET FIRST MESSAGES")
+            messagesRef.document(chatCollectionId)
+                .collection("messages")
+                .orderBy("sent_time", Query.Direction.DESCENDING)
+                .startAfter(currentTime)
                 .limit(15)
-                .get().addOnCompleteListener { task ->
+                .get()
+                .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
                         if (documents != null && documents.isNotEmpty()) {
                             val newMessages = ArrayList<ChatMessage>()
                             for (document in documents) {
                                 val message = document.toObject<ChatMessage>()
-                                if (message!=null){
+                                Log.d(
+                                    "CHATDEBUG",
+                                  message.toString()
+                                )
+                                if (message != null) {
                                     newMessages.add(message)
-
                                 }
                             }
-                            lastVisibleData= documents[documents.size - 1]
+                            Log.d(
+                                "CHATDEBUG",
+                                "docs"+documents.toString()
+                            )
+                            Log.d(
+                                    "CHATDEBUG",
+                            "docs"+ documents[documents.size - 1].toString()
+                            )
+                            lastVisibleData = documents[documents.size - 1]
+                            Log.d( "CHATDEBUG", "setting last visible data " + lastVisibleData?.get("sent_time").toString() )
+                            trySend(Response.Success(ArrayList(newMessages)))
+                        } else {
+                            // No more messages to load
+                            trySend(Response.Failure(SocialException("No more messages to load", Exception())))
+                        }
+                    } else {
+                        val exception = task.exception
+                        trySend(Response.Failure(SocialException("Failed to get more messages", exception ?: Exception())))
+                    }
+                }
+
+            awaitClose {}
+        }
+    //todo ::PAGINATION
+    override suspend fun getMoreMessages(chatCollectionId: String): Flow<Response<ArrayList<ChatMessage>>> =
+        callbackFlow {
+            Log.d("CHATDEBUG", "getMoreMessages repo" + lastVisibleData?.toString())
+
+            messagesRef.document(chatCollectionId)
+                .collection("messages")
+                .orderBy("sent_time", Query.Direction.DESCENDING)
+                .startAfter(lastVisibleData?.data?.get("sent_time"))
+                .limit(15)
+                .get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("CHATDEBUG", "success repo")
+                        val documents = task.result?.documents
+                        Log.d("CHATDEBUG", "docs" + documents.toString())
+                        if (documents != null && documents.isNotEmpty()) {
+                            val newMessages = ArrayList<ChatMessage>()
+                            for (document in documents) {
+                                val message = document.toObject<ChatMessage>()
+                                if (message != null) {
+                                    newMessages.add(message)
+                                    Log.d("CHATDEBUG", message.toString())
+                                }
+                            }
+                            lastVisibleData = documents[documents.size - 1]
                             loaded_messages.addAll(newMessages)
-                            val new_instance=ArrayList<ChatMessage>()
-                            new_instance.addAll(loaded_messages)
-                            trySend(Response.Success(new_instance))
-
+                            val newInstances = ArrayList(loaded_messages)
+                            newInstances.reverse()
+                            trySend(Response.Success(newInstances))
+                        } else {
+                            // No more messages to load
+                            trySend(Response.Failure(SocialException("No more messages to load", Exception())))
                         }
                     } else {
-                        // There are no more messages to load
-                        trySend(Response.Failure(e=SocialException(message="failed to get more messages",e=Exception())))
+                        Log.d("CHATDEBUG", "failed repo")
+                        val exception = task.exception
+                        trySend(Response.Failure(SocialException("Failed to get more messages", exception ?: Exception())))
                     }
-
                 }
 
-            awaitClose{
-            }
+            awaitClose {}
         }
-    //todo ::PAGINATION
-    override suspend fun getFirstMessages(chat_collection_id: String,current_time:String): Flow<Response<ArrayList<ChatMessage>>> =
-        callbackFlow {
-
-            val callback= messagesRef.document(chat_collection_id).collection("messages")
-                .orderBy("sent_time", Query.Direction.DESCENDING).startAfter(current_time)
-                .limit(15)
-                .get().addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val documents = task.result?.documents
-                        if (documents != null && documents.isNotEmpty()) {
-                            val newMessages = ArrayList<ChatMessage>()
-                            for (document in documents) {
-                                val message = document.toObject<ChatMessage>()
-                                if (message!=null){
-                                    newMessages.add(message)
-                                }
-                            }
-                            lastVisibleData= documents[documents.size - 1]
-                            trySend(Response.Success(newMessages))
-
-                        }
-                    } else {
-                        // There are no more messages to load
-                        trySend(Response.Failure(e=SocialException(message="failed to get more messages",e=Exception())))
-                    }
-
-                }
-
-            awaitClose{
-            }
-        }
-
     override suspend fun getGroups(id: String): Flow<Response<ArrayList<Chat>>> =
         callbackFlow {
 
@@ -402,82 +470,13 @@ class ChatRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getMessages(chat_collection_id: String,current_time:String): Flow<Response<ArrayList<ChatMessage>>> =
-        callbackFlow {
-            var messages: ArrayList<ChatMessage> = ArrayList()
-            Log.d("MessagesA", "setiing null")
-            lastVisibleData = null
-            Log.d("ChatRepository", "getmessages called")
-            val registration = messagesRef.document(chat_collection_id).collection("messages")
-                .orderBy("sent_time", Query.Direction.DESCENDING).endAt(current_time)
-                .addSnapshotListener { snapshots, exception ->
-                    if (exception != null) {
-                        channel.close(exception)
-                        return@addSnapshotListener
-                    }
-                    var new_messages = ArrayList<ChatMessage>()
-                    new_messages.addAll(messages)
-                    if (snapshots == null || snapshots.isEmpty()) {
-                        Log.d("MessagesA", "setiing null again")
-
-                        lastVisibleData = null
-                    } else {
-                        if (lastVisibleData==null){
-                            lastVisibleData = snapshots.getDocuments()
-                                .get(snapshots.size() - 1)
-                        }else{
-
-                        }
-
-                        Log.d("MessagesA", lastVisibleData.toString() + "SETT")
-
-                    }
-                    for (dc in snapshots!!.documentChanges) {
-                        when (dc.type) {
-                            DocumentChange.Type.ADDED -> {
-                                val message = dc.document.toObject(ChatMessage::class.java)
-                                Log.d("NEW MESSAGES", message.toString() + "\n")
-                                if (messages.isEmpty()) {
-                                    new_messages.add(message)
-
-                                } else {
-                                    new_messages.reverse()
-                                    new_messages.add(message)
-                                    new_messages.reverse()
-
-                                }
-
-                                Log.d("ChatRepositoryIMPL", messages.toString() + "\n")
-                            }
-                            DocumentChange.Type.MODIFIED -> {
-                                val message = dc.document.toObject(ChatMessage::class.java)
-                                new_messages.add(message)
-                            }
-                            DocumentChange.Type.REMOVED -> {
-                                val message = dc.document.toObject(ChatMessage::class.java)
-                                new_messages.remove(message)
-                                messages.remove(message)
-                            }
-                        }
-
-                    }
-                    messages.clear()
-                    messages.addAll(new_messages)
-                    trySend(Response.Success(new_messages))
-
-                }
-            awaitClose() {
-                registration.remove()
-            }
-
-        }
 
     override suspend fun getChatCollections(user_id: String): Flow<Response<ArrayList<Chat>>> =
         callbackFlow {
 
             var messages: ArrayList<Chat> = ArrayList()
 
-            lastVisibleData = null
+            lastVisibleChatCollectionData = null
             val registration = chatCollectionsRef.whereArrayContains("members", user_id)
                 .orderBy("recent_message_time", Query.Direction.DESCENDING).limit(10)
                 .addSnapshotListener { snapshots, exception ->
@@ -488,9 +487,9 @@ class ChatRepositoryImpl @Inject constructor(
                     var new_messages = ArrayList<Chat>()
                     new_messages.addAll(messages)
                     if (snapshots == null || snapshots.isEmpty()) {
-                        lastVisibleData = null
+                        lastVisibleChatCollectionData = null
                     } else {
-                        lastVisibleData = snapshots.getDocuments()
+                        lastVisibleChatCollectionData = snapshots.getDocuments()
                             .get(snapshots.size() - 1)
                     }
                     for (dc in snapshots!!.documentChanges) {

@@ -85,9 +85,9 @@ fun ChatContent(
     var highlight_dialog by remember { mutableStateOf(false) }
 
 
-
     var chat = remember{ mutableStateOf<Chat?>(null) }
-    loadChat(chatViewModel,chat)
+    loadChat(modifier=Modifier,chatViewModel,chat)
+
     var data = remember{ mutableStateListOf<ChatMessage>()}
     var data_new = remember{ mutableStateListOf<ChatMessage>()}
     var frist_data = remember{ mutableStateListOf<ChatMessage>()}
@@ -130,6 +130,7 @@ fun ChatContent(
 
             }
         }
+
         Box(Modifier.fillMaxSize()){
 
             if (highlight_dialog) {
@@ -180,6 +181,7 @@ fun ChatContent(
                 addImage = {onEvent(ChatEvents.OpenGallery)},
                 liveActivity = {})
             }
+
         }
 
     }
@@ -230,14 +232,14 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
                  ,valueExist: MutableState<Boolean>,chatID:String) {
 
 
-    Log.d("CHATCONTENT","LOAD MESSGESS CALLED")
+    Log.d("CHATDEBUG","LOAD MESSGESS CALLED")
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
             val currentDateTime = Calendar.getInstance().time
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedDateTime = dateFormat.format(currentDateTime)
-
+            Log.d("CHATDEBUG","BIGGGGG CALLLL")
 
             chatViewModel.getMessages(chatID, formattedDateTime)
             chatViewModel.getFirstMessages(chatID, formattedDateTime)
@@ -250,6 +252,7 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
             is Response.Success -> {
                 fristData.clear()
                 fristData.addAll(it.data)
+                Log.d("ChatDebug","SET TO TRUE")
                 valueExist.value = true
             }
             is Response.Loading -> {
@@ -264,8 +267,9 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
     chatViewModel.messagesState.value.let {
         when (it) {
             is Response.Success -> {
-                data.clear()
-                data.addAll(it.data)
+                dataNew.clear()
+                dataNew.addAll(it.data)
+
             }
             is Response.Loading -> {
                 data.clear()
@@ -278,14 +282,15 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
     chatViewModel.moreMessagesState.value.let {
         when (it) {
             is Response.Success -> {
-                dataNew.clear()
-                dataNew.addAll(it.data)
+                Log.d("CHATDEBUG","got older messges")
+                Log.d("CHATDEBUG",it.data.toString())
+
+                data.clear()
+                data.addAll(it.data)
             }
             is Response.Loading -> {
-                data.clear()
             }
             is Response.Failure -> {
-                data.clear()
             }
             else -> {}
         }
@@ -293,12 +298,12 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
 }
 
 @Composable
-fun loadChat(chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
+fun loadChat(modifier:Modifier,chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
     val chatState = chatViewModel.chatCollectionState.collectAsState()
     when (val result = chatState.value) {
         is Response.Loading -> {
             // Display a circular loading indicator
-            androidx.compose.material.CircularProgressIndicator()
+            androidx.compose.material.CircularProgressIndicator(modifier=modifier, color = SocialTheme.colors.textPrimary)
         }
         is Response.Success -> {
             chat.value=result.data
@@ -326,21 +331,32 @@ fun ChatMessages(
     ) {
 
     val lazyListState = rememberLazyListState()
+var messagesLoaded by remember {
+    mutableStateOf(false)
+}
 
-    // Trigger the "Get more messages" event when scrolled to the bottom
-    LaunchedEffect(lazyListState) {
-        val totalItems = data.size + new_data.size + first_data.size
-        val visibleItems = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
-        if (visibleItems >= totalItems - 1 && valueExist) {
-            Log.d("CHATDEBUG", "GET MORE MESSAGES CALLED")
-            onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
-        }
-    }
         var lastMessageSenderID: String? = null
         LazyColumn(modifier,
             reverseLayout = true,
             state = lazyListState
         ) {
+            items(new_data) { message ->
+                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
+                ChatBox(
+                    message,
+                    onLongPress = {
+                    },
+                    highlite_message = highlight_message,
+                    displayPicture = {},
+                    highlightMessage = {  },
+                    openDialog = {
+                    },
+                    onEvent = onEvent,
+                    shouldGroup = shouldGroup,
+                )
+
+                lastMessageSenderID = message.sender_id
+            }
             items(data) { message ->
                 val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
                 ChatBox(
@@ -375,27 +391,19 @@ fun ChatMessages(
 
                 lastMessageSenderID = message.sender_id
             }
-            items(new_data) { message ->
-                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
-                ChatBox(
-                    message,
-                    onLongPress = {
-                    },
-                    highlite_message = highlight_message,
-                    displayPicture = {},
-                    highlightMessage = {  },
-                    openDialog = {
-                    },
-                    onEvent = onEvent,
-                    shouldGroup = shouldGroup,
-                )
 
-                lastMessageSenderID = message.sender_id
+            item{
+                LaunchedEffect(true) {
+                        if(valueExist){
+                            Log.d("CHATDEBUG","CAALED FOR OLDER MESSAGES")
+                            Log.d("CHATDEBUG",chat_id)
+                            onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
+                        }
+
+                    }
+                }
             }
 
-
-
-        }
 
 }
 
@@ -567,14 +575,15 @@ fun ChatItemLeft(
                 placeholder = painterResource(R.drawable.ic_image_300),
                 contentDescription = "image sent",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier        .clip(
-                    shape = RoundedCornerShape(
-                        topEnd = 8.dp,
-                        topStart = 8.dp,
-                        bottomStart = 8.dp,
-                        bottomEnd = 0.dp
+                modifier = Modifier
+                    .clip(
+                        shape = RoundedCornerShape(
+                            topEnd = 8.dp,
+                            topStart = 8.dp,
+                            bottomStart = 8.dp,
+                            bottomEnd = 0.dp
+                        )
                     )
-                )
                     .combinedClickable(
                         onClick = {
                             onClick()
@@ -800,14 +809,15 @@ fun ChatItemRight(
                 placeholder = painterResource(R.drawable.ic_image_300),
                 contentDescription = "image sent",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier        .clip(
-                    shape = RoundedCornerShape(
-                        topEnd = 8.dp,
-                        topStart = 8.dp,
-                        bottomStart = 8.dp,
-                        bottomEnd = 0.dp
+                modifier = Modifier
+                    .clip(
+                        shape = RoundedCornerShape(
+                            topEnd = 8.dp,
+                            topStart = 8.dp,
+                            bottomStart = 8.dp,
+                            bottomEnd = 0.dp
+                        )
                     )
-                )
                     .combinedClickable(
                         onClick = {
                             onClick()

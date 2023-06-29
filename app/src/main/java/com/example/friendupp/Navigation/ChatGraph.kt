@@ -339,13 +339,12 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedDateTime = dateFormat.format(currentDateTime)
 
-            val currentChatViewModel :ChatViewModel= hiltViewModel()
 
             val chatID = backStackEntry.arguments?.getString("chatID")
             LaunchedEffect(chatID) {
                 if (chatID != null) {
                     Log.d("CHATDEBUG","GET MESSAGES CALLED ")
-                    currentChatViewModel.getChatCollection(chatID)
+                    chatViewModel.getChatCollection(chatID)
                 }
             }
 
@@ -398,7 +397,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         else -> {}
                     }
 
-                },chatViewModel=currentChatViewModel)
+                },chatViewModel=chatViewModel)
 
             var uri by remember { mutableStateOf<Uri?>(null) }
             val uriFlow = chatViewModel.uri.collectAsState()

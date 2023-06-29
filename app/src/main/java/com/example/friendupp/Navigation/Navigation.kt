@@ -265,6 +265,7 @@ fun NavigationComponent(
                     mapViewModel.stopLocationUpdates()
                 }
             }
+            val currentChatViewModel :ChatViewModel= hiltViewModel()
 
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
