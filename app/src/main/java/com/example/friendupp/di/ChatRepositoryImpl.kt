@@ -340,7 +340,7 @@ class ChatRepositoryImpl @Inject constructor(
                             }
                         }
                     }
-                    trySend(Response.Success(ArrayList(messages)))
+                    trySend(Response.Success(ArrayList(messages.reversed())))
                 }
 
             awaitClose {
@@ -357,7 +357,7 @@ class ChatRepositoryImpl @Inject constructor(
                 .collection("messages")
                 .orderBy("sent_time", Query.Direction.DESCENDING)
                 .startAfter(currentTime)
-                .limit(15)
+                .limit(25)
                 .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -425,7 +425,6 @@ class ChatRepositoryImpl @Inject constructor(
                             lastVisibleData = documents[documents.size - 1]
                             loaded_messages.addAll(newMessages)
                             val newInstances = ArrayList(loaded_messages)
-                            newInstances.reverse()
                             trySend(Response.Success(newInstances))
                         } else {
                             // No more messages to load

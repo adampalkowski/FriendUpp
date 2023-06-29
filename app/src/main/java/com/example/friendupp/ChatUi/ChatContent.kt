@@ -62,15 +62,16 @@ sealed class ChatEvents {
     class SendImage(message: Uri) : ChatEvents() {
         val message = message
     }
+
     object CloseDialog : ChatEvents()
     object OpenGallery : ChatEvents()
-    class GetMoreMessages(val chat_id:String) : ChatEvents()
-    class SendMessage (val chat_id:String,val message:String): ChatEvents()
+    class GetMoreMessages(val chat_id: String) : ChatEvents()
+    class SendMessage(val chat_id: String, val message: String) : ChatEvents()
     object OpenChatSettings : ChatEvents()
-    class Reply(val message:ChatMessage) : ChatEvents()
+    class Reply(val message: ChatMessage) : ChatEvents()
     object Report : ChatEvents()
-    class Delete (val id :String): ChatEvents()
-    class Copy (val text:String): ChatEvents()
+    class Delete(val id: String) : ChatEvents()
+    class Copy(val text: String) : ChatEvents()
     object Share : ChatEvents()
 }
 
@@ -85,12 +86,12 @@ fun ChatContent(
     var highlight_dialog by remember { mutableStateOf(false) }
 
 
-    var chat = remember{ mutableStateOf<Chat?>(null) }
-    loadChat(modifier=Modifier,chatViewModel,chat)
+    var chat = remember { mutableStateOf<Chat?>(null) }
+    loadChat(modifier = Modifier, chatViewModel, chat)
 
-    var data = remember{ mutableStateListOf<ChatMessage>()}
-    var data_new = remember{ mutableStateListOf<ChatMessage>()}
-    var frist_data = remember{ mutableStateListOf<ChatMessage>()}
+    var data = remember { mutableStateListOf<ChatMessage>() }
+    var data_new = remember { mutableStateListOf<ChatMessage>() }
+    var frist_data = remember { mutableStateListOf<ChatMessage>() }
     val valueExist = remember { mutableStateOf(false) }
 
     //HIGHLIGHT
@@ -104,8 +105,15 @@ fun ChatContent(
     val location_flow = chatViewModel.location.collectAsState()
     val isImageAddedToStorage by chatViewModel.isImageAddedToStorageFlow.collectAsState()
     var chatFinal = chat.value
-    if (chatFinal!=null){
-        loadMessages(frist_data,data,data_new,chatViewModel, valueExist = valueExist,chatFinal.id!!)
+    if (chatFinal != null) {
+        loadMessages(
+            frist_data,
+            data,
+            data_new,
+            chatViewModel,
+            valueExist = valueExist,
+            chatFinal.id!!
+        )
         if (chatFinal.highlited_message != null) {
             if (chatFinal.highlited_message!!.isNotEmpty()) {
                 highlight_dialog = true
@@ -113,25 +121,25 @@ fun ChatContent(
         }
 
         var chat_name = chatFinal.name.toString()
-        if (chatFinal.type.equals("duo")){
-            if(chatFinal.user_one_username==UserData.user!!.username){
-                chat_name=chatFinal.user_two_username.toString()
-            }else{
-                chat_name=chatFinal.user_one_username.toString()
+        if (chatFinal.type.equals("duo")) {
+            if (chatFinal.user_one_username == UserData.user!!.username) {
+                chat_name = chatFinal.user_two_username.toString()
+            } else {
+                chat_name = chatFinal.user_one_username.toString()
 
             }
         }
         var chat_image = chat.value!!.imageUrl.toString()
-        if (chat.value!!.type.equals("duo")){
-            if(chat.value!!.user_one_profile_pic==UserData.user!!.pictureUrl){
-                chat_image=chat.value!!.user_two_profile_pic.toString()
-            }else{
-                chat_image=chat.value!!.user_one_profile_pic.toString()
+        if (chat.value!!.type.equals("duo")) {
+            if (chat.value!!.user_one_profile_pic == UserData.user!!.pictureUrl) {
+                chat_image = chat.value!!.user_two_profile_pic.toString()
+            } else {
+                chat_image = chat.value!!.user_one_profile_pic.toString()
 
             }
         }
 
-        Box(Modifier.fillMaxSize()){
+        Box(Modifier.fillMaxSize()) {
 
             if (highlight_dialog) {
                 HighLightDialog(modifier = Modifier.align(Alignment.TopCenter), onEvent = { it ->
@@ -152,15 +160,17 @@ fun ChatContent(
                 )
                 ChatMessages(
                     modifier.weight(1f),
-                    onEvent = { event->
-                        Log.d("CHATDEBUG","EVENT")
+                    onEvent = { event ->
+                        Log.d("CHATDEBUG", "EVENT")
 
-                        when(event){
-                            is ChatEvents.Reply->{
-                                Log.d("CHATDEBUG","REPLY")
-                                replyMessage.value=event.message
+                        when (event) {
+                            is ChatEvents.Reply -> {
+                                Log.d("CHATDEBUG", "REPLY")
+                                replyMessage.value = event.message
                             }
-                            else->{ onEvent(event) }
+                            else -> {
+                                onEvent(event)
+                            }
                         }
                     },
                     data,
@@ -168,25 +178,27 @@ fun ChatContent(
                     frist_data,
                     valueExist = valueExist.value,
                     chat_id = chatFinal.id.toString(),
-                            highlightMessage={highlited_message_text = it},highlight_message=highlite_message
+                    highlightMessage = { highlited_message_text = it },
+                    highlight_message = highlite_message
 
                 )
-                BottomChatBar(modifier = Modifier,onEvent=onEvent,replyMessage=replyMessage,chat.value!!.id.toString(),
-                shareLocation = {
+                BottomChatBar(modifier = Modifier,
+                    onEvent = onEvent,
+                    replyMessage = replyMessage,
+                    chat.value!!.id.toString(),
+                    shareLocation = {
 
-                },
-                highlightMessage = {
-                    highlite_message = !highlite_message
-                },
-                addImage = {onEvent(ChatEvents.OpenGallery)},
-                liveActivity = {})
+                    },
+                    highlightMessage = {
+                        highlite_message = !highlite_message
+                    },
+                    addImage = { onEvent(ChatEvents.OpenGallery) },
+                    liveActivity = {})
             }
 
         }
 
     }
-
-
 
 
     //handle image loading animatipn
@@ -223,23 +235,26 @@ fun ChatContent(
     }
 
 
-
 }
 
 @Composable
-fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMessage>, dataNew: MutableList<ChatMessage>
-                 ,chatViewModel:ChatViewModel
-                 ,valueExist: MutableState<Boolean>,chatID:String) {
+fun loadMessages(
+    fristData: MutableList<ChatMessage>,
+    data: MutableList<ChatMessage>,
+    dataNew: MutableList<ChatMessage>,
+    chatViewModel: ChatViewModel,
+    valueExist: MutableState<Boolean>,
+    chatID: String,
+) {
 
 
-    Log.d("CHATDEBUG","LOAD MESSGESS CALLED")
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
             val currentDateTime = Calendar.getInstance().time
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedDateTime = dateFormat.format(currentDateTime)
-            Log.d("CHATDEBUG","BIGGGGG CALLLL")
+            Log.d("CHATDEBUG", "BIGGGGG CALLLL")
 
             chatViewModel.getMessages(chatID, formattedDateTime)
             chatViewModel.getFirstMessages(chatID, formattedDateTime)
@@ -247,13 +262,16 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
         }
     }
 
-   chatViewModel.firstMessagesState.value.let {
+
+
+    chatViewModel.firstMessagesState.value.let {
         when (it) {
             is Response.Success -> {
                 fristData.clear()
                 fristData.addAll(it.data)
-                Log.d("ChatDebug","SET TO TRUE")
+                Log.d("ChatDebug", "SET TO TRUE")
                 valueExist.value = true
+                chatViewModel.resetFirstMessages()
             }
             is Response.Loading -> {
                 fristData.clear()
@@ -269,6 +287,7 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
             is Response.Success -> {
                 dataNew.clear()
                 dataNew.addAll(it.data)
+                chatViewModel.resetNewMessages()
 
             }
             is Response.Loading -> {
@@ -277,16 +296,19 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
             is Response.Failure -> {
                 data.clear()
             }
+            else->{}
         }
     }
     chatViewModel.moreMessagesState.value.let {
         when (it) {
             is Response.Success -> {
-                Log.d("CHATDEBUG","got older messges")
-                Log.d("CHATDEBUG",it.data.toString())
+                Log.d("CHATDEBUG", "got older messges")
+                Log.d("CHATDEBUG", it.data.toString())
 
                 data.clear()
                 data.addAll(it.data)
+                chatViewModel.resetMoreMessages()
+
             }
             is Response.Loading -> {
             }
@@ -298,27 +320,34 @@ fun loadMessages(fristData: MutableList<ChatMessage>, data:  MutableList<ChatMes
 }
 
 @Composable
-fun loadChat(modifier:Modifier,chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
+fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
+
+
     val chatState = chatViewModel.chatCollectionState.collectAsState()
+
     when (val result = chatState.value) {
         is Response.Loading -> {
             // Display a circular loading indicator
-            androidx.compose.material.CircularProgressIndicator(modifier=modifier, color = SocialTheme.colors.textPrimary)
+            androidx.compose.material.CircularProgressIndicator(
+                modifier = modifier,
+                color = SocialTheme.colors.textPrimary
+            )
         }
         is Response.Success -> {
-            chat.value=result.data
-
+            chat.value = result.data
+            chatViewModel.resetChat()
         }
         is Response.Failure -> {
 
 
         }
+        else -> {}
     }
 }
 
 @Composable
 fun ChatMessages(
-    modifier:Modifier,
+    modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
     data: MutableList<ChatMessage>,
     new_data: MutableList<ChatMessage>,
@@ -326,83 +355,87 @@ fun ChatMessages(
     valueExist: Boolean,
     chat_id: String,
     highlightMessage: (String) -> Unit,
-    highlight_message :Boolean,
+    highlight_message: Boolean,
 
     ) {
 
     val lazyListState = rememberLazyListState()
-var messagesLoaded by remember {
-    mutableStateOf(false)
-}
+    var messagesLoaded by remember {
+        mutableStateOf(false)
+    }
 
-        var lastMessageSenderID: String? = null
-        LazyColumn(modifier,
-            reverseLayout = true,
-            state = lazyListState
-        ) {
-            items(new_data) { message ->
-                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
-                ChatBox(
-                    message,
-                    onLongPress = {
-                    },
-                    highlite_message = highlight_message,
-                    displayPicture = {},
-                    highlightMessage = {  },
-                    openDialog = {
-                    },
-                    onEvent = onEvent,
-                    shouldGroup = shouldGroup,
-                )
+    var lastMessageSenderID: String? = null
+    LazyColumn(
+        modifier,
+        reverseLayout = true,
+        state = lazyListState
+    ) {
+        items(new_data) { message ->
+            val shouldGroup =
+                lastMessageSenderID == message.sender_id || lastMessageSenderID == null
+            ChatBox(
+                message,
+                onLongPress = {
+                },
+                highlite_message = highlight_message,
+                displayPicture = {},
+                highlightMessage = { },
+                openDialog = {
+                },
+                onEvent = onEvent,
+                shouldGroup = shouldGroup,
+            )
 
-                lastMessageSenderID = message.sender_id
-            }
-            items(data) { message ->
-                val shouldGroup = lastMessageSenderID == message.sender_id || lastMessageSenderID==null
-                ChatBox(
-                    message,
-                    onLongPress = {
-                    },
-                    highlite_message = highlight_message,
-                    displayPicture = {},
-                    highlightMessage = highlightMessage,
-                    openDialog = {
-                    },
-                    onEvent = onEvent,
-                    shouldGroup = shouldGroup,
-                )
+            lastMessageSenderID = message.sender_id
+        }
 
-                lastMessageSenderID = message.sender_id
-            }
-            items(first_data) { message ->
-                val shouldGroup =  lastMessageSenderID == message.sender_id || lastMessageSenderID==null
-                ChatBox(
-                    message,
-                    onLongPress = {
-                    },
-                    highlite_message = highlight_message,
-                    displayPicture = {},
-                    highlightMessage = highlightMessage,
-                    openDialog = {
-                    },
-                    onEvent =onEvent,
-                    shouldGroup = shouldGroup,
-                )
+        items(first_data) { message ->
+            val shouldGroup =
+                lastMessageSenderID == message.sender_id || lastMessageSenderID == null
+            ChatBox(
+                message,
+                onLongPress = {
+                },
+                highlite_message = highlight_message,
+                displayPicture = {},
+                highlightMessage = highlightMessage,
+                openDialog = {
+                },
+                onEvent = onEvent,
+                shouldGroup = shouldGroup,
+            )
 
-                lastMessageSenderID = message.sender_id
-            }
+            lastMessageSenderID = message.sender_id
+        }
+        items(data) { message ->
+            val shouldGroup =
+                lastMessageSenderID == message.sender_id || lastMessageSenderID == null
+            ChatBox(
+                message,
+                onLongPress = {
+                },
+                highlite_message = highlight_message,
+                displayPicture = {},
+                highlightMessage = highlightMessage,
+                openDialog = {
+                },
+                onEvent = onEvent,
+                shouldGroup = shouldGroup,
+            )
 
-            item{
-                LaunchedEffect(true) {
-                        if(valueExist){
-                            Log.d("CHATDEBUG","CAALED FOR OLDER MESSAGES")
-                            Log.d("CHATDEBUG",chat_id)
-                            onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
-                        }
-
-                    }
+            lastMessageSenderID = message.sender_id
+        }
+        item {
+            LaunchedEffect(true) {
+                if (valueExist) {
+                    Log.d("CHATDEBUG", "CAALED FOR OLDER MESSAGES")
+                    Log.d("CHATDEBUG", chat_id)
+                    onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
                 }
+
             }
+        }
+    }
 
 
 }
@@ -431,8 +464,8 @@ fun ChatBox(
         ChatItemRight(
             text_type = chat.message_type,
             text = chat.text,
-            timeSent = chat.sent_time,onEvent = onEvent,
-            chat=chat,
+            timeSent = chat.sent_time, onEvent = onEvent,
+            chat = chat,
             onClick = {
                 if (highlite_message) {
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {
@@ -456,7 +489,7 @@ fun ChatBox(
             text_type = chat.message_type,
             text = chat.text,
             timeSent = chat.sent_time, onEvent = onEvent,
-            chat=chat, onClick = {
+            chat = chat, onClick = {
                 if (highlite_message) {
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {
 
@@ -519,7 +552,7 @@ fun ChatItemLeft(
     text: String,
     timeSent: String = "12:12",
     onClick: () -> Unit,
-    onEvent: (ChatEvents) -> Unit,chat:ChatMessage
+    onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
 ) {
     var clicked by remember {
         mutableStateOf(false)
@@ -566,7 +599,7 @@ fun ChatItemLeft(
             }
         }*/
 
-        if (text_type.equals("uri")){
+        if (text_type.equals("uri")) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(chat.text)
@@ -596,7 +629,7 @@ fun ChatItemLeft(
                     )
 
             )
-        }else if(text_type.equals("text")){
+        } else if (text_type.equals("text")) {
             Box(
                 modifier = Modifier
                     .clip(
@@ -639,7 +672,7 @@ fun ChatItemLeft(
                     )
                 )
             }
-        }else if(text_type.equals("latLng")){
+        } else if (text_type.equals("latLng")) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
@@ -650,12 +683,12 @@ fun ChatItemLeft(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     ClickableText(
-                        text = AnnotatedString("Shared location") ,
+                        text = AnnotatedString("Shared location"),
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color=SocialTheme.colors.textPrimary,
+                            color = SocialTheme.colors.textPrimary,
                             textDecoration = TextDecoration.Underline,
                         ),
                         onClick = {
@@ -669,7 +702,7 @@ fun ChatItemLeft(
                 }
 
             }
-        }else if(text_type.equals("live")){
+        } else if (text_type.equals("live")) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
@@ -679,12 +712,12 @@ fun ChatItemLeft(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ClickableText(
-                        text = AnnotatedString("Live activity shared") ,
+                        text = AnnotatedString("Live activity shared"),
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color=SocialTheme.colors.textPrimary,
+                            color = SocialTheme.colors.textPrimary,
                             textDecoration = TextDecoration.Underline,
                         ),
                         onClick = {
@@ -733,9 +766,11 @@ fun ChatItemLeft(
 @Composable
 fun ChatSettingItem(label: String, icon: Int, onClick: () -> Unit) {
     val color = SocialTheme.colors.uiBorder.copy(0.2f)
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
-        .clip(RoundedCornerShape(9.dp))
-        .clickable(onClick = onClick)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
+            .clip(RoundedCornerShape(9.dp))
+            .clickable(onClick = onClick)
+    ) {
         Box(
             modifier = Modifier
                 .clip(CircleShape)
@@ -770,7 +805,7 @@ fun ChatItemRight(
     text_type: String,
     text: String,
     timeSent: String = "12:12",
-    onEvent: (ChatEvents) -> Unit,chat:ChatMessage,
+    onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
     onClick: () -> Unit,
 ) {
     var clicked by remember {
@@ -800,7 +835,7 @@ fun ChatItemRight(
             Spacer(modifier = Modifier.height(4.dp))
         }
 
-        if (text_type.equals("uri")){
+        if (text_type.equals("uri")) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(chat.text)
@@ -830,7 +865,7 @@ fun ChatItemRight(
                     )
 
             )
-        }else if(text_type.equals("text")){
+        } else if (text_type.equals("text")) {
             Box(
                 modifier = Modifier
                     .clip(
@@ -866,7 +901,7 @@ fun ChatItemRight(
                     )
                 )
             }
-        }else if(text_type.equals("latLng")){
+        } else if (text_type.equals("latLng")) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
@@ -877,12 +912,12 @@ fun ChatItemRight(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     ClickableText(
-                        text = AnnotatedString("Shared location") ,
+                        text = AnnotatedString("Shared location"),
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color=SocialTheme.colors.textPrimary,
+                            color = SocialTheme.colors.textPrimary,
                             textDecoration = TextDecoration.Underline,
                         ),
                         onClick = {
@@ -896,7 +931,7 @@ fun ChatItemRight(
                 }
 
             }
-        }else if(text_type.equals("live")){
+        } else if (text_type.equals("live")) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
@@ -906,12 +941,12 @@ fun ChatItemRight(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ClickableText(
-                        text = AnnotatedString("Live activity shared") ,
+                        text = AnnotatedString("Live activity shared"),
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color=SocialTheme.colors.textPrimary,
+                            color = SocialTheme.colors.textPrimary,
                             textDecoration = TextDecoration.Underline,
                         ),
                         onClick = {
@@ -956,8 +991,10 @@ fun ChatItemRight(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) -> Unit,textState:TextFieldState
-,reply:Boolean) {
+fun SocialEditText(
+    modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) -> Unit, textState: TextFieldState,
+    reply: Boolean,
+) {
 
     val focusRequester = remember { FocusRequester() }
 
@@ -992,7 +1029,7 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
                     }
                     .wrapContentHeight(align = Alignment.Top)
                     .fillMaxWidth(),
-                value = textState.text, onValueChange = { textState.text = it},
+                value = textState.text, onValueChange = { textState.text = it },
                 textStyle = TextStyle(
                     fontFamily = Lexend, fontSize = 14.sp,
                     fontWeight = FontWeight.Light
@@ -1006,8 +1043,12 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
             )
             if (textState.text.isEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (reply){
-                        Icon(painter = painterResource(id = R.drawable.ic_reply_arrow), contentDescription =null, tint = SocialTheme.colors.uiBorder )
+                    if (reply) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_reply_arrow),
+                            contentDescription = null,
+                            tint = SocialTheme.colors.uiBorder
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             modifier = Modifier
@@ -1020,7 +1061,7 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
                                 fontWeight = FontWeight.Light
                             )
                         )
-                    }else{
+                    } else {
                         Text(
                             modifier = Modifier
                                 .padding(start = 0.dp),
@@ -1043,7 +1084,13 @@ fun SocialEditText(modifier: Modifier, focus: Boolean, onFocusChange: (Boolean) 
 }
 
 @Composable
-fun chatButtonsRow(modifier: Modifier,shareLocation:()->Unit,highlightMessage:()->Unit,addImage:()->Unit,liveActivity:()->Unit) {
+fun chatButtonsRow(
+    modifier: Modifier,
+    shareLocation: () -> Unit,
+    highlightMessage: () -> Unit,
+    addImage: () -> Unit,
+    liveActivity: () -> Unit,
+) {
     var highlight by remember { mutableStateOf(false) }
 
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -1053,29 +1100,31 @@ fun chatButtonsRow(modifier: Modifier,shareLocation:()->Unit,highlightMessage:()
                 .height(1.dp)
                 .background(color = Color.Transparent)
         )
-        eButtonSimple(icon = R.drawable.ic_pindrop_300,onClick=shareLocation)
+        eButtonSimple(icon = R.drawable.ic_pindrop_300, onClick = shareLocation)
         Spacer(
             modifier = Modifier
                 .width(12.dp)
                 .height(1.dp)
                 .background(color = SocialTheme.colors.uiBorder)
         )
-        eButtonSimple(icon = R.drawable.ic_highlight_300,onClick= {  highlight=!highlight
-                                                                  highlightMessage()}, selected = highlight)
+        eButtonSimple(icon = R.drawable.ic_highlight_300, onClick = {
+            highlight = !highlight
+            highlightMessage()
+        }, selected = highlight)
         Spacer(
             modifier = Modifier
                 .width(12.dp)
                 .height(1.dp)
                 .background(color = SocialTheme.colors.uiBorder)
         )
-        eButtonSimple(icon = R.drawable.ic_image_300,onClick=addImage)
+        eButtonSimple(icon = R.drawable.ic_image_300, onClick = addImage)
         Spacer(
             modifier = Modifier
                 .width(12.dp)
                 .height(1.dp)
                 .background(color = SocialTheme.colors.uiBorder)
         )
-        eButtonSimple(icon = R.drawable.ic_wave_300,onClick=liveActivity)
+        eButtonSimple(icon = R.drawable.ic_wave_300, onClick = liveActivity)
 
         Spacer(
             modifier = Modifier
@@ -1095,28 +1144,36 @@ fun chatButtonsRow(modifier: Modifier,shareLocation:()->Unit,highlightMessage:()
 }
 
 @Composable
-fun BottomChatBar(modifier: Modifier = Modifier,onEvent: (ChatEvents) -> Unit,replyMessage:MutableState<ChatMessage?>,chat_id:String
-,shareLocation:()->Unit,highlightMessage:()->Unit,addImage:()->Unit,liveActivity:()->Unit) {
+fun BottomChatBar(
+    modifier: Modifier = Modifier,
+    onEvent: (ChatEvents) -> Unit,
+    replyMessage: MutableState<ChatMessage?>,
+    chat_id: String,
+    shareLocation: () -> Unit,
+    highlightMessage: () -> Unit,
+    addImage: () -> Unit,
+    liveActivity: () -> Unit,
+) {
     var focused by remember { mutableStateOf(false) }
     var text by rememberSaveable(stateSaver = MessageStateSaver) {
         mutableStateOf(MessageState())
     }
     Column(modifier.background(color = SocialTheme.colors.uiBackground.copy(0.7f))) {
         chatButtonsRow(modifier = Modifier,
-        shareLocation = {
-                        shareLocation()
-        },
-        addImage = {
-                   addImage()
-        },
-        liveActivity = {
-                       liveActivity()
-        },
-        highlightMessage = {
-            highlightMessage()
+            shareLocation = {
+                shareLocation()
+            },
+            addImage = {
+                addImage()
+            },
+            liveActivity = {
+                liveActivity()
+            },
+            highlightMessage = {
+                highlightMessage()
 
-        })
-        if (replyMessage.value!=null){
+            })
+        if (replyMessage.value != null) {
             ReplyMessage(replyMessage.value!!)
         }
         //todo set appropirate color to theme
@@ -1132,20 +1189,20 @@ fun BottomChatBar(modifier: Modifier = Modifier,onEvent: (ChatEvents) -> Unit,re
                 onFocusChange = { focusState ->
                     focused = focusState
                 }, textState = text,
-            reply=replyMessage.value!=null
-                )
+                reply = replyMessage.value != null
+            )
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
             )
             eButtonSimpleBlue(icon = R.drawable.ic_send, onClick = {
-                if(text.text.isNotEmpty()){
-                    onEvent(ChatEvents.SendMessage(chat_id = chat_id,text.text))
-                    text.text=""
-                }else{
+                if (text.text.isNotEmpty()) {
+                    onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text))
+                    text.text = ""
+                } else {
 
                 }
-                }
+            }
             )
         }
 
@@ -1153,19 +1210,30 @@ fun BottomChatBar(modifier: Modifier = Modifier,onEvent: (ChatEvents) -> Unit,re
 }
 
 @Composable
-fun ReplyMessage(chat:ChatMessage) {
+fun ReplyMessage(chat: ChatMessage) {
     Row(
         Modifier
             .fillMaxWidth()
             .background(color = SocialTheme.colors.uiBorder.copy(0.3f))
-            .padding(vertical = 8.dp, horizontal = 24.dp)) {
+            .padding(vertical = 8.dp, horizontal = 24.dp)
+    ) {
         if (chat.sender_id == UserData.user!!.id) {
 
-            ChatItemRight(text_type = chat.message_type, text =chat.text ,  onEvent ={}, chat = chat, onClick = {})
+            ChatItemRight(
+                text_type = chat.message_type,
+                text = chat.text,
+                onEvent = {},
+                chat = chat,
+                onClick = {})
 
         } else {
 
-            ChatItemLeft(text_type = chat.message_type, text =chat.text , onEvent ={}, chat = chat, onClick = {})
+            ChatItemLeft(
+                text_type = chat.message_type,
+                text = chat.text,
+                onEvent = {},
+                chat = chat,
+                onClick = {})
 
         }
     }

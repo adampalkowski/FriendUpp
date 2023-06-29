@@ -343,7 +343,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             val chatID = backStackEntry.arguments?.getString("chatID")
             LaunchedEffect(chatID) {
                 if (chatID != null) {
-                    Log.d("CHATDEBUG","GET MESSAGES CALLED ")
+                    Log.d("CHATDEBUG","GET CHAT CALLED "+chatID)
                     chatViewModel.getChatCollection(chatID)
                 }
             }

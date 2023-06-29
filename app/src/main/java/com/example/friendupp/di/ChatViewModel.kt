@@ -30,8 +30,8 @@ class ChatViewModel @Inject constructor(
 
     val _chatCollectionStateFlow = MutableStateFlow<Chat>(Chat())
 
-    private val _chatCollectionState = MutableStateFlow<Response<Chat>>(Response.Loading)
-    val chatCollectionState: StateFlow<Response<Chat>> = _chatCollectionState
+    private val _chatCollectionState = MutableStateFlow<Response<Chat>?>(null)
+    val chatCollectionState: StateFlow<Response<Chat>?> = _chatCollectionState
 
     private val _uri = MutableStateFlow<Uri?>(null)
     val uri: MutableStateFlow<Uri?> = _uri
@@ -55,14 +55,14 @@ class ChatViewModel @Inject constructor(
     val chatCollectionsState: State<Response<ArrayList<Chat>>> = _chatCollectionsState
 
 
-    private val _messagesState = mutableStateOf<Response<ArrayList<ChatMessage>>>(Response.Loading)
-    val messagesState: State<Response<ArrayList<ChatMessage>>> = _messagesState
-    private val _firstMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>>(Response.Loading)
-    val firstMessagesState: State<Response<ArrayList<ChatMessage>>> = _firstMessagesState
+    private val _messagesState = mutableStateOf<Response<ArrayList<ChatMessage>>?>(null)
+    val messagesState: State<Response<ArrayList<ChatMessage>>?> = _messagesState
+    private val _firstMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>?>(null)
+    val firstMessagesState: State<Response<ArrayList<ChatMessage>>?> = _firstMessagesState
     private val _groupsState = MutableStateFlow<Response<ArrayList<Chat>>>(Response.Loading)
     val groupsState: StateFlow<Response<ArrayList<Chat>>> = _groupsState
-    private val _moreMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>>(Response.Loading)
-    val moreMessagesState: State<Response<ArrayList<ChatMessage>>> = _moreMessagesState
+    private val _moreMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>?>(null)
+    val moreMessagesState: State<Response<ArrayList<ChatMessage>>?> = _moreMessagesState
     private val _addedMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>>(Response.Loading)
     val addedMessagesState: State<Response<ArrayList<ChatMessage>>> = _addedMessagesState
 
@@ -112,10 +112,24 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
+    fun resetChat(){
+        _chatCollectionState.value=null
+    }
+    fun resetNewMessages(){
+        _messagesState.value=null
+    }
+    fun resetFirstMessages(){
+        _firstMessagesState.value=null
+    }
+    fun resetMoreMessages(){
+        _moreMessagesState.value=null
+    }
+
     fun onUriReceived(uri: Uri) {
         _uri.value = uri
         _uriReceived.value = true
     }
+
 
     fun onUriProcessed() {
         _uriReceived.value = false
@@ -124,6 +138,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getChatCollection(id).collect{
                 response->
+                        _chatCollectionState.value=Response.Loading
                         _chatCollectionState.value=response
             }
         }
