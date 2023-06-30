@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.ChatMessage
 import com.example.friendupp.model.Response
@@ -104,6 +105,10 @@ class ChatViewModel @Inject constructor(
 
     private val _highlightRemovedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val highlightRemovedState: State<Response<Void?>> = _highlightRemovedState
+
+
+    private val _loadedMessages: ArrayList<ChatMessage> = ArrayList()
+     val loadedMessages: ArrayList<ChatMessage> = _loadedMessages
     fun getChatCollections(id:String){
         viewModelScope.launch {
             repo.getChatCollections(id).collect{
@@ -133,6 +138,7 @@ class ChatViewModel @Inject constructor(
 
     fun onUriProcessed() {
         _uriReceived.value = false
+        _uri.value=null
     }
     fun getChatCollection(id: String) {
         viewModelScope.launch {
@@ -252,7 +258,6 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getMessages(id,current_time).collect{response->
                         _messagesState.value=response
-
             }
 
         }
@@ -266,15 +271,23 @@ class ChatViewModel @Inject constructor(
 
         }
     }
-
-    fun getMoreMessages(id: String){
+    fun resetLoadedMessages(){
+        _loadedMessages.clear()
+    }
+    fun getMoreMessages(id: String) {
         viewModelScope.launch {
-            repo.getMoreMessages(id).collect{response->
-                        _moreMessagesState.value=response
-
-
+            repo.getMoreMessages(id).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        _loadedMessages.addAll(response.data)
+                        _moreMessagesState.value = response
+                    }
+                    is Response.Failure -> {
+                        _moreMessagesState.value = response
+                    }
+                    else->{}
+                }
             }
-
         }
     }
 
@@ -286,7 +299,7 @@ class ChatViewModel @Inject constructor(
         val id:String = uuid.toString()
         message.id=id
 
-        message.sent_time= getTime()
+        message.sent_time= getCurrentUTCTime()
         viewModelScope.launch {
             repo.addMessage(chat_collection_id,message).collect{
                     response->
@@ -344,7 +357,7 @@ class ChatViewModel @Inject constructor(
         val id:String = uuid.toString()
         message.id=id
 
-        message.sent_time= getTime()
+        message.sent_time= getCurrentUTCTime()
         viewModelScope.launch {
             repo.addImageFromGalleryToStorage(id, uri).collect{ response ->
                 _isImageAddedToStorageState.value=response
@@ -372,8 +385,6 @@ class ChatViewModel @Inject constructor(
                 }
 
             }
-
-
 
         }
     }

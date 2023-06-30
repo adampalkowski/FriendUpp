@@ -108,7 +108,7 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
                 image=chat_image,
                 title=chat_name,
                 subtitle=chat.recent_message.toString(),
-                date=chat.recent_message_time.toString(),
+                date= convertUTCtoLocal(chat.recent_message_time.toString(), outputFormat = "yyyy-MM-dd HH:mm:ss") ,
                 onClick = {
                     chatEvent(ChatCollectionEvents.GoToChat(chat))
                 }

@@ -49,11 +49,17 @@ import kotlin.collections.ArrayList
 
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.createGraph(
-    navController: NavController, currentActivity: MutableState<Activity>, outputDirectory: File,
-    executor: Executor, activityViewModel: ActivityViewModel,chatViewModel:ChatViewModel,userViewModel:UserViewModel,mapViewModel:MapViewModel,
-activityState:ActivityState
+    navController: NavController,
+    currentActivity: MutableState<Activity>,
+    outputDirectory: File,
+    executor: Executor,
+    activityViewModel: ActivityViewModel,
+    chatViewModel: ChatViewModel,
+    userViewModel: UserViewModel,
+    mapViewModel: MapViewModel,
+    activityState: ActivityState,
 
-) {
+    ) {
 
     navigation(startDestination = "FriendPicker", route = "CreateGraph") {
 
@@ -110,9 +116,9 @@ activityState:ActivityState
         ) { backStackEntry ->
             var photoUri by rememberSaveable {
                 mutableStateOf<Uri?>(
-                    if(activityState.imageUrl.isNotEmpty()){
+                    if (activityState.imageUrl.isNotEmpty()) {
                         activityState.imageUrl.toUri()
-                    }else{
+                    } else {
                         null
                     }
                 )
@@ -134,19 +140,19 @@ activityState:ActivityState
                         is CameraEvent.AcceptPhoto -> {
                             if (photoUri != null) {
                                 val photo: String = photoUri.toString()
-                                activityState.imageUrl=photo
+                                activityState.imageUrl = photo
                                 Log.d("CreateGraphActivity", "SETTING")
                                 Log.d("CreateGraphActivity", photo)
                                 navController.navigate("Create")
                                 /*todo dooo sth with the final uri */
-                            }else{
+                            } else {
                                 currentActivity.value = currentActivity.value.copy(image = "")
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
                             Log.d("CreateGraphActivity", "dElete photo")
-                            activityState.imageUrl=""
-                            photoUri=null
+                            activityState.imageUrl = ""
+                            photoUri = null
                         }
                         else -> {}
                     }
@@ -222,7 +228,7 @@ activityState:ActivityState
 
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
-            Log.d("CHATDEBUG","GETFRIENDSCALLED")
+            Log.d("CHATDEBUG", "GETFRIENDSCALLED")
             userViewModel.getFriends(UserData.user!!.id)
             chatViewModel.getGroups(UserData.user!!.id)
             FriendPickerScreen(
@@ -248,57 +254,79 @@ activityState:ActivityState
                         val endHours = activityState.timeEndState.hours
                         val endMinutes = activityState.timeEndState.minutes
 
-                    // Formatting the start time
-                        val startTime = String.format("%04d-%02d-%02d %02d:%02d", selectedStartYear, selectedStartMonth, selectedStartDay, startHours, startMinutes)
-
-                    // Formatting the end time
-                        val endTime = String.format("%04d-%02d-%02d %02d:%02d", selectedEndYear, selectedEndMonth, selectedEndDay, endHours, endMinutes)
-
-                        currentActivity.value = currentActivity.value.copy(start_time = startTime,
-                        image=activityState.imageUrl, end_time = endTime
+                        // Formatting the start time
+                        val startTime = String.format(
+                            "%04d-%02d-%02d %02d:%02d",
+                            selectedStartYear,
+                            selectedStartMonth,
+                            selectedStartDay,
+                            startHours,
+                            startMinutes
                         )
 
+                        // Formatting the end time
+                        val endTime = String.format(
+                            "%04d-%02d-%02d %02d:%02d",
+                            selectedEndYear,
+                            selectedEndMonth,
+                            selectedEndDay,
+                            endHours,
+                            endMinutes
+                        )
 
+                        currentActivity.value = currentActivity.value.copy(
+                            start_time = startTime,
+                            image = activityState.imageUrl,
+                            end_time = endTime,
+                            title = activityState.titleState.text,
+                            description = activityState.descriptionState.text
+                        )
 
 
                         //Add current user to invited list
                         selectedUsers.add(user.id)
                         currentActivity.value = currentActivity.value.copy(
                             invited_users = ArrayList(selectedUsers),
-                            creator_profile_picture = user.pictureUrl?:"",
-                            creator_name = user.name?:"",
-                            creator_username = user.username?:"",
+                            creator_profile_picture = user.pictureUrl ?: "",
+                            creator_name = user.name ?: "",
+                            creator_username = user.username ?: "",
                             creator_id = user.id,
-                            )
+                        )
                         Log.d("CreateGraphActivity", currentActivity.toString())
                         val uuid: UUID = UUID.randomUUID()
                         val id: String = uuid.toString()
                         currentActivity.value = currentActivity.value.copy(id = id)
-                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val formatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                        val current = LocalDateTime.now().format(formatter)
                         val date = LocalDateTime.now().format(formatterDate)
-                        currentActivity.value = currentActivity.value.copy(creation_time = current,date=date)
-                       if(currentActivity.value.location!=null){
+                        currentActivity.value = currentActivity.value.copy(
+                            creation_time = getCurrentUTCTime(),
+                            date = date
+                        )
+                        if (currentActivity.value.location != null) {
 
-                           val lat=activityState.location.latitude
-                           val lng=  activityState.location.longitude
-                           //Create geohash
-                           val geoHash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
+                            val lat = activityState.location.latitude
+                            val lng = activityState.location.longitude
+                            //Create geohash
+                            val geoHash = GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
 
 
-                           currentActivity.value = currentActivity.value.copy(geoHash = geoHash,lat=lat,lng=lng)
-                       }
+                            currentActivity.value =
+                                currentActivity.value.copy(geoHash = geoHash, lat = lat, lng = lng)
+                        }
 
                         createGroup(
                             currentActivity.value,
                             activityViewModel = activityViewModel,
                             context,
                             chatViewModel = chatViewModel,
-                            group_picture = currentActivity.value.image?:""
+                            group_picture = currentActivity.value.image ?: ""
                         )
-                    }else{
-                        Toast.makeText(context,"Failed to read current user, please re-login",Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Failed to read current user, please re-login",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
 
 
@@ -391,7 +419,7 @@ activityState:ActivityState
                         is CreateEvents.OpenCamera -> {
                             navController.navigate("Camera")
                         }
-                        is CreateEvents.LocationPicker->{
+                        is CreateEvents.LocationPicker -> {
                             navController.navigate("LocationPicker")
                         }
                         is CreateEvents.Create -> {
@@ -475,16 +503,16 @@ activityState:ActivityState
 
                         navController.navigate("Create")
                     }
-                    is LocationPickerEvent.DeleteLocation->{
-                        activityState.location= LatLng(0.0,0.0)
+                    is LocationPickerEvent.DeleteLocation -> {
+                        activityState.location = LatLng(0.0, 0.0)
                     }
-                    is LocationPickerEvent.ConfirmLocation->{
-                        activityState.location=event.latLng
+                    is LocationPickerEvent.ConfirmLocation -> {
+                        activityState.location = event.latLng
                         navController.navigate("Create")
                     }
 
                 }
-            },activityState=activityState, mapViewModel = mapViewModel)
+            }, activityState = activityState, mapViewModel = mapViewModel)
 
         }
 
@@ -544,10 +572,10 @@ activityState:ActivityState
                 when (event) {
                     is CreateSettingsEvents.GoBack -> {
                         val location = event.location
-                        if(location==null){
+                        if (location == null) {
                             currentActivity.value = currentActivity.value.copy(
                                 custom_location = event.customLocation,
-                                location =null,
+                                location = null,
                                 minUserCount = event.minUserCount,
                                 maxUserCount = event.maxUserCount,
                                 disableChat = event.disableChat,
@@ -555,7 +583,7 @@ activityState:ActivityState
                                 enableActivitySharing = event.activitySharing,
                                 disableNotification = event.disableNotification
                             )
-                        }else{
+                        } else {
                             currentActivity.value = currentActivity.value.copy(
                                 custom_location = event.customLocation,
                                 location = GeoPoint(
@@ -578,7 +606,7 @@ activityState:ActivityState
 
                     }
                 }
-            }, activity = currentActivity.value,activityState=activityState)
+            }, activity = currentActivity.value, activityState = activityState)
 
         }
 
@@ -682,14 +710,15 @@ fun createActivity(
         }
     }
 }
+
 fun createGroup(
     currentActivity: Activity,
     activityViewModel: ActivityViewModel,
     context: Context,
-    chatViewModel:ChatViewModel,
-    group_picture:String
+    chatViewModel: ChatViewModel,
+    group_picture: String,
 ) {
-    val members= arrayListOf(UserData.user!!.id)
+    val members = arrayListOf(UserData.user!!.id)
     members.addAll(currentActivity.invited_users)
 
     val chat = Chat(
@@ -701,29 +730,28 @@ fun createGroup(
         recent_message = "say hi!",
         recent_message_time = currentActivity.creation_time,
         type = "activity",
-        members =members ,
+        members = members,
         user_one_username = null,
         user_two_username = null,
         user_one_profile_pic = null,
         user_two_profile_pic = null,
         highlited_message = "",
-        description="",
-        numberOfUsers=1,
-        numberOfActivities=1
+        description = "",
+        numberOfUsers = 1,
+        numberOfActivities = 1
     )
-    chatViewModel.addChatCollection(chat,group_picture, onFinished = {picture->
-        if(picture.isEmpty()){
-            createActivity(currentActivity,activityViewModel,context)
-        }else{
+    chatViewModel.addChatCollection(chat, group_picture, onFinished = { picture ->
+        if (picture.isEmpty()) {
+            createActivity(currentActivity, activityViewModel, context)
+        } else {
 
             currentActivity.image = picture
-            createActivity(currentActivity,activityViewModel,context)
+            createActivity(currentActivity, activityViewModel, context)
 
         }
 
 
     })
-
 
 
 }

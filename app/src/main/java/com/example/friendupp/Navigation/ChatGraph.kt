@@ -335,10 +335,6 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 }
             }
         ) { backStackEntry ->
-            val currentDateTime = Calendar.getInstance().time
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            val formattedDateTime = dateFormat.format(currentDateTime)
-
 
             val chatID = backStackEntry.arguments?.getString("chatID")
             LaunchedEffect(chatID) {
@@ -357,18 +353,6 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                             navController.popBackStack()
                         }
                         is ChatEvents.SendImage -> {
-                            //id and sent_time are set in view model
-                            //we have URI
-                            //add uri to storage and resize it
-                            //get the url and add it to the message
-                            chatViewModel.sendImage(chatID!!, ChatMessage(
-                                text = event.message.toString(),
-                                sender_picture_url = UserData.user?.pictureUrl!!,
-                                sent_time = "",
-                                sender_id = UserData.user!!.id,
-                                message_type = "uri",
-                                id = ""
-                            ),event.message)
 
                         }
                         is ChatEvents.OpenChatSettings -> {
@@ -380,17 +364,31 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         is ChatEvents.OpenGallery -> {
                             navController.navigate("ChatCamera")
                         }
+                        is ChatEvents.ShareLocation ->{
+                            chatViewModel.addMessage(
+                                chat_id!!,
+                                ChatMessage(
+                                    text = event.latLng.latitude.toString()+"/"+event.latLng.longitude.toString(),
+                                    sender_picture_url = UserData.user?.pictureUrl!!,
+                                    sent_time ="",
+                                    sender_id = UserData.user!!.id,
+                                    message_type = "latLng",
+                                    id = ""
+                                )
+                            )
+                        }
                         is ChatEvents.SendMessage->{
-                            Log.d("CHATDEBUG","SENDING MESSAGE"+formattedDateTime.toString()+event.message.toString())
                             chatViewModel.addMessage(
                                event.chat_id,
                                 ChatMessage(
                                     text = event.message,
                                     sender_picture_url = UserData.user?.pictureUrl!!,
-                                    sent_time =formattedDateTime,
+                                    sent_time =   getCurrentUTCTime()
+                                ,
                                     sender_id = UserData.user!!.id,
                                     message_type = "text",
-                                    id = ""
+                                    id = "",
+                                    collectionId = event.chat_id
                                 )
                             )
                         }
@@ -414,7 +412,8 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                             sent_time = "",
                             sender_id = UserData.user!!.id,
                             message_type = "uri",
-                            id = ""
+                            id = "",
+                            chatID
                         ),
                         uri!!
                     )
@@ -429,3 +428,10 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
 }
 
 
+
+fun getCurrentUTCTime(): String  {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    val currentDateTime = Calendar.getInstance().time
+    return dateFormat.format(currentDateTime)
+}

@@ -6,8 +6,9 @@ data class ChatMessage (
     var sent_time:String,
     val sender_id:String,
     var message_type:String="text",
-    var id :String
+    var id :String,
+    val collectionId:String
 ){
 
-    constructor(): this("", "","", "","","")
+    constructor(): this("", "","", "","","","")
 }

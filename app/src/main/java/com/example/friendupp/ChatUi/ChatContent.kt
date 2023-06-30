@@ -1,5 +1,6 @@
 package com.example.friendupp.ChatUi
 
+import android.media.midi.MidiOutputPort
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -27,6 +28,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -41,10 +43,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.Disposable
 import coil.request.ImageRequest
 import com.example.friendupp.Home.eButtonSimple
 import com.example.friendupp.Home.eButtonSimpleBlue
 import com.example.friendupp.Login.TextFieldState
+import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
@@ -53,6 +57,9 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.delay
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -64,6 +71,7 @@ sealed class ChatEvents {
     }
 
     object CloseDialog : ChatEvents()
+    class ShareLocation(val latLng: LatLng) : ChatEvents()
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
     class SendMessage(val chat_id: String, val message: String) : ChatEvents()
@@ -100,6 +108,10 @@ fun ChatContent(
     BackHandler(true) {
         onEvent(ChatEvents.GoBack)
     }
+    //handle image loading animatipn
+    var showLoading by remember { mutableStateOf(false) }
+    val flowimageaddition = chatViewModel?.isImageAddedToStorageAndFirebaseState?.collectAsState()
+
     val replyMessage = remember { mutableStateOf<ChatMessage?>(null) }
     val permission_flow = chatViewModel.granted_permission.collectAsState()
     val location_flow = chatViewModel.location.collectAsState()
@@ -182,6 +194,7 @@ fun ChatContent(
                     highlight_message = highlite_message
 
                 )
+                LoadingImage(showLoading =showLoading )
                 BottomChatBar(modifier = Modifier,
                     onEvent = onEvent,
                     replyMessage = replyMessage,
@@ -200,14 +213,14 @@ fun ChatContent(
 
     }
 
-
-    //handle image loading animatipn
-    var showLoading by remember { mutableStateOf(false) }
-    val flowimageaddition = chatViewModel?.isImageAddedToStorageAndFirebaseState?.collectAsState()
-
+    DisposableEffect(Unit ){
+        onDispose { showLoading=false }
+    }
+    
     flowimageaddition?.value.let {
         when (it) {
             is Response.Success -> {
+                if(it.data.equals("successfully added image"))
                 showLoading = false
 
             }
@@ -238,6 +251,25 @@ fun ChatContent(
 }
 
 @Composable
+fun LoadingImage(showLoading: Boolean) {
+    val iconTint = SocialTheme.colors.iconPrimary
+    val textColor = SocialTheme.colors.textPrimary
+    val backColor = SocialTheme.colors.uiBorder
+   if(showLoading){
+       Box(modifier = Modifier
+           .background(backColor.copy(0.4f))
+           .fillMaxWidth()
+           .padding(horizontal = 24.dp, vertical = 8.dp)){
+           Row(Modifier.fillMaxWidth()) {
+               Icon(painter = painterResource(id = R.drawable.ic_loading), contentDescription =null,tint=iconTint )
+               Spacer(modifier=Modifier.width(12.dp))
+               Text(text = "Hol up...",color=textColor.copy(0.8f), style = TextStyle(fontWeight = FontWeight.SemiBold, fontFamily = Lexend, fontSize = 14.sp))
+           }
+       }
+   } 
+}
+
+@Composable
 fun loadMessages(
     fristData: MutableList<ChatMessage>,
     data: MutableList<ChatMessage>,
@@ -251,25 +283,30 @@ fun loadMessages(
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
-            val currentDateTime = Calendar.getInstance().time
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            val formattedDateTime = dateFormat.format(currentDateTime)
-            Log.d("CHATDEBUG", "BIGGGGG CALLLL")
 
-            chatViewModel.getMessages(chatID, formattedDateTime)
-            chatViewModel.getFirstMessages(chatID, formattedDateTime)
+            Log.d("CHATDEBUG", "BIGGGGG CALLLL")
+            chatViewModel.getFirstMessages(chatID, getCurrentUTCTime())
+            chatViewModel.getMessages(chatID, getCurrentUTCTime())
             activitiesFetched.value = true
         }
     }
 
 
+    /*Here clean up the loaded messages , otherwise when loading chat again loaded messages will double*/
+    DisposableEffect(Unit){
+        onDispose {
+            Log.d("CHATDEBUGed","DISPOSE")
+            chatViewModel.resetLoadedMessages()
+        }
+    }
 
     chatViewModel.firstMessagesState.value.let {
         when (it) {
             is Response.Success -> {
                 fristData.clear()
                 fristData.addAll(it.data)
-                Log.d("ChatDebug", "SET TO TRUE")
+                Log.d("CHATMESSAGEDDEUG", "First")
+                Log.d("CHATMESSAGEDDEUG", it.data.toString())
                 valueExist.value = true
                 chatViewModel.resetFirstMessages()
             }
@@ -286,7 +323,13 @@ fun loadMessages(
         when (it) {
             is Response.Success -> {
                 dataNew.clear()
-                dataNew.addAll(it.data)
+                it.data.forEach {
+                    if( it.collectionId==chatID){
+                        dataNew.add(it)
+                    }
+                }
+                Log.d("CHATMESSAGEDDEUG", "new")
+                Log.d("CHATMESSAGEDDEUG", it.data.toString())
                 chatViewModel.resetNewMessages()
 
             }
@@ -302,11 +345,11 @@ fun loadMessages(
     chatViewModel.moreMessagesState.value.let {
         when (it) {
             is Response.Success -> {
-                Log.d("CHATDEBUG", "got older messges")
-                Log.d("CHATDEBUG", it.data.toString())
 
+                Log.d("CHATMESSAGEDDEUG", "more")
+                Log.d("CHATMESSAGEDDEUG", it.data.toString())
                 data.clear()
-                data.addAll(it.data)
+                data.addAll(chatViewModel.loadedMessages)
                 chatViewModel.resetMoreMessages()
 
             }
@@ -363,6 +406,7 @@ fun ChatMessages(
     var messagesLoaded by remember {
         mutableStateOf(false)
     }
+
 
     var lastMessageSenderID: String? = null
     LazyColumn(
@@ -432,7 +476,6 @@ fun ChatMessages(
                     Log.d("CHATDEBUG", chat_id)
                     onEvent(ChatEvents.GetMoreMessages(chat_id = chat_id))
                 }
-
             }
         }
     }
@@ -440,7 +483,29 @@ fun ChatMessages(
 
 }
 
+fun convertUTCtoLocal(utcDate: String, outputFormat: String): String {
+    val utcDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    val utcDateWithoutSecondsFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    utcDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    utcDateWithoutSecondsFormat.timeZone = TimeZone.getTimeZone("UTC")
 
+    val localDateFormat = SimpleDateFormat(outputFormat, Locale.getDefault())
+    localDateFormat.timeZone = TimeZone.getDefault()
+
+    var utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+
+    try {
+        utcCalendar.time = utcDateFormat.parse(utcDate)!!
+    } catch (e: ParseException) {
+        try {
+            utcCalendar.time = utcDateWithoutSecondsFormat.parse(utcDate)!!
+        } catch (e: ParseException) {
+            return "Invalid date format"
+        }
+    }
+
+    return localDateFormat.format(utcCalendar.time)
+}
 @Composable
 fun ChatBox(
     chat: ChatMessage,
@@ -464,7 +529,8 @@ fun ChatBox(
         ChatItemRight(
             text_type = chat.message_type,
             text = chat.text,
-            timeSent = chat.sent_time, onEvent = onEvent,
+            timeSent = convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"),
+            onEvent = onEvent,
             chat = chat,
             onClick = {
                 if (highlite_message) {
@@ -488,7 +554,7 @@ fun ChatBox(
         ChatItemLeft(
             text_type = chat.message_type,
             text = chat.text,
-            timeSent = chat.sent_time, onEvent = onEvent,
+            timeSent =  convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"), onEvent = onEvent,
             chat = chat, onClick = {
                 if (highlite_message) {
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {

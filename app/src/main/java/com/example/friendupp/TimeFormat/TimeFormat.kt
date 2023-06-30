@@ -1,5 +1,6 @@
 package com.example.friendupp.TimeFormat
 
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -18,6 +19,7 @@ fun getFormattedDate(date: String): String {
         // Display month, day, and year
         SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
     }
+    Log.d("GETFORMATTEDDATE",formatter.format(dateTime))
 
     return formatter.format(dateTime)
 }

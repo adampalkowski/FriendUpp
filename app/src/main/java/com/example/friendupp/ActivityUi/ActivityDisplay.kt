@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.ChatUi.convertUTCtoLocal
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -202,7 +203,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialThem
 
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = getFormattedDateNoSeconds(time),
+            text = convertUTCtoLocal(time, outputFormat = "yyyy-MM-dd HH:mm"),
             style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,

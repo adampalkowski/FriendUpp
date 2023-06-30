@@ -94,7 +94,6 @@ class ChatRepositoryImpl @Inject constructor(
         imageUri: Uri
     ): Flow<Response<String>> = flow {
         try {
-            emit(Response.Loading)
             if (imageUri != null) {
                 val fileName = id
                 val imageRef = resStorage.child("images/$fileName")
@@ -321,8 +320,6 @@ class ChatRepositoryImpl @Inject constructor(
                         return@addSnapshotListener
                     }
 
-
-
                     for (dc in snapshots!!.documentChanges) {
                         when (dc.type) {
                             DocumentChange.Type.ADDED -> {
@@ -353,6 +350,7 @@ class ChatRepositoryImpl @Inject constructor(
 
         callbackFlow {
             Log.d("CHATDEBUG", "GET FIRST MESSAGES")
+            Log.d("CHATDEBUG", currentTime)
             messagesRef.document(chatCollectionId)
                 .collection("messages")
                 .orderBy("sent_time", Query.Direction.DESCENDING)
@@ -374,16 +372,8 @@ class ChatRepositoryImpl @Inject constructor(
                                     newMessages.add(message)
                                 }
                             }
-                            Log.d(
-                                "CHATDEBUG",
-                                "docs"+documents.toString()
-                            )
-                            Log.d(
-                                    "CHATDEBUG",
-                            "docs"+ documents[documents.size - 1].toString()
-                            )
+
                             lastVisibleData = documents[documents.size - 1]
-                            Log.d( "CHATDEBUG", "setting last visible data " + lastVisibleData?.get("sent_time").toString() )
                             trySend(Response.Success(ArrayList(newMessages)))
                         } else {
                             // No more messages to load
@@ -398,6 +388,7 @@ class ChatRepositoryImpl @Inject constructor(
             awaitClose {}
         }
     //todo ::PAGINATION
+
     override suspend fun getMoreMessages(chatCollectionId: String): Flow<Response<ArrayList<ChatMessage>>> =
         callbackFlow {
             Log.d("CHATDEBUG", "getMoreMessages repo" + lastVisibleData?.toString())
@@ -423,8 +414,7 @@ class ChatRepositoryImpl @Inject constructor(
                                 }
                             }
                             lastVisibleData = documents[documents.size - 1]
-                            loaded_messages.addAll(newMessages)
-                            val newInstances = ArrayList(loaded_messages)
+                            val newInstances = ArrayList(newMessages)
                             trySend(Response.Success(newInstances))
                         } else {
                             // No more messages to load
