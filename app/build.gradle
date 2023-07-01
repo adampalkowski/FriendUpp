@@ -60,6 +60,7 @@ android {
 }
 
 dependencies {
+    implementation "com.google.accompanist:accompanist-permissions:0.30.1"
 
     implementation("com.marosseleng.android:compose-material3-datetime-pickers:0.7.1")
     //snapper

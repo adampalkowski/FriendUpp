@@ -349,6 +349,7 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun getFirstMessages(chatCollectionId: String, currentTime: String): Flow<Response<ArrayList<ChatMessage>>> =
 
         callbackFlow {
+            trySend(Response.Loading)
             Log.d("CHATDEBUG", "GET FIRST MESSAGES")
             Log.d("CHATDEBUG", currentTime)
             messagesRef.document(chatCollectionId)

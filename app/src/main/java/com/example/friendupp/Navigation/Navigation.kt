@@ -249,16 +249,15 @@ fun NavigationComponent(
             )
 
 
-
             val mapViewModel = remember { MapViewModel(context) }
             DisposableEffect(Unit) {
                 mapViewModel.checkLocationPermission(
                     permissionDenied = {
+
                     },
                     permissionGranted = {
-
                         mapViewModel.startLocationUpdates()
-                    }
+                    },
                 )
 
                 onDispose {
@@ -277,7 +276,7 @@ fun NavigationComponent(
                     }
                 }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel, mapViewModel =mapViewModel )
                 chatGraph(navController, chatViewModel, currentChat  ,outputDirectory = outputDirectory,
-                    executor = executor,)
+                    executor = executor,mapViewModel=mapViewModel)
                 profileGraph(
                     navController,
                     outputDirectory = outputDirectory,

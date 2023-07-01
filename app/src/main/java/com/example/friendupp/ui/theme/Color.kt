@@ -80,6 +80,7 @@ val Rose0 = Color(0xfffff2f6)
 
 val Neutral8= Color(0xff1A1A1A)
 val Neutral9 = Color(0xFF000000)
+val Neutral10 = Color(0xff6688FF)
 val Neutral7 = Color(0xff3E5DC9)
 val Neutral6 = Color(0xFF88A2FF)
 val Neutral5 = Color(0x61000000)

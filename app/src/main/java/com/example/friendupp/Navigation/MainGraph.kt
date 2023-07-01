@@ -1,11 +1,21 @@
 package com.example.friendupp.Navigation
 
+import android.Manifest
+import android.app.Activity
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -14,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.example.friendupp.ActivityUi.ActivityPreview
 import com.example.friendupp.ActivityUi.ActivityPreviewEvents
+import com.example.friendupp.Camera.getActivity
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
@@ -31,15 +42,21 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
+import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.mainGraph(
     navController: NavController,
     openDrawer: () -> Unit,
@@ -50,7 +67,6 @@ fun NavGraphBuilder.mainGraph(
 
 ) {
     navigation(startDestination = "Home", route = "Main") {
-
 
 
         composable(
@@ -140,37 +156,43 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
-            homeViewModel.deep_link.value.let {deep_link->
-                when(deep_link?.pathSegments?.get(0)){
-                    "Activity"->{
+            homeViewModel.deep_link.value.let { deep_link ->
+                when (deep_link?.pathSegments?.get(0)) {
+                    "Activity" -> {
                         val activity_id = deep_link.pathSegments?.get(1).toString()
                         activityViewModel.getActivity(activity_id)
-                        Log.d("MAINGRAPHACTIVITY","Activity")
+                        Log.d("MAINGRAPHACTIVITY", "Activity")
 
 
                         homeViewModel.resetDeepLink()
                     }
-                    "User"->{
+                    "User" -> {
                         homeViewModel.resetDeepLink()
-                        navController.navigate("ProfileDisplay/"+ deep_link.pathSegments?.get(1).toString())
+                        navController.navigate(
+                            "ProfileDisplay/" + deep_link.pathSegments?.get(1).toString()
+                        )
 
                     }
                 }
             }
 
             activityViewModel.activityState.value.let {
-                when(it){
-                    is Response.Success->{
-                        Log.d("MAINGRAPHACTIVITY","ActivityPreviewD")
+                when (it) {
+                    is Response.Success -> {
+                        Log.d("MAINGRAPHACTIVITY", "ActivityPreviewD")
                         homeViewModel.setExpandedActivity(it.data)
                         activityViewModel.resetActivityState()
                         navController.navigate("ActivityPreview")
                     }
-                    is Response.Failure->{
-                        Toast.makeText(LocalContext.current,"Couldn't display activity",Toast.LENGTH_SHORT).show()
+                    is Response.Failure -> {
+                        Toast.makeText(
+                            LocalContext.current,
+                            "Couldn't display activity",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
                     }
-                    is Response.Loading->{
+                    is Response.Loading -> {
                     }
                 }
             }
@@ -191,7 +213,7 @@ fun NavGraphBuilder.mainGraph(
 
                     }
                     is HomeEvents.OpenChat -> {
-                        navController.navigate("ChatItem/"+event.id)
+                        navController.navigate("ChatItem/" + event.id)
 
                     }
                     is HomeEvents.LeaveActivity -> {
@@ -201,12 +223,12 @@ fun NavGraphBuilder.mainGraph(
                         )
                     }
                     is HomeEvents.ExpandActivity -> {
-                        Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW")
+                        Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
                         homeViewModel.setExpandedActivity(event.activityData)
                         navController.navigate("ActivityPreview")
                     }
                 }
-            }, activityViewModel = activityViewModel,mapViewModel=mapViewModel)
+            }, activityViewModel = activityViewModel, mapViewModel = mapViewModel)
 
 
         }
@@ -297,8 +319,8 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
-            val localClipboardManager= LocalClipboardManager.current
-            val context= LocalContext.current
+            val localClipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
 
 
 
@@ -307,10 +329,11 @@ fun NavGraphBuilder.mainGraph(
                     is ActivityPreviewEvents.GoBack -> {
                         navController.popBackStack()
                     }
-                    is ActivityPreviewEvents.ShareActivityLink->{
+                    is ActivityPreviewEvents.ShareActivityLink -> {
                         //CREATE A DYNAMINC LINK TO DOMAIN
                         val dynamicLink = Firebase.dynamicLinks.dynamicLink {
-                            link = Uri.parse("https://link.friendup.app/" + "Activity" + "/" + event.link)
+                            link =
+                                Uri.parse("https://link.friendup.app/" + "Activity" + "/" + event.link)
                             domainUriPrefix = "https://link.friendup.app/"
                             // Open links with this app on Android
                             androidParameters { }
@@ -318,7 +341,11 @@ fun NavGraphBuilder.mainGraph(
                         val dynamicLinkUri = dynamicLink.uri
                         //COPY LINK AND MAKE A TOAST
                         localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
-                        Toast.makeText(context, "Copied activity link to clipboard", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Copied activity link to clipboard",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             }, homeViewModel = homeViewModel)
@@ -409,18 +436,47 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
+            val context= LocalContext.current
+            // Location permission state
+            val locationPermissionState = rememberPermissionState(
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            )
 
-            MapScreen(mapViewModel,activityViewModel=activityViewModel, onEvent = {
-                event->
-                when(event){
-                    is MapEvent.PreviewActivity->{
-                        Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW")
-                        homeViewModel.setExpandedActivity(event.activity)
-                        navController.navigate("ActivityPreview")
+
+
+
+            if(locationPermissionState.status.isGranted){
+                mapViewModel.startLocationUpdates()
+
+                MapScreen(
+                    mapViewModel,
+                    activityViewModel = activityViewModel,
+                    onEvent = { event ->
+                        when (event) {
+                            is MapEvent.PreviewActivity -> {
+                                homeViewModel.setExpandedActivity(event.activity)
+                                navController.navigate("ActivityPreview")
+                            }
+                            else -> {}
+                        }
+                    })
+            }else{
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = "Share your current location to search for nearby activities"
+                    )
+                    Button(onClick = {
+                        locationPermissionState.launchPermissionRequest()
+
+
+                    }) {
+
                     }
-                    else->{}
                 }
-            })
+            }
+
+
         }
 
 
@@ -480,7 +536,7 @@ fun NavGraphBuilder.mainGraph(
                         navController.popBackStack()
                     }
                     is SearchEvents.DisplayUser -> {
-                        navController.navigate("ProfileDisplay/"+event.id)
+                        navController.navigate("ProfileDisplay/" + event.id)
 
                     }
                     is SearchEvents.SearchForUser -> {
@@ -488,33 +544,35 @@ fun NavGraphBuilder.mainGraph(
                     }
                     is SearchEvents.OnInviteAccepted -> {
                         val uuid: UUID = UUID.randomUUID()
-                        val id:String = uuid.toString()
+                        val id: String = uuid.toString()
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val current = LocalDateTime.now().format(formatter)
-                        userViewModel.acceptInvite(UserData.user!!,event.user , Chat(current,
-                            owner_id =event.user.id,
-                            id =id,
-                            name =null,
-                            imageUrl =null,
-                            recent_message =null,
-                            recent_message_time =current,
-                            type ="duo",
-                            members = arrayListOf(UserData.user!!.id,event.user.id),
-                            user_one_username =UserData.user!!.username,
-                            user_two_username =event.user.username,
-                            user_one_profile_pic = UserData.user!!.pictureUrl,
-                            user_two_profile_pic = event.user.pictureUrl,
-                            highlited_message = "",
-                            description="",
-                             numberOfUsers=2,
-                            numberOfActivities=0,
+                        userViewModel.acceptInvite(
+                            UserData.user!!, event.user, Chat(
+                                current,
+                                owner_id = event.user.id,
+                                id = id,
+                                name = null,
+                                imageUrl = null,
+                                recent_message = null,
+                                recent_message_time = current,
+                                type = "duo",
+                                members = arrayListOf(UserData.user!!.id, event.user.id),
+                                user_one_username = UserData.user!!.username,
+                                user_two_username = event.user.username,
+                                user_one_profile_pic = UserData.user!!.pictureUrl,
+                                user_two_profile_pic = event.user.pictureUrl,
+                                highlited_message = "",
+                                description = "",
+                                numberOfUsers = 2,
+                                numberOfActivities = 0,
 
-                        )
+                                )
                         )
 
                     }
                 }
-            },userViewModel=userViewModel)
+            }, userViewModel = userViewModel)
 
             /*
             CHECK IF USER EXISTS in search, if succes navigate to profile with user
@@ -522,10 +580,10 @@ fun NavGraphBuilder.mainGraph(
             userFlow.value.let {
                 when (it) {
                     is Response.Success -> {
-                        if(it.data!=null){
-                            Log.d("SEARCHSCREENDEBUG","search cseren scuesss")
+                        if (it.data != null) {
+                            Log.d("SEARCHSCREENDEBUG", "search cseren scuesss")
 
-                            navController.navigate("ProfileDisplay/"+it.data.id.toString())
+                            navController.navigate("ProfileDisplay/" + it.data.id.toString())
                         }
 
                     }
@@ -541,7 +599,6 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         }
-
 
     }
 }

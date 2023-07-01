@@ -1,18 +1,23 @@
 package com.example.friendupp.Navigation
 
+import android.Manifest
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -22,10 +27,19 @@ import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.ChatUi.*
+import com.example.friendupp.Components.DisplayLocationDialog
+import com.example.friendupp.Components.FriendUppDialog
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
+import com.example.friendupp.ui.theme.SocialTheme
+import com.example.friendupp.util.getTime
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.auth.User
 import java.io.File
 import java.text.SimpleDateFormat
@@ -33,9 +47,9 @@ import java.util.*
 import java.util.concurrent.Executor
 
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatViewModel, currentChat: MutableState<Chat?>, outputDirectory: File,
-                              executor: Executor
+                              executor: Executor,mapViewModel: MapViewModel
 ) {
     navigation(startDestination = "Chat", route = "Chats") {
         composable(
@@ -344,7 +358,23 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 }
             }
 
+            val locationPermissionState = rememberPermissionState(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            var displayLocationDialog by remember {
+                mutableStateOf<LatLng?>(null)
+            }
+            var sendLocationDialog by remember{ mutableStateOf(false) }
+            var highlightDialog by remember { mutableStateOf<String?>(null) }
+            //keep current location for send location
+            var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
+            val flow = mapViewModel.currentLocation.collectAsState()
+            flow.value.let { latLng ->
+                if (latLng != null) {
+                    currentLocation = latLng
+                }
+            }
             ChatContent(
                 modifier = Modifier,
                 onEvent = { event ->
@@ -365,17 +395,37 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                             navController.navigate("ChatCamera")
                         }
                         is ChatEvents.ShareLocation ->{
-                            chatViewModel.addMessage(
-                                chat_id!!,
-                                ChatMessage(
-                                    text = event.latLng.latitude.toString()+"/"+event.latLng.longitude.toString(),
-                                    sender_picture_url = UserData.user?.pictureUrl!!,
-                                    sent_time ="",
-                                    sender_id = UserData.user!!.id,
-                                    message_type = "latLng",
-                                    id = ""
-                                )
-                            )
+                            /*share your location to chat
+                        1.check permission
+                        2.display confirmation dialog
+                        3.send message
+                        */
+                            if(locationPermissionState.status.isGranted){
+                                sendLocationDialog=true
+                            }else{
+                                sendLocationDialog=false
+                                locationPermissionState.launchPermissionRequest()
+                            }
+
+
+                        }
+                        is ChatEvents.CreateNonExistingChatCollection->{
+                            Log.d("CHATREPOSITYIMPLCHATCOLLECT","Creatae colleciton")
+                            when(chatViewModel.chat_type.value) {
+                                "duo" -> {
+                                    Log.d("CHATREPOSITYIMPLCHATCOLLECT","duo")
+
+                                }
+                                "activity" -> {
+
+                                }
+                                "group" -> {
+
+                                }
+                                else -> {
+
+                                }
+                           }
                         }
                         is ChatEvents.SendMessage->{
                             chatViewModel.addMessage(
@@ -395,7 +445,58 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         else -> {}
                     }
 
-                },chatViewModel=chatViewModel)
+                },chatViewModel=chatViewModel, displayLocation = {displayLocationDialog=it}, higlightDialog = {messageToHighlight->
+                    highlightDialog=messageToHighlight
+
+                })
+
+            if(highlightDialog!=null){
+                val trunctuatedMessage =highlightDialog
+                if(trunctuatedMessage!!.length>30){
+                    trunctuatedMessage.take(30)+"..."
+                }
+                FriendUppDialog(
+                    label="Make sure everybody sees the message("+trunctuatedMessage+") by highlighting it.",
+                    confirmLabel = "Highlight",
+                    icon = com.example.friendupp.R.drawable.ic_highlight_300,
+                    onCancel = {     highlightDialog=null},
+                    onConfirm = {
+                        chatViewModel.addHighLight(chatID!!, highlightDialog.toString())
+                        highlightDialog=null
+
+                    })
+            }
+            if(displayLocationDialog!=null){
+                DisplayLocationDialog(latLng = displayLocationDialog!!, onCancel = {
+                    displayLocationDialog=null
+                })
+            }
+            if(sendLocationDialog){
+
+                FriendUppDialog(
+                    label="Your current location will be shared to chat",
+                    confirmLabel = "Share current location",
+                    icon = com.example.friendupp.R.drawable.ic_pindrop_300,
+                    onCancel = {sendLocationDialog=false},
+                    onConfirm = {
+                        if(currentLocation!=null){
+                            chatViewModel.addMessage(
+                                chatID.toString(),
+                                ChatMessage(
+                                    text = currentLocation?.latitude.toString()+","+ currentLocation?.longitude.toString(),
+                                    sender_picture_url = UserData.user?.pictureUrl!!,
+                                    sent_time ="",
+                                    sender_id = UserData.user!!.id,
+                                    message_type = "latLng",
+                                    id = "",
+                                    collectionId = chatID.toString()
+                                ))
+                        }
+                        sendLocationDialog=false
+
+                    })
+            }
+
 
             var uri by remember { mutableStateOf<Uri?>(null) }
             val uriFlow = chatViewModel.uri.collectAsState()

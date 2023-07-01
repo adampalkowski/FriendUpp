@@ -21,8 +21,10 @@ import androidx.compose.ui.platform.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
 import com.example.friendupp.di.ActivityViewModel
@@ -56,27 +58,6 @@ class MainActivity : ComponentActivity() {
     private val activityViewModel by viewModels<ActivityViewModel>()
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
-    private var fusedLocationClient: FusedLocationProviderClient? = null
-    private val _granted_permission = MutableStateFlow<Boolean>(false)
-
-    private var locationCallback: LocationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            val locationList = locationResult.locations
-            if (locationList.isNotEmpty()) {
-                //The last location in the list is the newest
-                Log.d("Mapfragment","location callback")
-                val location = locationList.last()
-                activityViewModel.setLocation(LatLng(location.latitude, location.longitude))
-            }
-        }
-    }
-    override fun onPause() {
-        super.onPause()
-        stopLocationUpdates()
-    }
-    private fun stopLocationUpdates() {
-        fusedLocationClient?.removeLocationUpdates(locationCallback)
-    }
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -96,7 +77,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         UserData.user= User()
 
-
         if(authViewModel.isUserAuthenticated)
         {
             Log.d("MAINACTIVItyDebug","auth")
@@ -112,64 +92,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         requestCameraPermission()
-        fusedLocationClient =
-            LocationServices.getFusedLocationProviderClient(this.applicationContext!!)
-        if (ActivityCompat.checkSelfPermission(
-                this.applicationContext!!,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this.applicationContext!!,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            fusedLocationClient!!.requestLocationUpdates(
-                LocationRequest(),
-                locationCallback,
-                Looper.getMainLooper()
-            )
 
-        }
 
-        val requestPermissionLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (isGranted) {
-                    // Permission is granted. Continue the action or workflow in your
-                    // app.\
-
-                } else {
-                    // Explain to the user that the feature is unavailable because the
-                    // feature requires a permission that the user has denied. At the
-                    // same time, respect the user's decision. Don't link to system
-                    // settings in an effort to convince the user to change their
-                    // decision.
-                }
-
-            }
-        when {
-            ContextCompat.checkSelfPermission(
-                this.applicationContext!!,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                _granted_permission.value=true
-            }
-            shouldShowRequestPermissionRationale(android.Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                // In an educational UI, explain to the user why your app requires this
-                // permission for a specific feature to behave as expected, and what
-                // features are disabled if it's declined. In this UI, include a
-                // "cancel" or "no thanks" button that lets the user continue
-                // using your app without granting the permission.
-
-            }
-            else -> {
-                // You can directly ask for the permission.
-                // The registered ActivityResultCallback gets the result of this request.
-                requestPermissionLauncher.launch(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            }
-        }
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -239,6 +163,25 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+    }
+
+    fun checkLocationPermission(
+        permissionGranted: () -> Unit,
+        permissionDenied: () -> Unit,
+    ) {
+        if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionGranted()
+        }else{
+            permissionDenied()
+
+        }
     }
 }
 

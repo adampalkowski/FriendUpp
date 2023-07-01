@@ -71,7 +71,7 @@ sealed class ChatEvents {
     }
 
     object CloseDialog : ChatEvents()
-    class ShareLocation(val latLng: LatLng) : ChatEvents()
+    object ShareLocation: ChatEvents()
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
     class SendMessage(val chat_id: String, val message: String) : ChatEvents()
@@ -80,22 +80,37 @@ sealed class ChatEvents {
     object Report : ChatEvents()
     class Delete(val id: String) : ChatEvents()
     class Copy(val text: String) : ChatEvents()
+    object CreateNonExistingChatCollection : ChatEvents()
+
     object Share : ChatEvents()
 }
 
+fun createLatLngFromString(coordinates: String): LatLng? {
+    val latLngPattern = Regex("(-?\\d+\\.\\d+),(-?\\d+\\.\\d+)")
+    val matchResult = latLngPattern.find(coordinates)
 
+    return if (matchResult != null && matchResult.groupValues.size == 3) {
+        val lat = matchResult.groupValues[1].toDouble()
+        val lng = matchResult.groupValues[2].toDouble()
+        LatLng(lat, lng)
+    } else {
+        null
+    }
+}
 @Composable
 fun ChatContent(
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
     chatViewModel: ChatViewModel,
+    displayLocation: (LatLng) -> Unit,
+    higlightDialog: (String) -> Unit
 ) {
 
     var highlight_dialog by remember { mutableStateOf(false) }
 
 
     var chat = remember { mutableStateOf<Chat?>(null) }
-    loadChat(modifier = Modifier, chatViewModel, chat)
+    loadChat(modifier = Modifier, chatViewModel, chat,chatNonExistent={onEvent(ChatEvents.CreateNonExistingChatCollection)})
 
     var data = remember { mutableStateListOf<ChatMessage>() }
     var data_new = remember { mutableStateListOf<ChatMessage>() }
@@ -192,6 +207,8 @@ fun ChatContent(
                     chat_id = chatFinal.id.toString(),
                     highlightMessage = { highlited_message_text = it },
                     highlight_message = highlite_message
+                    , displayLocation = displayLocation,
+                    higlightDialog=higlightDialog
 
                 )
                 LoadingImage(showLoading =showLoading )
@@ -200,7 +217,7 @@ fun ChatContent(
                     replyMessage = replyMessage,
                     chat.value!!.id.toString(),
                     shareLocation = {
-
+                        onEvent(ChatEvents.ShareLocation)
                     },
                     highlightMessage = {
                         highlite_message = !highlite_message
@@ -311,6 +328,8 @@ fun loadMessages(
                 chatViewModel.resetFirstMessages()
             }
             is Response.Loading -> {
+
+                CircularProgressIndicator(color=SocialTheme.colors.textPrimary)
                 fristData.clear()
             }
             is Response.Failure -> {
@@ -363,7 +382,7 @@ fun loadMessages(
 }
 
 @Composable
-fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableState<Chat?>) {
+fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableState<Chat?>,chatNonExistent:()->Unit) {
 
 
     val chatState = chatViewModel.chatCollectionState.collectAsState()
@@ -381,7 +400,15 @@ fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableStat
             chatViewModel.resetChat()
         }
         is Response.Failure -> {
-
+            Log.d("CHATREPOSITYIMPLCHATCOLLECT", "FAILURE")
+            Toast.makeText(
+                LocalContext.current,
+                "Can't load in chat. Please try again later",
+                Toast.LENGTH_SHORT
+            ).show()
+            if (result.e.message.equals("document_null")) {
+                chatNonExistent()
+            }
 
         }
         else -> {}
@@ -399,6 +426,8 @@ fun ChatMessages(
     chat_id: String,
     highlightMessage: (String) -> Unit,
     highlight_message: Boolean,
+    displayLocation: (LatLng) -> Unit,
+    higlightDialog:(String)->Unit
 
     ) {
 
@@ -424,11 +453,10 @@ fun ChatMessages(
                 highlite_message = highlight_message,
                 displayPicture = {},
                 highlightMessage = { },
-                openDialog = {
-                },
+                openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-            )
+               displayLocation = displayLocation)
 
             lastMessageSenderID = message.sender_id
         }
@@ -443,11 +471,10 @@ fun ChatMessages(
                 highlite_message = highlight_message,
                 displayPicture = {},
                 highlightMessage = highlightMessage,
-                openDialog = {
-                },
+                openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-            )
+               displayLocation =displayLocation )
 
             lastMessageSenderID = message.sender_id
         }
@@ -461,10 +488,10 @@ fun ChatMessages(
                 highlite_message = highlight_message,
                 displayPicture = {},
                 highlightMessage = highlightMessage,
-                openDialog = {
-                },
+                openDialog = higlightDialog,
                 onEvent = onEvent,
-                shouldGroup = shouldGroup,
+                shouldGroup = shouldGroup
+                , displayLocation =displayLocation
             )
 
             lastMessageSenderID = message.sender_id
@@ -512,10 +539,11 @@ fun ChatBox(
     highlite_message: Boolean,
     onLongPress: () -> Unit,
     onEvent: (ChatEvents) -> Unit,
-    openDialog: () -> Unit,
+    openDialog: (String) -> Unit,
     displayPicture: (String) -> Unit,
     highlightMessage: (String) -> Unit,
     shouldGroup: Boolean = false,
+    displayLocation: (LatLng) -> Unit
 ) {
     var padding = if (shouldGroup) {
         0.dp
@@ -537,7 +565,7 @@ fun ChatBox(
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {
 
                     } else {
-                        openDialog()
+                        openDialog(chat.text)
                         highlightMessage(chat.text)
                     }
                 } else {
@@ -546,7 +574,8 @@ fun ChatBox(
 
                     }
                 }
-            }
+            },
+            displayLocation = displayLocation,highlite_message=highlite_message
         )
     } else {
         Spacer(modifier = Modifier.height(padding))
@@ -560,7 +589,7 @@ fun ChatBox(
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {
 
                     } else {
-                        openDialog()
+                        openDialog(chat.text)
                         highlightMessage(chat.text)
                     }
                 } else {
@@ -569,8 +598,8 @@ fun ChatBox(
 
                     }
                 }
-            }
-        )
+            },
+            displayLocation = displayLocation, highlite_message = highlite_message)
 
     }
 
@@ -619,6 +648,8 @@ fun ChatItemLeft(
     timeSent: String = "12:12",
     onClick: () -> Unit,
     onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
+    displayLocation: (LatLng) -> Unit,
+    highlite_message: Boolean
 ) {
     var clicked by remember {
         mutableStateOf(false)
@@ -708,8 +739,14 @@ fun ChatItemLeft(
                     )
                     .combinedClickable(
                         onClick = {
-                            onClick()
-                            clicked = !clicked
+                            if(highlite_message){
+                                onClick()
+
+                            }else{
+                                onClick()
+                                clicked = !clicked
+                            }
+
                         },
                         onLongClick = {
                             selected = !selected
@@ -718,7 +755,7 @@ fun ChatItemLeft(
                     .background(color = SocialTheme.colors.uiBackground)
 
                     .border(
-                        border = BorderStroke(1.dp, SocialTheme.colors.uiBorder),
+                        border = BorderStroke(0.8.dp, SocialTheme.colors.uiBorder),
                         shape = RoundedCornerShape(
                             topEnd = 8.dp,
                             topStart = 8.dp,
@@ -739,31 +776,58 @@ fun ChatItemLeft(
                 )
             }
         } else if (text_type.equals("latLng")) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Box(modifier = Modifier
+                    .clip(
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 8.dp
+                    )
+                    )
+                .combinedClickable(
+                    onClick = {
+                        val latLng = createLatLngFromString(text)
+                        if (latLng != null) {
+                            displayLocation(latLng)
+                        }
+
+                    },
+                    onLongClick = {
+                        clicked = !clicked
+                        onClick()
+                        selected = !selected
+                    },
+                )
+                .background(color = SocialTheme.colors.uiBackground)
+
+                .border(
+                    border = BorderStroke(0.8.dp, SocialTheme.colors.uiBorder),
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 8.dp
+                    )
+                )
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
                         painter = painterResource(id = R.drawable.ic_location),
-                        tint = SocialTheme.colors.iconPrimary,
+                        tint = SocialTheme.colors.textPrimary,
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    ClickableText(
-                        text = AnnotatedString("Shared location"),
+                   Text(
+                        text ="Shared location",
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
                             color = SocialTheme.colors.textPrimary,
-                            textDecoration = TextDecoration.Underline,
                         ),
-                        onClick = {
-
-                            /*
-                            * toodo
-                            * on click open location*/
-
-                        }
                     )
                 }
 
@@ -873,6 +937,8 @@ fun ChatItemRight(
     timeSent: String = "12:12",
     onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
     onClick: () -> Unit,
+    displayLocation:(LatLng)->Unit,
+    highlite_message:Boolean
 ) {
     var clicked by remember {
         mutableStateOf(false)
@@ -921,9 +987,14 @@ fun ChatItemRight(
                     )
                     .combinedClickable(
                         onClick = {
-                            onClick()
+                            if(highlite_message){
+                                onClick()
 
-                            clicked = !clicked
+                            }else{
+                                onClick()
+                                clicked = !clicked
+                            }
+
                         },
                         onLongClick = {
                             selected = !selected
@@ -968,31 +1039,48 @@ fun ChatItemRight(
                 )
             }
         } else if (text_type.equals("latLng")) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Box(modifier = Modifier
+                .clip(
+                    shape = RoundedCornerShape(
+                        topEnd = 8.dp,
+                        topStart = 8.dp,
+                        bottomStart = 8.dp,
+                        bottomEnd = 0.dp
+                    )
+                )
+                .combinedClickable(
+                    onClick = {
+                        val latLng = createLatLngFromString(text)
+                        if (latLng != null) {
+                            displayLocation(latLng)
+                        }
+
+                    },
+                    onLongClick = {
+                        clicked = !clicked
+                        onClick()
+                        selected = !selected
+                    },
+                )
+
+                .background(color =SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
+                .padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
                         painter = painterResource(id = R.drawable.ic_location),
-                        tint = SocialTheme.colors.iconPrimary,
+                        tint =  SocialTheme.colors.textSecondary,
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    ClickableText(
-                        text = AnnotatedString("Shared location"),
+                    Text(
+                        text = "Shared location",
                         style = TextStyle(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color = SocialTheme.colors.textPrimary,
-                            textDecoration = TextDecoration.Underline,
-                        ),
-                        onClick = {
-
-                            /*
-                            * toodo
-                            * on click open location*/
-
-                        }
+                            color =  SocialTheme.colors.textSecondary,
+                        )
                     )
                 }
 
@@ -1290,7 +1378,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {})
+                onClick = {}, displayLocation = {}, highlite_message = false)
 
         } else {
 
@@ -1299,7 +1387,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {})
+                onClick = {},displayLocation = {}, highlite_message = false)
 
         }
     }
