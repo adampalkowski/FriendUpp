@@ -75,6 +75,7 @@ sealed class ChatEvents {
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
     class SendMessage(val chat_id: String, val message: String) : ChatEvents()
+    class SendReply(val chat_id: String, val message: String,var replyTo:String) : ChatEvents()
     object OpenChatSettings : ChatEvents()
     class Reply(val message: ChatMessage) : ChatEvents()
     object Report : ChatEvents()
@@ -208,7 +209,9 @@ fun ChatContent(
                     highlightMessage = { highlited_message_text = it },
                     highlight_message = highlite_message
                     , displayLocation = displayLocation,
-                    higlightDialog=higlightDialog
+                    higlightDialog={
+                        higlightDialog(it)
+                    highlite_message=false}
 
                 )
                 LoadingImage(showLoading =showLoading )
@@ -223,7 +226,7 @@ fun ChatContent(
                         highlite_message = !highlite_message
                     },
                     addImage = { onEvent(ChatEvents.OpenGallery) },
-                    liveActivity = {})
+                    liveActivity = {},highlite_message=highlite_message)
             }
 
         }
@@ -576,6 +579,7 @@ fun ChatBox(
                 }
             },
             displayLocation = displayLocation,highlite_message=highlite_message
+        , replyTo = chat.replyTo
         )
     } else {
         Spacer(modifier = Modifier.height(padding))
@@ -649,7 +653,8 @@ fun ChatItemLeft(
     onClick: () -> Unit,
     onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
     displayLocation: (LatLng) -> Unit,
-    highlite_message: Boolean
+    highlite_message: Boolean,
+    isReply:Boolean=false
 ) {
     var clicked by remember {
         mutableStateOf(false)
@@ -716,9 +721,12 @@ fun ChatItemLeft(
                     )
                     .combinedClickable(
                         onClick = {
-                            onClick()
-
-                            clicked = !clicked
+                            if (highlite_message) {
+                                clicked = !clicked
+                            } else {
+                                onClick()
+                                clicked = !clicked
+                            }
                         },
                         onLongClick = {
                             selected = !selected
@@ -739,10 +747,10 @@ fun ChatItemLeft(
                     )
                     .combinedClickable(
                         onClick = {
-                            if(highlite_message){
+                            if (highlite_message) {
                                 onClick()
 
-                            }else{
+                            } else {
                                 onClick()
                                 clicked = !clicked
                             }
@@ -777,14 +785,14 @@ fun ChatItemLeft(
             }
         } else if (text_type.equals("latLng")) {
             Box(modifier = Modifier
-                    .clip(
+                .clip(
                     shape = RoundedCornerShape(
                         topEnd = 8.dp,
                         topStart = 8.dp,
                         bottomStart = 0.dp,
                         bottomEnd = 8.dp
                     )
-                    )
+                )
                 .combinedClickable(
                     onClick = {
                         val latLng = createLatLngFromString(text)
@@ -854,6 +862,18 @@ fun ChatItemLeft(
                             /*todo join live*/
                         }
                     )
+                }
+
+            }
+        }else if(text_type.equals("reply")){
+            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material.Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        tint = SocialTheme.colors.iconPrimary,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
 
             }
@@ -938,7 +958,9 @@ fun ChatItemRight(
     onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
     onClick: () -> Unit,
     displayLocation:(LatLng)->Unit,
-    highlite_message:Boolean
+    highlite_message:Boolean,
+    isReply:Boolean=false,
+    replyTo: String?
 ) {
     var clicked by remember {
         mutableStateOf(false)
@@ -987,17 +1009,23 @@ fun ChatItemRight(
                     )
                     .combinedClickable(
                         onClick = {
-                            if(highlite_message){
-                                onClick()
+                            if (!isReply) {
+                                if (highlite_message) {
+                                    clicked = !clicked
 
-                            }else{
-                                onClick()
-                                clicked = !clicked
+                                } else {
+                                    onClick()
+                                    clicked = !clicked
+                                }
                             }
+
 
                         },
                         onLongClick = {
-                            selected = !selected
+                            if (!isReply) {
+                                selected = !selected
+                            }
+
                         },
                     )
 
@@ -1015,12 +1043,21 @@ fun ChatItemRight(
                     )
                     .combinedClickable(
                         onClick = {
-                            onClick()
+                            if (!isReply) {
+                                if (highlite_message) {
+                                    onClick()
+                                } else {
+                                    onClick()
+                                    clicked = !clicked
+                                }
+                            }
 
-                            clicked = !clicked
                         },
                         onLongClick = {
-                            selected = !selected
+                            if (!isReply) {
+                                selected = !selected
+                            }
+
                         },
                     )
 
@@ -1034,8 +1071,9 @@ fun ChatItemRight(
                         fontFamily = Lexend,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = SocialTheme.colors.uiBackground.copy(alpha = 0.9f)
-                    )
+
+                    ),
+                    color = SocialTheme.colors.uiBackground
                 )
             }
         } else if (text_type.equals("latLng")) {
@@ -1050,20 +1088,26 @@ fun ChatItemRight(
                 )
                 .combinedClickable(
                     onClick = {
-                        val latLng = createLatLngFromString(text)
-                        if (latLng != null) {
-                            displayLocation(latLng)
+                        if (!isReply) {
+                            val latLng = createLatLngFromString(text)
+                            if (latLng != null) {
+                                displayLocation(latLng)
+                            }
                         }
+
 
                     },
                     onLongClick = {
-                        clicked = !clicked
-                        onClick()
-                        selected = !selected
+                        if (!isReply) {
+                            clicked = !clicked
+                            onClick()
+                            selected = !selected
+                        }
+
                     },
                 )
 
-                .background(color =SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
+                .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
                 .padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material.Icon(
@@ -1079,8 +1123,9 @@ fun ChatItemRight(
                             fontFamily = Lexend,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            color =  SocialTheme.colors.textSecondary,
-                        )
+
+                        ),                     color = SocialTheme.colors.uiBackground
+
                     )
                 }
 
@@ -1110,6 +1155,100 @@ fun ChatItemRight(
                 }
 
             }
+        }else if(text_type.equals("reply")){
+            Column(horizontalAlignment = Alignment.End) {
+                Box(
+                    modifier = Modifier
+                        .clip(
+                            shape = RoundedCornerShape(
+                                topEnd = 8.dp,
+                                topStart = 8.dp,
+                                bottomStart = 8.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
+                        .combinedClickable(
+                            onClick = {
+                                if (!isReply) {
+                                    if (highlite_message) {
+                                        onClick()
+                                    } else {
+                                        onClick()
+                                        clicked = !clicked
+                                    }
+                                }
+
+                            },
+                            onLongClick = {
+                                if (!isReply) {
+                                    selected = !selected
+                                }
+
+                            },
+                        )
+
+                        .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.1f))
+
+                        .padding(horizontal = 12.dp, vertical = 8.dp).padding(bottom=12.dp)
+                ) {
+                    Text(
+                        text = replyTo!!,
+                        style = TextStyle(
+                            fontFamily = Lexend,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+
+                            ),
+                        color = SocialTheme.colors.textPrimary
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(
+                            shape = RoundedCornerShape(
+                                topEnd = 0.dp,
+                                topStart = 8.dp,
+                                bottomStart = 8.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
+                        .combinedClickable(
+                            onClick = {
+                                if (!isReply) {
+                                    if (highlite_message) {
+                                        onClick()
+                                    } else {
+                                        onClick()
+                                        clicked = !clicked
+                                    }
+                                }
+
+                            },
+                            onLongClick = {
+                                if (!isReply) {
+                                    selected = !selected
+                                }
+
+                            },
+                        )
+
+                        .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
+
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = text,
+                        style = TextStyle(
+                            fontFamily = Lexend,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+
+                            ),
+                        color = SocialTheme.colors.uiBackground
+                    )
+                }
+            }
+
         }
 
 
@@ -1244,8 +1383,9 @@ fun chatButtonsRow(
     highlightMessage: () -> Unit,
     addImage: () -> Unit,
     liveActivity: () -> Unit,
+    highlite_message:Boolean=false
 ) {
-    var highlight by remember { mutableStateOf(false) }
+
 
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Spacer(
@@ -1262,9 +1402,8 @@ fun chatButtonsRow(
                 .background(color = SocialTheme.colors.uiBorder)
         )
         eButtonSimple(icon = R.drawable.ic_highlight_300, onClick = {
-            highlight = !highlight
             highlightMessage()
-        }, selected = highlight)
+        }, selected = highlite_message)
         Spacer(
             modifier = Modifier
                 .width(12.dp)
@@ -1307,6 +1446,7 @@ fun BottomChatBar(
     highlightMessage: () -> Unit,
     addImage: () -> Unit,
     liveActivity: () -> Unit,
+    highlite_message:Boolean
 ) {
     var focused by remember { mutableStateOf(false) }
     var text by rememberSaveable(stateSaver = MessageStateSaver) {
@@ -1326,7 +1466,7 @@ fun BottomChatBar(
             highlightMessage = {
                 highlightMessage()
 
-            })
+            },highlite_message=highlite_message)
         if (replyMessage.value != null) {
             ReplyMessage(replyMessage.value!!)
         }
@@ -1351,8 +1491,15 @@ fun BottomChatBar(
             )
             eButtonSimpleBlue(icon = R.drawable.ic_send, onClick = {
                 if (text.text.isNotEmpty()) {
-                    onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text))
-                    text.text = ""
+                    if (replyMessage.value!=null){
+                        onEvent(ChatEvents.SendReply(chat_id = chat_id, text.text,replyTo=replyMessage.value!!.text.toString()))
+                        replyMessage.value=null
+                        text.text = ""
+                    }else{
+                        onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text))
+                        text.text = ""
+                    }
+
                 } else {
 
                 }
@@ -1372,13 +1519,12 @@ fun ReplyMessage(chat: ChatMessage) {
             .padding(vertical = 8.dp, horizontal = 24.dp)
     ) {
         if (chat.sender_id == UserData.user!!.id) {
-
             ChatItemRight(
                 text_type = chat.message_type,
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {}, displayLocation = {}, highlite_message = false)
+                onClick = {}, displayLocation = {}, highlite_message = false,isReply=true    , replyTo = null)
 
         } else {
 
@@ -1387,7 +1533,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {},displayLocation = {}, highlite_message = false)
+                onClick = {},displayLocation = {}, highlite_message = false,isReply=true)
 
         }
     }

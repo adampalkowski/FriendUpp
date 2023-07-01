@@ -438,7 +438,24 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                                     sender_id = UserData.user!!.id,
                                     message_type = "text",
                                     id = "",
-                                    collectionId = event.chat_id
+                                    collectionId = event.chat_id,
+                                    replyTo = null
+                                )
+                            )
+                        }
+                        is ChatEvents.SendReply->{
+                            chatViewModel.addMessage(
+                                event.chat_id,
+                                ChatMessage(
+                                    text = event.message,
+                                    sender_picture_url = UserData.user?.pictureUrl!!,
+                                    sent_time =   getCurrentUTCTime()
+                                    ,
+                                    sender_id = UserData.user!!.id,
+                                    message_type = "reply",
+                                    id = "",
+                                    collectionId = event.chat_id,
+                                    replyTo = event.replyTo
                                 )
                             )
                         }
@@ -489,7 +506,8 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                                     sender_id = UserData.user!!.id,
                                     message_type = "latLng",
                                     id = "",
-                                    collectionId = chatID.toString()
+                                    collectionId = chatID.toString(),
+                                    replyTo = null
                                 ))
                         }
                         sendLocationDialog=false
@@ -514,7 +532,9 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                             sender_id = UserData.user!!.id,
                             message_type = "uri",
                             id = "",
-                            chatID
+                            chatID,
+                            replyTo = null
+
                         ),
                         uri!!
                     )

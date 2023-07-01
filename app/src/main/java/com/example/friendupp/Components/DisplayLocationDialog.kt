@@ -54,39 +54,56 @@ fun DisplayLocationDialog(latLng: LatLng,onCancel:()->Unit){
             Modifier
                 .clip(RoundedCornerShape(24.dp))
                 .background(SocialTheme.colors.uiBackground)){
-            Column(horizontalAlignment = Alignment.CenterHorizontally,modifier= Modifier.verticalScroll(
-                rememberScrollState()
-            ) ) {
-                GoogleMap(
-                    Modifier
-                        .height(300.dp).clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                      , cameraPositionState,
-                    properties = properties, onMapLoaded = {
-                        isMapLoaded = true
-                    }, onMapLongClick = {
-                    }, onMapClick = {
-                    },
-                    uiSettings = uiSettings
-                ) {
-                    latLng.let {
-                        MarkerInfoWindow(
-                            state = MarkerState(
-                                position = it
-                            )
-                        ) {
 
+                Column() {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onCancel)
+                        .padding(vertical = 8.dp, horizontal = 12.dp), horizontalArrangement = Arrangement.Center){
+
+                        Text(text ="Location", style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp, fontFamily = Lexend), color = SocialTheme.colors.textPrimary )
+
+                    }
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(SocialTheme.colors.uiBorder))
+
+                    GoogleMap(
+                        Modifier
+                            .height(300.dp)
+
+                        , cameraPositionState,
+                        properties = properties, onMapLoaded = {
+                            isMapLoaded = true
+                        }, onMapLongClick = {
+                        }, onMapClick = {
+                        },
+                        uiSettings = uiSettings
+                    ) {
+                        latLng.let {
+                            MarkerInfoWindow(
+                                state = MarkerState(
+                                    position = it
+                                )
+                            ) {
+
+                            }
                         }
                     }
-                }
-                Box(modifier = Modifier.fillMaxSize().height(0.5.dp).background(SocialTheme.colors.uiBorder))
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onCancel)
-                            .padding(vertical = 16.dp, horizontal = 12.dp), horizontalArrangement = Arrangement.Center){
-                            Text(text ="Dismiss", style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, fontFamily = Lexend), color = SocialTheme.colors.iconPrimary )
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(SocialTheme.colors.uiBorder))
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onCancel)
+                        .padding(vertical = 16.dp, horizontal = 12.dp), horizontalArrangement = Arrangement.Center){
+                        Text(text ="Dismiss", style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, fontFamily = Lexend), color = SocialTheme.colors.iconPrimary )
 
-                        }
-            }
+                    }
+
+                }
 
 
 

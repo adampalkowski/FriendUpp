@@ -16,10 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -111,7 +108,7 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
                 date= convertUTCtoLocal(chat.recent_message_time.toString(), outputFormat = "yyyy-MM-dd HH:mm:ss") ,
                 onClick = {
                     chatEvent(ChatCollectionEvents.GoToChat(chat))
-                }
+                },highlightedMessage=chat.highlited_message.toString()
             )
         }
         }
@@ -220,7 +217,7 @@ fun ButtonAdd( onClick: () -> Unit,disabled:Boolean=false,icon:Int) {
 }
 
 @Composable
-fun ChatItem(image: String, title: String, subtitle: String, date: String, onClick: () -> Unit) {
+fun ChatItem(image: String, title: String, subtitle: String, date: String,highlightedMessage:String, onClick: () -> Unit) {
     val trunctuatedSubTitle =  if(subtitle.length>30){subtitle.substring(0, minOf(subtitle.length, 30))+"..."}else{subtitle}
     val trunctuatedTitle =  if(title.length>30){title.substring(0, minOf(title.length, 30))+"..."}else{title}
 
@@ -273,12 +270,44 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String, onCli
                 )
 
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(SocialTheme.colors.uiBorder)
-            )
+            if(highlightedMessage.isNotEmpty()){
+                var expand by remember {
+                    mutableStateOf(false)
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically){
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(1.dp)
+                            .background(SocialTheme.colors.uiBorder)
+                    )
+                    Box(modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = { expand = !expand })
+                        .border(
+                            BorderStroke(1.dp, SocialTheme.colors.uiBorder),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp)){
+                        Text(text = if(expand){highlightedMessage}else{ if(highlightedMessage.length>30){   highlightedMessage.take(30)+"..."}else{highlightedMessage} }, style = TextStyle(fontFamily = Lexend, fontSize = 12.sp, fontWeight = FontWeight.SemiBold), color = SocialTheme.colors.textPrimary)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(1.dp)
+                            .background(SocialTheme.colors.uiBorder)
+                    )
+                }
+            }else{
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(SocialTheme.colors.uiBorder)
+                )
+
+            }
         }
 
 
