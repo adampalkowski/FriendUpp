@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.platform.InspectableModifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.Disposable
@@ -1156,7 +1158,9 @@ fun ChatItemRight(
 
             }
         }else if(text_type.equals("reply")){
-            Column(horizontalAlignment = Alignment.End) {
+
+
+
                 Box(
                     modifier = Modifier
                         .clip(
@@ -1202,52 +1206,52 @@ fun ChatItemRight(
                         color = SocialTheme.colors.textPrimary
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(
-                            shape = RoundedCornerShape(
-                                topEnd = 0.dp,
-                                topStart = 8.dp,
-                                bottomStart = 8.dp,
-                                bottomEnd = 0.dp
+
+                        Box(
+                            modifier = Modifier
+                                .clip(
+                                    shape = RoundedCornerShape(
+                                        topEnd = 8.dp,
+                                        topStart = 8.dp,
+                                        bottomStart = 8.dp,
+                                        bottomEnd = 0.dp
+                                    )
+                                )
+                                .combinedClickable(
+                                    onClick = {
+                                        if (!isReply) {
+                                            if (highlite_message) {
+                                                onClick()
+                                            } else {
+                                                onClick()
+                                                clicked = !clicked
+                                            }
+                                        }
+
+                                    },
+                                    onLongClick = {
+                                        if (!isReply) {
+                                            selected = !selected
+                                        }
+
+                                    },
+                                ) .background(color = SocialTheme.colors.uiBackground)
+                                .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
+
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = text,
+                                style = TextStyle(
+                                    fontFamily = Lexend,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 14.sp,
+
+                                    ),
+                                color = SocialTheme.colors.uiBackground
                             )
-                        )
-                        .combinedClickable(
-                            onClick = {
-                                if (!isReply) {
-                                    if (highlite_message) {
-                                        onClick()
-                                    } else {
-                                        onClick()
-                                        clicked = !clicked
-                                    }
-                                }
+                        }
 
-                            },
-                            onLongClick = {
-                                if (!isReply) {
-                                    selected = !selected
-                                }
-
-                            },
-                        )
-
-                        .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
-
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = text,
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-
-                            ),
-                        color = SocialTheme.colors.uiBackground
-                    )
-                }
-            }
 
         }
 
