@@ -68,6 +68,7 @@ sealed class HomeEvents {
     class JoinActivity(val id: String) : HomeEvents()
     class LeaveActivity(val id: String) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
+    class GoToProfile(val id: String) : HomeEvents()
 }
 
 val TAG = "HOMESCREENDEBUG"
@@ -238,20 +239,8 @@ fun HomeScreen(
                                     // Handle click event
                                 },
                                 onEvent = { event ->
-                                    when (event) {
-                                        is ActivityEvents.Expand -> {
-                                            onEvent(HomeEvents.ExpandActivity(event.activity))
-                                        }
-                                        is ActivityEvents.Join -> {
-                                            onEvent(HomeEvents.JoinActivity(event.id))
-                                        }
-                                        is ActivityEvents.Leave -> {
-                                            onEvent(HomeEvents.LeaveActivity(event.id))
-                                        }
-                                        is ActivityEvents.OpenChat -> {
-                                            onEvent(HomeEvents.OpenChat(event.id))
-                                        }
-                                    }
+                                    handleActivityEvent(event,onEvent=onEvent)
+
                                 }
                             )
                         }
@@ -263,21 +252,7 @@ fun HomeScreen(
                                     // Handle click event
                                 },
                                 onEvent = { event ->
-                                    when (event) {
-                                        is ActivityEvents.Expand -> {
-                                            onEvent(HomeEvents.ExpandActivity(event.activity))
-                                        }
-                                        is ActivityEvents.Leave -> {
-                                            onEvent(HomeEvents.LeaveActivity(event.id))
-                                        }
-
-                                        is ActivityEvents.Join -> {
-                                            onEvent(HomeEvents.JoinActivity(event.id))
-                                        }
-                                        is ActivityEvents.OpenChat -> {
-                                            onEvent(HomeEvents.OpenChat(event.id))
-                                        }
-                                    }
+                                    handleActivityEvent(event,onEvent=onEvent)
                                 }
                             )
                         }
@@ -300,21 +275,7 @@ fun HomeScreen(
                                     // Handle click event
                                 },
                                 onEvent = { event ->
-                                    when (event) {
-                                        is ActivityEvents.Expand -> {
-                                            onEvent(HomeEvents.ExpandActivity(event.activity))
-                                        }
-                                        is ActivityEvents.Leave -> {
-                                            onEvent(HomeEvents.LeaveActivity(event.id))
-                                        }
-
-                                        is ActivityEvents.Join -> {
-                                            onEvent(HomeEvents.JoinActivity(event.id))
-                                        }
-                                        is ActivityEvents.OpenChat -> {
-                                            onEvent(HomeEvents.OpenChat(event.id))
-                                        }
-                                    }
+                                    handleActivityEvent(event,onEvent=onEvent)
                                 }
                             )
                         }
@@ -326,21 +287,7 @@ fun HomeScreen(
                                     // Handle click event
                                 },
                                 onEvent = { event ->
-                                    when (event) {
-                                        is ActivityEvents.Expand -> {
-                                            onEvent(HomeEvents.ExpandActivity(event.activity))
-                                        }
-                                        is ActivityEvents.Leave -> {
-                                            onEvent(HomeEvents.LeaveActivity(event.id))
-                                        }
-
-                                        is ActivityEvents.Join -> {
-                                            onEvent(HomeEvents.JoinActivity(event.id))
-                                        }
-                                        is ActivityEvents.OpenChat -> {
-                                            onEvent(HomeEvents.OpenChat(event.id))
-                                        }
-                                    }
+                                    handleActivityEvent(event,onEvent=onEvent)
                                 }
                             )
                         }
@@ -858,6 +805,26 @@ fun eButtonSimpleBlue(onClick: () -> Unit, icon: Int, modifier: Modifier = Modif
                     tint = Color.White
                 )
             }
+        }
+    }
+}
+
+private fun handleActivityEvent(event: ActivityEvents,    onEvent: (HomeEvents) -> Unit) {
+    when (event) {
+        is ActivityEvents.Expand -> {
+            onEvent(HomeEvents.ExpandActivity(event.activity))
+        }
+        is ActivityEvents.Join -> {
+            onEvent(HomeEvents.JoinActivity(event.id))
+        }
+        is ActivityEvents.Leave -> {
+            onEvent(HomeEvents.LeaveActivity(event.id))
+        }
+        is ActivityEvents.OpenChat -> {
+            onEvent(HomeEvents.OpenChat(event.id))
+        }
+        is ActivityEvents.GoToProfile->{
+            onEvent(HomeEvents.GoToProfile(event.id))
         }
     }
 }

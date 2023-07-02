@@ -2,10 +2,13 @@ package com.example.friendupp.ActivityUi
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,7 @@ sealed class ActivityEvents{
     class Join(val id :String):ActivityEvents()
     class Leave(val id :String):ActivityEvents()
     class OpenChat(val id :String):ActivityEvents()
+    class GoToProfile(val id :String):ActivityEvents()
 }
 
 
@@ -48,8 +52,11 @@ fun activityCard(
     creatorUsername: String,
     creatorFullName: String,
     profilePictureUrl: String,
+    creatorId: String,
     expandButton:Boolean=true,
-    onExpand:()->Unit
+    onExpand:()->Unit,
+    goToProfile:(String)->Unit,
+
 ) {
 
         Column(Modifier.background(SocialTheme.colors.uiBackground)) {
@@ -58,39 +65,47 @@ fun activityCard(
                 .padding(bottom = 12.dp, top = 6.dp)) {
                 Column(modifier = Modifier, horizontalAlignment = Alignment.Start) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(profilePictureUrl)
-                                .crossfade(true)
-                                .build(),
-                            placeholder = painterResource(R.drawable.ic_launcher_background),
-                            contentDescription = "stringResource(R.string.description)",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text = creatorFullName,
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = Lexend,
-                                    color = SocialTheme.colors.textPrimary
+                        Box(modifier =  Modifier.weight(1f).clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(color = Color.White),
+                            onClick ={goToProfile(creatorId.toString()) })){
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(profilePictureUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    placeholder = painterResource(R.drawable.ic_launcher_background),
+                                    contentDescription = "stringResource(R.string.description)",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
                                 )
-                            )
-                            Text(
-                                text = creatorUsername,
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraLight,
-                                    fontFamily = Lexend,
-                                    color = SocialTheme.colors.textSecondary
-                                )
-                            )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column() {
+                                    Text(
+                                        text = creatorFullName,
+                                        style = TextStyle(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = Lexend,
+                                            color = SocialTheme.colors.textPrimary
+                                        )
+                                    )
+                                    Text(
+                                        text = creatorUsername,
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.ExtraLight,
+                                            fontFamily = Lexend,
+                                            color = SocialTheme.colors.textSecondary
+                                        )
+                                    )
+                                }
+                            }
                         }
+
                         if(expandButton){
                             IconButton(onClick = onExpand) {
                                 Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription =null,tint=SocialTheme.colors.iconPrimary.copy(0.5f))
@@ -165,7 +180,9 @@ fun activityItem(
                     description = activity.description,
                     creatorUsername = activity.creator_username,
                     creatorFullName = activity.creator_name,
+                    creatorId=activity.creator_id,
                     profilePictureUrl = activity.creator_profile_picture,
+                    goToProfile = {onEvent(ActivityEvents.GoToProfile(it))},
                     onExpand= {
 
                         Log.d("ACTIVITYDEBUG","LAUNCH ")

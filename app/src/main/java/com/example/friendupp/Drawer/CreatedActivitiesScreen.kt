@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Home.HomeEvents
+import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.Profile.loadActivitiesHistory
 import com.example.friendupp.Profile.loadJoinedActivities
 import com.example.friendupp.Profile.loadMoreActivitiesHistory
@@ -22,6 +24,11 @@ import com.example.friendupp.model.UserData
 
 sealed class CreatedActivitiesEvents{
     object GoBack:CreatedActivitiesEvents()
+    class ExpandActivity(val activityData: Activity) : CreatedActivitiesEvents()
+    class JoinActivity(val id: String) : CreatedActivitiesEvents()
+    class GoToProfile(val id: String) : CreatedActivitiesEvents()
+    class LeaveActivity(val id: String) : CreatedActivitiesEvents()
+    class OpenChat(val id: String) : CreatedActivitiesEvents()
 }
 
 @Composable
@@ -45,14 +52,8 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
                             // Handle click event
                         },
                         onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
-                                    Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-                                }
-                                is ActivityEvents.Join->{  }
-                                is ActivityEvents.OpenChat->{ }
-                                is ActivityEvents.Leave->{ }
-                            }
+
+                                handleActivityEvent(event,onEvent)
                         }
                     )
                 }
@@ -64,15 +65,7 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
                             // Handle click event
                         },
                         onEvent = { event->
-                            when(event){
-                                is ActivityEvents.Expand->{
-                                }
-                                is ActivityEvents.Join->{  }
-                                is ActivityEvents.Join->{  }
-                                is ActivityEvents.Leave->{ }
-
-                                is ActivityEvents.OpenChat->{  }
-                            }
+                            handleActivityEvent(event,onEvent)
                         }
                     )
                 }
@@ -91,4 +84,24 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
 
     }
 
+}
+
+private fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActivitiesEvents) -> Unit) {
+    when (event) {
+        is ActivityEvents.Expand -> {
+            onEvent(CreatedActivitiesEvents.ExpandActivity(event.activity))
+        }
+        is ActivityEvents.Join -> {
+            onEvent(CreatedActivitiesEvents.JoinActivity(event.id))
+        }
+        is ActivityEvents.Leave -> {
+            onEvent(CreatedActivitiesEvents.LeaveActivity(event.id))
+        }
+        is ActivityEvents.OpenChat -> {
+            onEvent(CreatedActivitiesEvents.OpenChat(event.id))
+        }
+        is ActivityEvents.GoToProfile->{
+            onEvent(CreatedActivitiesEvents.GoToProfile(event.id))
+        }
+    }
 }

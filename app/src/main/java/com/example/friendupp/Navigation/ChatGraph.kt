@@ -35,8 +35,13 @@ import java.util.concurrent.Executor
 
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
-fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatViewModel, currentChat: MutableState<Chat?>, outputDirectory: File,
-                              executor: Executor,mapViewModel: MapViewModel
+fun NavGraphBuilder.chatGraph(
+    navController: NavController,
+    chatViewModel: ChatViewModel,
+    currentChat: MutableState<Chat?>,
+    outputDirectory: File,
+    executor: Executor,
+    mapViewModel: MapViewModel,
 ) {
     navigation(startDestination = "Chat", route = "Chats") {
         composable(
@@ -126,27 +131,29 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 }
             }
         ) {
-            val user= UserData.user
-            if(user!=null){
+            val user = UserData.user
+            if (user != null) {
                 chatViewModel.getChatCollections(user.id)
             }
             ChatCollection(modifier = Modifier.fillMaxSize(),
-                chatEvent = {event->
-                    when(event){
-                        is ChatCollectionEvents.GoToChat->{
-                            currentChat.value=event.chat
-                            navController.navigate("ChatItem/"+event.chat.id)}
-                        is ChatCollectionEvents.GoBack->{
+                chatEvent = { event ->
+                    when (event) {
+                        is ChatCollectionEvents.GoToChat -> {
+                            currentChat.value = event.chat
+                            navController.navigate("ChatItem/" + event.chat.id)
+                        }
+                        is ChatCollectionEvents.GoBack -> {
                             navController.navigate("Home")
                         }
-                        is ChatCollectionEvents.GoToGroups->{
+                        is ChatCollectionEvents.GoToGroups -> {
                             navController.navigate("Groups")
                         }
-                        is ChatCollectionEvents.GoToSearch->{navController.navigate("Search")}
+                        is ChatCollectionEvents.GoToSearch -> {
+                            navController.navigate("Search")
+                        }
                     }
 
-                }
-                    ,chatViewModel=chatViewModel)
+                }, chatViewModel = chatViewModel)
         }
 
         composable(
@@ -193,16 +200,44 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             }
         ) {
 
+            var chat = remember { mutableStateOf<Chat?>(null) }
+            loadChat(modifier = Modifier, chatViewModel = chatViewModel, chat = chat) { }
 
-            ChatSettings(
-                TYPE.GROUP
-                , chatSettingsEvents = {event->
-                    when(event){
-                        is ChatSettingsEvents.GoBack->{navController.popBackStack() }
-                        is ChatSettingsEvents.GoToUserProfile->{navController.navigate("Profile")}
-                        else ->{}
-                    }
-                },chatViewModel)
+
+
+            if(chat.value!=null){
+                var type by remember {
+                    mutableStateOf<TYPE?>(null)
+                }
+                when(chat.value!!.type){
+                    "duo"->{type=TYPE.DUO}
+                    "activity"->{type=TYPE.ACTIVITY}
+                    "group"->{type=TYPE.GROUP}
+                }
+
+                if(type==null){
+                    navController.popBackStack()
+                }else{
+                    ChatSettings(
+                        type!!, chatSettingsEvents = { event ->
+                            when (event) {
+                                is ChatSettingsEvents.GoBack -> {
+                                    navController.popBackStack()
+                                }
+                                is ChatSettingsEvents.GoToUserProfile -> {
+                                    navController.navigate("Profile")
+                                }
+                                else -> {}
+                            }
+                        }, chatViewModel,chat.value!!
+                    )
+                }
+
+            }else{
+                //Chat shouldn't be null
+                navController.popBackStack()
+            }
+
         }
 
         composable("ChatCamera",
@@ -277,14 +312,14 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                             if (photoUri != null) {
                                 chatViewModel.onUriReceived(photoUri!!)
                                 navController.popBackStack()
-                            }else{
+                            } else {
                                 navController.popBackStack()
 
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
                             Log.d("CreateGraphActivity", "dElete photo")
-                            photoUri=null
+                            photoUri = null
                         }
                         else -> {}
                     }
@@ -296,7 +331,8 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
 
 
         composable(
-            "ChatItem/{chatID}",   arguments = listOf(navArgument("chatID") { type = NavType.StringType }),
+            "ChatItem/{chatID}",
+            arguments = listOf(navArgument("chatID") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "Chat" ->
@@ -339,18 +375,22 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             }
         ) { backStackEntry ->
 
+
             val chatID = backStackEntry.arguments?.getString("chatID")
+
+            /*
+            1.get chat id
+            2.call for chat
+            3.store chat in view model
+            */
+
             LaunchedEffect(chatID) {
                 if (chatID != null) {
-
-                    Log.d("CHATDEBUG","GET CHAT CALLED "+chatID)
+                    Log.d("CHATDEBUG", "GET CHAT CALLED " + chatID)
                     chatViewModel.getChatCollection(chatID)
-
 
                 }
             }
-
-
 
             val locationPermissionState = rememberPermissionState(
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -358,7 +398,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             var displayLocationDialog by remember {
                 mutableStateOf<LatLng?>(null)
             }
-            var sendLocationDialog by remember{ mutableStateOf(false) }
+            var sendLocationDialog by remember { mutableStateOf(false) }
             var highlightDialog by remember { mutableStateOf<String?>(null) }
             //keep current location for send location
             var currentLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -370,8 +410,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 }
             }
             LaunchedEffect(Unit) {
-                Log.d("RESETCHAT","RESET")
-                chatViewModel.resetChat()
+                Log.d("RESETCHAT", "RESET")
 
             }
 
@@ -381,10 +420,10 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 chatViewModel,
                 chat,
                 chatNonExistent = {
-                    Log.d("CHATREPOSITYIMPLCHATCOLLECT","Creatae colleciton")
-                    when(chatViewModel.chat_type.value) {
+                    Log.d("CHATREPOSITYIMPLCHATCOLLECT", "Creatae colleciton")
+                    when (chatViewModel.chat_type.value) {
                         "duo" -> {
-                            Log.d("CHATREPOSITYIMPLCHATCOLLECT","duo")
+                            Log.d("CHATREPOSITYIMPLCHATCOLLECT", "duo")
 
                         }
                         "activity" -> {
@@ -398,7 +437,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         }
                     }
                 })
-            var chatFinal = chat.value
+
             val dataSaver = ChatMessageListSaver()
             var data = rememberSaveable(
                 saver = dataSaver,
@@ -415,7 +454,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 init = { mutableStateListOf<ChatMessage>() }
             )
             val valueExist = rememberSaveable { mutableStateOf(false) }
-
+            var chatFinal = chat.value
             if (chatFinal != null) {
                 loadMessages(
                     frist_data,
@@ -426,127 +465,135 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                     chatFinal.id!!
                 )
 
-            ChatContent(
-                modifier = Modifier,
-                onEvent = { event ->
-                    when (event) {
-                        is ChatEvents.GoBack -> {
-                            navController.popBackStack()
-                        }
-                        is ChatEvents.SendImage -> {
-
-                        }
-                        is ChatEvents.OpenChatSettings -> {
-                            navController.navigate("ChatSettings")
-                        }
-                        is ChatEvents.GetMoreMessages -> {
-                            chatViewModel.getMoreMessages(event.chat_id)
-                        }
-                        is ChatEvents.OpenGallery -> {
-                            navController.navigate("ChatCamera")
-                        }
-                        is ChatEvents.ShareLocation ->{
-                            /*share your location to chat
-                        1.check permission
-                        2.display confirmation dialog
-                        3.send message
-                        */
-                            if(locationPermissionState.status.isGranted){
-                                sendLocationDialog=true
-                            }else{
-                                sendLocationDialog=false
-                                locationPermissionState.launchPermissionRequest()
+                ChatContent(
+                    modifier = Modifier,
+                    onEvent = { event ->
+                        when (event) {
+                            is ChatEvents.GoBack -> {
+                                navController.popBackStack()
                             }
+                            is ChatEvents.SendImage -> {
+
+                            }
+                            is ChatEvents.OpenChatSettings -> {
+                                navController.navigate("ChatSettings")
+                            }
+                            is ChatEvents.GetMoreMessages -> {
+                                chatViewModel.getMoreMessages(event.chat_id)
+                            }
+                            is ChatEvents.OpenGallery -> {
+                                navController.navigate("ChatCamera")
+                            }
+                            is ChatEvents.ShareLocation -> {
+                                /*share your location to chat
+                            1.check permission
+                            2.display confirmation dialog
+                            3.send message
+                            */
+                                if (locationPermissionState.status.isGranted) {
+                                    sendLocationDialog = true
+                                } else {
+                                    sendLocationDialog = false
+                                    locationPermissionState.launchPermissionRequest()
+                                }
 
 
-                        }
-                        is ChatEvents.CreateNonExistingChatCollection->{
+                            }
+                            is ChatEvents.CreateNonExistingChatCollection -> {
 
-                        }
-                        is ChatEvents.SendMessage->{
-                            chatViewModel.addMessage(
-                               event.chat_id,
-                                ChatMessage(
-                                    text = event.message,
-                                    sender_picture_url = UserData.user?.pictureUrl!!,
-                                    sent_time =   getCurrentUTCTime()
-                                ,
-                                    sender_id = UserData.user!!.id,
-                                    message_type = "text",
-                                    id = "",
-                                    collectionId = event.chat_id,
-                                    replyTo = null
+                            }
+                            is ChatEvents.SendMessage -> {
+                                chatViewModel.addMessage(
+                                    event.chat_id,
+                                    ChatMessage(
+                                        text = event.message,
+                                        sender_picture_url = UserData.user?.pictureUrl!!,
+                                        sent_time = getCurrentUTCTime(),
+                                        sender_id = UserData.user!!.id,
+                                        message_type = "text",
+                                        id = "",
+                                        collectionId = event.chat_id,
+                                        replyTo = null
+                                    )
                                 )
-                            )
-                        }
-                        is ChatEvents.SendReply->{
-                            chatViewModel.addMessage(
-                                event.chat_id,
-                                ChatMessage(
-                                    text = event.message,
-                                    sender_picture_url = UserData.user?.pictureUrl!!,
-                                    sent_time =   getCurrentUTCTime()
-                                    ,
-                                    sender_id = UserData.user!!.id,
-                                    message_type = "reply",
-                                    id = "",
-                                    collectionId = event.chat_id,
-                                    replyTo = event.replyTo
+                            }
+                            is ChatEvents.SendReply -> {
+                                chatViewModel.addMessage(
+                                    event.chat_id,
+                                    ChatMessage(
+                                        text = event.message,
+                                        sender_picture_url = UserData.user?.pictureUrl!!,
+                                        sent_time = getCurrentUTCTime(),
+                                        sender_id = UserData.user!!.id,
+                                        message_type = "reply",
+                                        id = "",
+                                        collectionId = event.chat_id,
+                                        replyTo = event.replyTo
+                                    )
                                 )
-                            )
+                            }
+                            else -> {}
                         }
-                        else -> {}
-                    }
 
-                },chatViewModel=chatViewModel, displayLocation = {displayLocationDialog=it}, higlightDialog = {messageToHighlight->
-                    highlightDialog=messageToHighlight
+                    },
+                    chatViewModel = chatViewModel,
+                    displayLocation = { displayLocationDialog = it },
+                    higlightDialog = { messageToHighlight ->
+                        highlightDialog = messageToHighlight
 
-                },chatFinal!!,data=data, first_data = frist_data, new_data = data_new, valueExist = valueExist.value)
+                    },
+                    chatFinal!!,
+                    data = data,
+                    first_data = frist_data,
+                    new_data = data_new,
+                    valueExist = valueExist.value
+                )
             }
-            if(highlightDialog!=null){
-                val trunctuatedMessage =highlightDialog
-                if(trunctuatedMessage!!.length>30){
-                    trunctuatedMessage.take(30)+"..."
+            if (highlightDialog != null) {
+                val trunctuatedMessage = highlightDialog
+                if (trunctuatedMessage!!.length > 30) {
+                    trunctuatedMessage.take(30) + "..."
                 }
                 FriendUppDialog(
-                    label="Make sure everybody sees the message("+trunctuatedMessage+") by highlighting it.",
+                    label = "Make sure everybody sees the message(" + trunctuatedMessage + ") by highlighting it.",
                     confirmLabel = "Highlight",
                     icon = com.example.friendupp.R.drawable.ic_highlight_300,
-                    onCancel = {     highlightDialog=null},
+                    onCancel = { highlightDialog = null },
                     onConfirm = {
                         chatViewModel.addHighLight(chatID!!, highlightDialog.toString())
-                        highlightDialog=null
+                        highlightDialog = null
 
                     })
             }
-            if(displayLocationDialog!=null){
+            if (displayLocationDialog != null) {
                 DisplayLocationDialog(latLng = displayLocationDialog!!, onCancel = {
-                    displayLocationDialog=null
+                    displayLocationDialog = null
                 })
             }
-            if(sendLocationDialog){
+            if (sendLocationDialog) {
 
                 FriendUppDialog(
-                    label="Your current location will be shared to chat",
+                    label = "Your current location will be shared to chat",
                     confirmLabel = "Share current location",
                     icon = com.example.friendupp.R.drawable.ic_pindrop_300,
-                    onCancel = {sendLocationDialog=false},
+                    onCancel = { sendLocationDialog = false },
                     onConfirm = {
-                        if(currentLocation!=null){
+                        if (currentLocation != null) {
                             chatViewModel.addMessage(
                                 chatID.toString(),
                                 ChatMessage(
-                                    text = currentLocation?.latitude.toString()+","+ currentLocation?.longitude.toString(),
+                                    text = currentLocation?.latitude.toString() + "," + currentLocation?.longitude.toString(),
                                     sender_picture_url = UserData.user?.pictureUrl!!,
-                                    sent_time ="",
+                                    sent_time = "",
                                     sender_id = UserData.user!!.id,
                                     message_type = "latLng",
                                     id = "",
                                     collectionId = chatID.toString(),
                                     replyTo = null
-                                ))
+                                )
+                            )
                         }
-                        sendLocationDialog=false
+                        sendLocationDialog = false
 
                     })
             }
@@ -585,8 +632,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
 }
 
 
-
-fun getCurrentUTCTime(): String  {
+fun getCurrentUTCTime(): String {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     dateFormat.timeZone = TimeZone.getTimeZone("UTC")
     val currentDateTime = Calendar.getInstance().time

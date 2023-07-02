@@ -78,7 +78,7 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                     creatorFullName = activity.creator_name,expandButton=false,
                     profilePictureUrl = activity.creator_profile_picture, onExpand = {
                         onEvent(MapEvent.PreviewActivity(activity))
-                    })
+                    }, goToProfile ={onEvent(MapEvent.GoToProfile(it))}, creatorId = activity.creator_id )
 
             }
         }

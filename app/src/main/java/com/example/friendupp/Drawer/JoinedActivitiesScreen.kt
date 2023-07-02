@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.Profile.loadJoinedActivities
 import com.example.friendupp.Profile.loadMoreJoinedActivities
 import com.example.friendupp.di.ActivityViewModel
@@ -20,6 +21,11 @@ import com.example.friendupp.model.UserData
 
 sealed class JoinedActivitiesEvents{
     object GoBack:JoinedActivitiesEvents()
+    class ExpandActivity(val activityData: Activity) : JoinedActivitiesEvents()
+    class JoinActivity(val id: String) : JoinedActivitiesEvents()
+    class GoToProfile(val id: String) : JoinedActivitiesEvents()
+    class LeaveActivity(val id: String) : JoinedActivitiesEvents()
+    class OpenChat(val id: String) : JoinedActivitiesEvents()
 }
 
 @Composable
@@ -40,16 +46,8 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
+                        handleActivityEvent(event,onEvent)
 
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{ }
-                        }
                     }
                 )
             }
@@ -60,14 +58,7 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{  }
-                        }
+                        handleActivityEvent(event,onEvent)
                     }
                 )
             }
@@ -86,4 +77,23 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
 
     }
 
+}
+private fun handleActivityEvent(event: ActivityEvents,    onEvent: (JoinedActivitiesEvents) -> Unit) {
+    when (event) {
+        is ActivityEvents.Expand -> {
+            onEvent(JoinedActivitiesEvents.ExpandActivity(event.activity))
+        }
+        is ActivityEvents.Join -> {
+            onEvent(JoinedActivitiesEvents.JoinActivity(event.id))
+        }
+        is ActivityEvents.Leave -> {
+            onEvent(JoinedActivitiesEvents.LeaveActivity(event.id))
+        }
+        is ActivityEvents.OpenChat -> {
+            onEvent(JoinedActivitiesEvents.OpenChat(event.id))
+        }
+        is ActivityEvents.GoToProfile->{
+            onEvent(JoinedActivitiesEvents.GoToProfile(event.id))
+        }
+    }
 }

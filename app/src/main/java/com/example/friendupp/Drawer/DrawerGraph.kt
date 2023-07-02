@@ -1,5 +1,6 @@
 package com.example.friendupp.Drawer
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -8,13 +9,16 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.Settings.*
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel) {
+fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel,homeViewModel:HomeViewModel) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 
         composable(
@@ -86,6 +90,31 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     JoinedActivitiesScreen(onEvent={event->
                         when(event){
                             is JoinedActivitiesEvents.GoBack->{navController.popBackStack()}
+                            is JoinedActivitiesEvents.GoToProfile->{
+                                navController.navigate("ProfileDisplay/"+event.id)
+                            }
+                            is JoinedActivitiesEvents.JoinActivity -> {
+                                activityViewModel.likeActivity(
+                                    event.id,
+                                    UserData.user!!
+                                )
+
+                            }
+                            is JoinedActivitiesEvents.OpenChat -> {
+                                navController.navigate("ChatItem/" + event.id)
+
+                            }
+                            is JoinedActivitiesEvents.LeaveActivity -> {
+                                activityViewModel?.unlikeActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is JoinedActivitiesEvents.ExpandActivity -> {
+                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
+                                homeViewModel.setExpandedActivity(event.activityData)
+                                navController.navigate("ActivityPreview")
+                            }
                         }
 
                     },activityViewModel)
@@ -94,6 +123,31 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     CreatedActivitiesScreen(onEvent={event->
                         when(event){
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
+                            is CreatedActivitiesEvents.GoToProfile->{
+                                navController.navigate("ProfileDisplay/"+event.id)
+                            }
+                            is CreatedActivitiesEvents.JoinActivity -> {
+                                activityViewModel.likeActivity(
+                                    event.id,
+                                    UserData.user!!
+                                )
+
+                            }
+                            is CreatedActivitiesEvents.OpenChat -> {
+                                navController.navigate("ChatItem/" + event.id)
+
+                            }
+                            is CreatedActivitiesEvents.LeaveActivity -> {
+                                activityViewModel?.unlikeActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is CreatedActivitiesEvents.ExpandActivity -> {
+                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
+                                homeViewModel.setExpandedActivity(event.activityData)
+                                navController.navigate("ActivityPreview")
+                            }
                         }
 
                     },activityViewModel)

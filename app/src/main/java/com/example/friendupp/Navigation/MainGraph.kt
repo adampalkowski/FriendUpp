@@ -227,6 +227,9 @@ fun NavGraphBuilder.mainGraph(
                         homeViewModel.setExpandedActivity(event.activityData)
                         navController.navigate("ActivityPreview")
                     }
+                    is HomeEvents.GoToProfile->{
+                        navController.navigate("ProfileDisplay/"+event.id)
+                    }
                 }
             }, activityViewModel = activityViewModel, mapViewModel = mapViewModel)
 
@@ -554,7 +557,7 @@ fun NavGraphBuilder.mainGraph(
                                 id = id,
                                 name = null,
                                 imageUrl = null,
-                                recent_message = null,
+                                recent_message = "",
                                 recent_message_time = current,
                                 type = "duo",
                                 members = arrayListOf(UserData.user!!.id, event.user.id),

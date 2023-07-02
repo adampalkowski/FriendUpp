@@ -64,6 +64,11 @@ sealed class ProfileEvents {
     object GoToFriendList : ProfileEvents()
     object GetProfileLink : ProfileEvents()
     object OpenCamera : ProfileEvents()
+    class ExpandActivity(val activityData: Activity) : ProfileEvents()
+    class JoinActivity(val id: String) : ProfileEvents()
+    class GoToProfile(val id: String) : ProfileEvents()
+    class LeaveActivity(val id: String) : ProfileEvents()
+    class OpenChat(val id: String) : ProfileEvents()
 }
 
 
@@ -174,16 +179,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{ }
-                        }
+                        handleActivityEvent(event, onEvent = onEvent)
                     }
                 )
             }
@@ -194,14 +190,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{  }
-                        }
+                        handleActivityEvent(event, onEvent = onEvent)
                     }
                 )
             }
@@ -225,16 +214,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{ }
-                        }
+                        handleActivityEvent(event, onEvent = onEvent)
                     }
                 )
             }
@@ -246,14 +226,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{  }
-                        }
+                        handleActivityEvent(event, onEvent = onEvent)
                     }
                 )
             }
@@ -623,16 +596,7 @@ fun ProfileCalendar(modifier:Modifier,joinedActivities:MutableList<Activity>){
                     // Handle click event
                 },
                 onEvent = { event->
-                    when(event){
-                        is ActivityEvents.Expand->{
-                            Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
-                        }
-                        is ActivityEvents.Leave->{ }
-
-                        is ActivityEvents.Join->{  }
-                        is ActivityEvents.OpenChat->{ }
-                    }
+                    handleActivityEvent(event, onEvent = {  })
                 }
             )
         }
@@ -656,6 +620,22 @@ fun ProfileHistory(modifier:Modifier,activitiesHistory: MutableList<Activity>){
 
 
 
-
-
-
+private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileEvents) -> Unit) {
+    when (event) {
+        is ActivityEvents.Expand -> {
+            onEvent(ProfileEvents.ExpandActivity(event.activity))
+        }
+        is ActivityEvents.Join -> {
+            onEvent(ProfileEvents.JoinActivity(event.id))
+        }
+        is ActivityEvents.Leave -> {
+            onEvent(ProfileEvents.LeaveActivity(event.id))
+        }
+        is ActivityEvents.OpenChat -> {
+            onEvent(ProfileEvents.OpenChat(event.id))
+        }
+        is ActivityEvents.GoToProfile->{
+            onEvent(ProfileEvents.GoToProfile(event.id))
+        }
+    }
+}

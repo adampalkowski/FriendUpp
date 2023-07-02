@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -223,7 +224,8 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String,highli
 
     Box(modifier = Modifier
         .fillMaxWidth()
-        .clickable(onClick = onClick)) {
+        .clickable(onClick = onClick, interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(color = Color.Black),)) {
         Column() {
             Row(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),

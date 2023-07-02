@@ -23,6 +23,8 @@ import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ChatEvents
 import com.example.friendupp.Groups.GroupItemEvent
+import com.example.friendupp.Home.HomeEvents
+import com.example.friendupp.Home.HomeViewModel
 
 import com.example.friendupp.Profile.*
 import com.example.friendupp.di.ActivityViewModel
@@ -49,6 +51,7 @@ fun NavGraphBuilder.profileGraph(
     executor: Executor,userViewModel:UserViewModel,
     chatViewModel: ChatViewModel,
     authViewModel: AuthViewModel,
+    homeViewModel:HomeViewModel
 ) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
@@ -295,7 +298,31 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileEvents.OpenCamera -> {
                                 navController.navigate("CameraProfile")
                             }
+                            is ProfileEvents.GoToProfile->{
+                                navController.navigate("ProfileDisplay/"+event.id)
+                            }
+                            is ProfileEvents.JoinActivity -> {
+                                activityViewModel.likeActivity(
+                                    event.id,
+                                    UserData.user!!
+                                )
 
+                            }
+                            is ProfileEvents.OpenChat -> {
+                                navController.navigate("ChatItem/" + event.id)
+
+                            }
+                            is ProfileEvents.LeaveActivity -> {
+                                activityViewModel?.unlikeActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is ProfileEvents.ExpandActivity -> {
+                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
+                                homeViewModel.setExpandedActivity(event.activityData)
+                                navController.navigate("ActivityPreview")
+                            }
                         }
 
                     },
@@ -734,7 +761,31 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileDisplayEvents.GoToChat->{
                                 navController.navigate("ChatItem/"+event.chat_id)
                             }
+                            is ProfileDisplayEvents.JoinActivity -> {
+                                activityViewModel.likeActivity(
+                                    event.id,
+                                    UserData.user!!
+                                )
 
+                            }
+                            is ProfileDisplayEvents.OpenChat -> {
+                                navController.navigate("ChatItem/" + event.id)
+
+                            }
+                            is ProfileDisplayEvents.LeaveActivity -> {
+                                activityViewModel?.unlikeActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is ProfileDisplayEvents.ExpandActivity -> {
+                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
+                                homeViewModel.setExpandedActivity(event.activityData)
+                                navController.navigate("ActivityPreview")
+                            }
+                            is ProfileDisplayEvents.GoToProfile->{
+                                navController.navigate("ProfileDisplay/"+event.id)
+                            }
                         }
                     }
                     , user = user.value!!

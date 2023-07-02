@@ -284,6 +284,7 @@ fun NavigationComponent(
                     userViewModel = userViewModel,
                     chatViewModel = chatViewModel,
                     authViewModel = authViewModel,
+                    homeViewModel=homeViewModel
                 )
                 createGraph(
                     navController,
@@ -296,7 +297,7 @@ fun NavigationComponent(
                     activityState=activityState
                 , mapViewModel = mapViewModel)
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController, activityViewModel)
+                drawerGraph(navController, activityViewModel,homeViewModel=homeViewModel)
                 groupGraph(navController, chatViewModel)
                 cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
             }

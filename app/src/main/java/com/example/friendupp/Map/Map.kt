@@ -43,6 +43,7 @@ import com.google.maps.android.compose.*
 
 sealed class MapEvent {
     class PreviewActivity(val activity: Activity) : MapEvent()
+    class GoToProfile(val id: String) : MapEvent()
 }
 
 @Composable

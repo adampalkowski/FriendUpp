@@ -36,8 +36,9 @@ import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
 sealed class TYPE {
-    object SINGLE : TYPE()
+    object DUO : TYPE()
     object GROUP : TYPE()
+    object ACTIVITY : TYPE()
 }
 
 sealed class ChatSettingsEvents {
@@ -62,26 +63,19 @@ fun ChatSettings(
     type: TYPE,
     chatSettingsEvents: (ChatSettingsEvents) -> Unit,
     chatViewModel: ChatViewModel,
+    chat:Chat
 ) {
     BackHandler(true) {
         chatSettingsEvents(ChatSettingsEvents.GoBack)
     }
-    var chat = remember { mutableStateOf<Chat?>(null) }
-    loadChat(modifier = Modifier, chatViewModel = chatViewModel, chat = chat) {
 
-    }
-    var chatFinal = chat.value
-    if (chatFinal != null) {
-        val (chat_name, chat_image) = getChatNameAndImage(chatFinal)
-
-
+        val (chat_name, chat_image) = getChatNameAndImage(chat)
 
         when (type) {
-            is TYPE.SINGLE -> {
-
+            is TYPE.DUO -> {
                 ChatSettingsSingle(
-                    name = chat_name, username = "tomala", profilePictureUrl = chat_image,
-                    chatSettingsEvents = chatSettingsEvents, chatViewModel = chatViewModel
+                    name = chat_name, username ="", profilePictureUrl = chat_image,
+                    chatSettingsEvents = chatSettingsEvents, chatViewModel = chatViewModel,
                 )
             }
             is TYPE.GROUP -> {
@@ -91,8 +85,14 @@ fun ChatSettings(
                     chatSettingsEvents = chatSettingsEvents, chatViewModel = chatViewModel
                 )
             }
+            is TYPE.ACTIVITY -> {
+
+                ChatSettingsActivity(
+                    name = chat_name, profilePictureUrl = chat_image,
+                    chatSettingsEvents = chatSettingsEvents, chatViewModel = chatViewModel,
+                )
+            }
         }
-    }
 }
 
 @Composable
@@ -145,7 +145,6 @@ fun ChatSettingsGroup(
                 color = SocialTheme.colors.textPrimary
             )
         }
-        TagDivider()
         Spacer(modifier = Modifier.height(24.dp))
         SettingsItem(label = "Display users", icon = R.drawable.ic_group) {
             chatSettingsEvents(ChatSettingsEvents.DisplayUsers)
@@ -240,7 +239,6 @@ fun ChatSettingsSingle(
             )
 
         }
-        TagDivider()
         Spacer(modifier = Modifier.height(24.dp))
         SettingsItem(label = "Notifications", icon = R.drawable.ic_notify) {
             chatSettingsEvents(ChatSettingsEvents.Notification)
@@ -256,6 +254,76 @@ fun ChatSettingsSingle(
         }
         SettingsItem(label = "Block", icon = R.drawable.ic_block) {
             chatSettingsEvents(ChatSettingsEvents.Block)
+        }
+        SettingsItem(label = "Report", icon = R.drawable.ic_flag) {
+            chatSettingsEvents(ChatSettingsEvents.Report)
+        }
+    }
+}
+@Composable
+fun ChatSettingsActivity(
+    profilePictureUrl: String,
+    name: String,
+    chatSettingsEvents: (ChatSettingsEvents) -> Unit,
+    chatViewModel: ChatViewModel,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.verticalScroll(
+            rememberScrollState()
+        )
+    ) {
+        ScreenHeading(
+            title = "Chat settings",
+            backButton = true,
+            onBack = { chatSettingsEvents(ChatSettingsEvents.GoBack) }) {
+
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.clickable(onClick = {
+                chatSettingsEvents(
+                    ChatSettingsEvents.GoToUserProfile("")
+                )
+            })
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(profilePictureUrl)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.ic_launcher_background),
+                contentDescription = "stringResource(R.string.description)",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = name,
+                style = TextStyle(
+                    fontFamily = Lexend,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = SocialTheme.colors.textPrimary
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        SettingsItem(label = "Display users", icon = R.drawable.ic_group) {
+            chatSettingsEvents(ChatSettingsEvents.DisplayUsers)
+
+        }
+        SettingsItem(label = "Notifications", icon = R.drawable.ic_notify) {
+            chatSettingsEvents(ChatSettingsEvents.Notification)
+        }
+        SettingsItem(label = "Share activity", icon = R.drawable.ic_share) {
+            chatSettingsEvents(ChatSettingsEvents.Share)
+        }
+
+        SettingsItem(label = "Leave activity", icon = R.drawable.ic_logout) {
+            chatSettingsEvents(ChatSettingsEvents.LeaveGroup)
         }
         SettingsItem(label = "Report", icon = R.drawable.ic_flag) {
             chatSettingsEvents(ChatSettingsEvents.Report)

@@ -32,6 +32,7 @@ import com.example.friendupp.ActivityUi.ActivityEvents
 import com.example.friendupp.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Drawer.CreatedActivitiesEvents
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.loadMoreFriendsActivities
 import com.example.friendupp.R
@@ -59,6 +60,12 @@ sealed class ProfileDisplayEvents {
     /*todo*/
     object GoToFriendList : ProfileDisplayEvents()
     object GetProfileLink : ProfileDisplayEvents()
+
+    class ExpandActivity(val activityData: Activity) : ProfileDisplayEvents()
+    class JoinActivity(val id: String) : ProfileDisplayEvents()
+    class GoToProfile(val id: String) : ProfileDisplayEvents()
+    class LeaveActivity(val id: String) : ProfileDisplayEvents()
+    class OpenChat(val id: String) : ProfileDisplayEvents()
 }
 
 enum class UserOption {
@@ -214,16 +221,7 @@ fun ProfileDisplayScreen(
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-
-                            }
-                            is ActivityEvents.Leave->{ }
-
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{ }
-                        }
+                        handleActivityEvent(event,onEvent)
                     }
                 )
             }
@@ -234,14 +232,8 @@ fun ProfileDisplayScreen(
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                            }
-                            is ActivityEvents.Leave->{ }
+                        handleActivityEvent(event,onEvent)
 
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{  }
-                        }
                     }
                 )
             }
@@ -266,15 +258,8 @@ fun ProfileDisplayScreen(
                     },
                     onEvent = { event->
 
-                        when(event){
-                            is ActivityEvents.Expand->{
-                                Log.d("ACTIVITYDEBUG","LAUNCH PREIVEW2 ")
-                            }
-                            is ActivityEvents.Leave->{ }
+                        handleActivityEvent(event,onEvent)
 
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{ }
-                        }
                     }
                 )
             }
@@ -286,14 +271,8 @@ fun ProfileDisplayScreen(
                         // Handle click event
                     },
                     onEvent = { event->
-                        when(event){
-                            is ActivityEvents.Expand->{
-                            }
-                            is ActivityEvents.Leave->{ }
+                        handleActivityEvent(event,onEvent)
 
-                            is ActivityEvents.Join->{  }
-                            is ActivityEvents.OpenChat->{  }
-                        }
                     }
                 )
             }
@@ -477,3 +456,22 @@ fun ProfileDisplaySettingsItem(turnOffIcon:Boolean=false,icon:Int=R.drawable.ic_
     }
 }
 
+private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileDisplayEvents) -> Unit) {
+    when (event) {
+        is ActivityEvents.Expand -> {
+            onEvent(ProfileDisplayEvents.ExpandActivity(event.activity))
+        }
+        is ActivityEvents.Join -> {
+            onEvent(ProfileDisplayEvents.JoinActivity(event.id))
+        }
+        is ActivityEvents.Leave -> {
+            onEvent(ProfileDisplayEvents.LeaveActivity(event.id))
+        }
+        is ActivityEvents.OpenChat -> {
+            onEvent(ProfileDisplayEvents.OpenChat(event.id))
+        }
+        is ActivityEvents.GoToProfile->{
+            onEvent(ProfileDisplayEvents.GoToProfile(event.id))
+        }
+    }
+}

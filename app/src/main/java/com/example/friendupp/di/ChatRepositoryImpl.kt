@@ -34,17 +34,19 @@ class ChatRepositoryImpl @Inject constructor(
     private var lastVisibleChatCollectionData: DocumentSnapshot? = null
     private  var loaded_messages: ArrayList<ChatMessage> = ArrayList()
     override suspend fun getChatCollection(id: String): Flow<Response<Chat>> = flow {
-        chatCollectionsRef.document(id).get().addOnSuccessListener { documentSnapshot ->
-            val response = if (documentSnapshot != null) {
+        try {
+            val documentSnapshot = chatCollectionsRef.document(id).get().await()
+            val response = if (documentSnapshot != null && documentSnapshot.exists()) {
                 val activity = documentSnapshot.toObject<Chat>()
-                if (activity!=null){
+                if (activity != null) {
                     Response.Success(activity)
-                }else{
+                } else {
                     Response.Failure(
                         e = SocialException(
                             "document_null",
                             Exception()
-                        ) )
+                        )
+                    )
                 }
             } else {
                 Response.Failure(
@@ -55,8 +57,14 @@ class ChatRepositoryImpl @Inject constructor(
                 )
             }
             emit(response)
+        } catch (e: Exception) {
+            emit(Response.Failure(
+                e = SocialException(
+                    "getChatCollection exception",
+                    e
+                )
+            ))
         }
-
     }
 
 

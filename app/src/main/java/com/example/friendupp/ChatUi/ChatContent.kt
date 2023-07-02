@@ -122,7 +122,12 @@ fun ChatContent(
     valueExist: Boolean,
 
     ) {
-
+    DisposableEffect(Unit) {
+        onDispose {
+            chatViewModel.resetChat()
+            chatViewModel.resetLoadedMessages()
+        }
+    }
     var highlight_dialog by remember { mutableStateOf(false) }
 
     //HIGHLIGHT
@@ -379,7 +384,6 @@ fun loadChat(
     chat: MutableState<Chat?>,
     chatNonExistent: () -> Unit,
 ) {
-
 
     val chatState = chatViewModel.chatCollectionState.collectAsState()
 
