@@ -164,7 +164,8 @@ fun ProfileDisplayScreen(
                         modifier = Modifier.fillMaxWidth(),
                         user.activitiesCreated,
                         user.friends_ids.size,
-                        user.usersReached
+                        user.usersReached,
+                        GoToFriends = {onEvent(ProfileDisplayEvents.GoToFriendList)}
                     )
                 }
 

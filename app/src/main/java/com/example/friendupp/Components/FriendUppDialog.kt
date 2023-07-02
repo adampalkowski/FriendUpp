@@ -34,7 +34,9 @@ fun FriendUppDialog(
     textColor: Color = SocialTheme.colors.textPrimary,
     backgroundColor: Color=SocialTheme.colors.uiBackground,
     confirmTextColor:Color=SocialTheme.colors.textInteractive,
-    cancelTextColor:Color=SocialTheme.colors.iconPrimary
+    cancelTextColor:Color=SocialTheme.colors.iconPrimary,
+    disableConfirmButton:Boolean=false
+
 ){
         Dialog(onDismissRequest = onCancel,) {
             Box(
@@ -54,13 +56,18 @@ fun FriendUppDialog(
                     Spacer(modifier = Modifier.height(24.dp))
                     Card(colors = CardDefaults.cardColors(containerColor = Color.Transparent, contentColor = Color.Transparent), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                         Column() {
-                            Row(modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(onClick = onConfirm)
-                                .border(BorderStroke(0.5.dp, SocialTheme.colors.uiBorder))
-                                .padding(vertical = 16.dp, horizontal = 12.dp), horizontalArrangement = Arrangement.Center){
-                                Text(text =confirmLabel, style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, fontFamily = Lexend), color = confirmTextColor )
+                            if(!disableConfirmButton){
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(onClick = onConfirm)
+                                    .border(BorderStroke(0.5.dp, SocialTheme.colors.uiBorder))
+                                    .padding(vertical = 16.dp, horizontal = 12.dp), horizontalArrangement = Arrangement.Center){
+                                    Text(text =confirmLabel, style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, fontFamily = Lexend), color = confirmTextColor )
+                                }
+                            }else{
+                                Box(modifier = Modifier.fillMaxWidth().height(0.5.dp).background(SocialTheme.colors.uiBorder))
                             }
+
                             Row(modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(onClick = onCancel)

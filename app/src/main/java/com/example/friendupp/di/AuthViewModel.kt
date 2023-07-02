@@ -75,6 +75,12 @@ class AuthViewModel @Inject constructor(
     fun resetLoginFlow(){
         _loginFlow.value=null
     }
+    fun updateEmail(new_email:String,id:String){
+        viewModelScope.launch {
+            repo.updateEmail(new_email)
+            repo.updateUserEmail(id,new_email)
+        }
+    }
     fun logout(){
         repo.logout()
         _loginFlow.value=null
@@ -89,7 +95,6 @@ class AuthViewModel @Inject constructor(
          viewModelScope.launch {
              repo.deleteAccount(id)
          }
-
 
     }
 

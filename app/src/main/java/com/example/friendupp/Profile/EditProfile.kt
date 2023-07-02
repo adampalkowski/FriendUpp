@@ -1,5 +1,6 @@
 package com.example.friendupp.Profile
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
@@ -9,10 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -36,7 +34,10 @@ import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.*
 import com.example.friendupp.R
+import com.example.friendupp.Settings.ChangeEmailDialog
+import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.model.User
+import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
@@ -44,6 +45,8 @@ sealed class EditProfileEvents{
     object GoBack:EditProfileEvents()
     object ConfirmChanges:EditProfileEvents()
     object OpenCamera:EditProfileEvents()
+    object openEditEmailDialog:EditProfileEvents()
+    object openChangePasswordDialog:EditProfileEvents()
 }
 
 @Composable
@@ -59,11 +62,11 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit,user:User, onEvent: (Edit
             ScreenHeading(title = "Edit profile", backButton = true,
                 backIcon = com.example.friendupp.R.drawable.ic_back, onBack = {goBack()}) {
                 Row(Modifier,verticalAlignment = Alignment.CenterVertically){
-                    ButtonAdd(icon = R.drawable.ic_email, onClick = {})
+                    ButtonAdd(icon = R.drawable.ic_email, onClick = {onEvent(EditProfileEvents.openEditEmailDialog)})
                     Spacer(modifier = Modifier
                         .background(SocialTheme.colors.uiBorder)
                         .width(16.dp))
-                    ButtonAdd(icon = R.drawable.ic_password, onClick = {})
+                    ButtonAdd(icon = R.drawable.ic_password, onClick ={onEvent(EditProfileEvents.openChangePasswordDialog)})
 
                 }
             }
@@ -78,6 +81,8 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit,user:User, onEvent: (Edit
 
             CreateButton("Confirm changes", modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp), disabled = false, createClicked = {onEvent(EditProfileEvents.ConfirmChanges)})
             Spacer(modifier = Modifier.height(120.dp)) }
+
+
 
 
 }

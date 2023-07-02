@@ -120,6 +120,13 @@ class AuthRepositoryImpl @Inject constructor(
     override fun logout() {
         auth.signOut()
     }
+    override fun updateEmail(newEmail:String){
+        auth.currentUser?.updateEmail(newEmail)
+    }
+    override suspend fun updateUserEmail(id:String,email:String) {
+
+        db.collection("Users").document(id).update("email",email).await()
+    }
 
     override  suspend fun deleteAccount(id:String) {
 

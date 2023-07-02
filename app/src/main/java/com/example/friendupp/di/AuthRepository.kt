@@ -18,6 +18,8 @@ interface AuthRepository {
     suspend fun signup(name:String,email:String,password: String): Response<FirebaseUser?>
 
     fun logout()
+    fun updateEmail(new_email:String)
+    suspend fun  updateUserEmail(id:String,email:String)
     fun deleteAuth()
     fun resetPassword(new_password:String)
      suspend fun deleteAccount(id:String)

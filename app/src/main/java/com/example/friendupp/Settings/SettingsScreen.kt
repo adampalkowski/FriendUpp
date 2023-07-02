@@ -46,22 +46,11 @@ sealed class SettingsEvents {
     object AppVersionInformation : SettingsEvents()
     object TermsAndPrivacy : SettingsEvents()
     object DarkMode : SettingsEvents()
+    object OpenLogOutDialog : SettingsEvents()
+    object OpenDeleteAccountDialog : SettingsEvents()
 }
 
 
-// Function to get the saved range value from SharedPreferences
-private fun getSavedRangeValue(context:Context): Float {
-    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-    val rangeValueKey = "rangeValue"
-    return preferences.getFloat(rangeValueKey, 0.05f)
-}
-
-// Function to save the range value to SharedPreferences
-private fun saveRangeValue(value: Float,context: Context) {
-    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-    val rangeValueKey = "rangeValue"
-    preferences.edit().putFloat(rangeValueKey, value).apply()
-}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit) {
@@ -70,22 +59,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
     val confirmAction = remember { mutableStateOf<SettingsEvents?>(null) }
     val context = LocalContext.current
 
-    var sliderValue by rememberSaveable {
-        mutableStateOf(getSavedRangeValue(context))
-    }
-    LaunchedEffect(Unit) {
-        sliderValue = getSavedRangeValue(context)
-    }
-    DisposableEffect(Unit) {
 
-        // Load the range value from SharedPreferences
-        sliderValue = getSavedRangeValue(context)
-
-        onDispose {
-            saveRangeValue(sliderValue,context)
-        }
-
-    }
     BackHandler(true) {
         settingsEvents(SettingsEvents.GoBack)
     }
@@ -164,11 +138,10 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
            SettingsLabel("Search Range")
 
 
-            RangeItem(
+            SettingsItem(
                 label = "Change range",
                 icon = R.drawable.ic_ruler,
-                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) },sliderValue=sliderValue, onValueChange = {value->sliderValue=value})
-
+                onClick = { settingsEvents(SettingsEvents.ChangeSearchRange) })
             SettingsLabel("Account")
             SettingsItem(
                 label = "Language",
@@ -187,8 +160,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 icon = R.drawable.ic_darkmode,
                 onClick = {
                     scope.launch {
-                        confirmAction.value = SettingsEvents.DarkMode
-                        sheetState.show()
+                        settingsEvents(SettingsEvents.DarkMode)
                     }
                 })
             SettingsItem(
@@ -203,8 +175,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 icon = R.drawable.ic_logout,
                 onClick = {
                     scope.launch {
-                        confirmAction.value = SettingsEvents.LogOut
-                        sheetState.show()
+                        settingsEvents(SettingsEvents.OpenLogOutDialog)
                     }
 
                 })
@@ -214,8 +185,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 onClick = {
                     scope.launch {
 
-                        confirmAction.value = SettingsEvents.DeleteAccount
-                        sheetState.show()
+                        settingsEvents(SettingsEvents.OpenDeleteAccountDialog)
                     }
                 })
 

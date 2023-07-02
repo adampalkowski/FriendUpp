@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +28,9 @@ import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeViewModel
 
 import com.example.friendupp.Profile.*
+import com.example.friendupp.R
+import com.example.friendupp.Settings.ChangeEmailDialog
+import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.AuthViewModel
 import com.example.friendupp.di.ChatViewModel
@@ -35,6 +39,7 @@ import com.example.friendupp.model.ChatMessage
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -390,6 +395,15 @@ fun NavGraphBuilder.profileGraph(
                 }
             }
         ) {
+            val context = LocalContext.current
+
+            var openEditEmailDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
+            var openChangePasswordDialog by rememberSaveable {
+                mutableStateOf(false)
+            }
+
             val user = UserData.user
             if(user!=null){
                 EditProfile(
@@ -400,6 +414,12 @@ fun NavGraphBuilder.profileGraph(
                             is EditProfileEvents.GoBack->{navController.popBackStack()}
                             is EditProfileEvents.ConfirmChanges->{}
                             is EditProfileEvents.OpenCamera->{navController.navigate("CameraProfile")}
+                            is EditProfileEvents.openEditEmailDialog->{
+                                openEditEmailDialog=true
+                            }
+                            is EditProfileEvents.openChangePasswordDialog->{
+                                openChangePasswordDialog=true
+                            }
                         }
 
 
@@ -422,6 +442,42 @@ fun NavGraphBuilder.profileGraph(
             }else{
                 navController.popBackStack()
             }
+            if (openChangePasswordDialog) {
+                ChangePasswordDialog(
+                    label = "Update password to keep your account safe.",
+                    icon = R.drawable.ic_password,
+                    onCancel = { openChangePasswordDialog = false },
+                    onConfirm = { new_password ->
+                        authViewModel.resetPassword(new_password)
+                        Toast.makeText(
+                            context,
+                            "Password updated, changes may take up to few minutes.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        openChangePasswordDialog = false
+                    },
+                    confirmTextColor = SocialTheme.colors.textInteractive,
+                    disableConfirmButton = false
+                )
+            }
+
+            if (openEditEmailDialog) {
+                ChangeEmailDialog(
+                    label = "Update email address to keep your account safe.",
+                    icon = R.drawable.ic_email,
+                    onCancel = { openEditEmailDialog = false },
+                    onConfirm = { new_email ->
+
+                        authViewModel.updateEmail(new_email,id= UserData.user!!.id)
+                        openEditEmailDialog = false
+                        Toast.makeText(context, "Email updated, changes may take a few minutes.", Toast.LENGTH_SHORT).show()
+
+                    },
+                    confirmTextColor = SocialTheme.colors.textInteractive,
+                    disableConfirmButton = false
+                )
+            }
+
 
         }
         composable(

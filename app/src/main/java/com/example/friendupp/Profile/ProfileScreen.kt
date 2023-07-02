@@ -134,7 +134,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                 onEvent=onEvent
             )
             TagDivider(tags=user.tags)
-            ProfileStats(modifier=Modifier.fillMaxWidth(), activitiesCreated = user.activitiesCreated, friendCount = user.friends_ids.size, usersReached = user.usersReached)
+            ProfileStats(modifier=Modifier.fillMaxWidth(), activitiesCreated = user.activitiesCreated, friendCount = user.friends_ids.size, usersReached = user.usersReached,GoToFriends={onEvent(ProfileEvents.GoToFriendList)})
             ProfileOptions(onEvent=onEvent)
 
         } }
@@ -448,18 +448,18 @@ fun Tag(icon:Int,label:String){
 
 
 @Composable
-fun ProfileStats(modifier: Modifier,friendCount:Int,activitiesCreated:Int,usersReached:Int){
+fun ProfileStats(modifier: Modifier,friendCount:Int,activitiesCreated:Int,usersReached:Int,GoToFriends:()->Unit){
     Row(modifier = modifier,horizontalArrangement = Arrangement.SpaceEvenly) {
-        Stat(value=friendCount.toString(), label = "Friends")
-        Stat(value=activitiesCreated.toString(), label = "Activities")
-        Stat(value=usersReached.toString(), label = "Participants")
+        Stat(value=friendCount.toString(), label = "Friends",onClick=GoToFriends)
+        Stat(value=activitiesCreated.toString(), label = "Activities",onClick={})
+        Stat(value=usersReached.toString(), label = "Participants", onClick = {})
 
     }
 }
 
 @Composable
-fun Stat(value:String,label:String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun Stat(value:String,label:String,onClick:()->Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick)) {
         Text(text =value, style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary )
         Text(text =label, style = TextStyle(fontFamily = Lexend, fontSize = 14.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary.copy(0.6f) )
     }

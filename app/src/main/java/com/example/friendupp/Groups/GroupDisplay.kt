@@ -99,8 +99,8 @@ fun GroupDisplayScreen(
 @Composable
 fun GroupStats(modifier: Modifier,numberOfUsers:Int,numberOfActivities:Int,){
     Row(modifier = modifier,horizontalArrangement = Arrangement.SpaceEvenly) {
-        Stat(value=numberOfUsers.toString(), label = "Users")
-        Stat(value=numberOfActivities.toString(), label = "Activities")
+        Stat(value=numberOfUsers.toString(), label = "Users", onClick = {})
+        Stat(value=numberOfActivities.toString(), label = "Activities", onClick = {})
     }
 }
 
