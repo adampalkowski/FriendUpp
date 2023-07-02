@@ -142,9 +142,7 @@ class ChatViewModel @Inject constructor(
     }
     fun getChatCollection(id: String) {
         viewModelScope.launch {
-            repo.getChatCollection(id).collect{
-                response->
-                        _chatCollectionState.value=Response.Loading
+            repo.getChatCollection(id).collect{ response->
                         _chatCollectionState.value=response
             }
         }

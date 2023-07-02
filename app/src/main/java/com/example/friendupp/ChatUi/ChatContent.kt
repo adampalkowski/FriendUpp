@@ -1,11 +1,9 @@
 package com.example.friendupp.ChatUi
 
-import android.media.midi.MidiOutputPort
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -28,24 +25,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
-import androidx.compose.ui.platform.InspectableModifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.Disposable
 import coil.request.ImageRequest
 import com.example.friendupp.Home.eButtonSimple
 import com.example.friendupp.Home.eButtonSimpleBlue
@@ -60,7 +47,6 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.LatLng
-import kotlinx.coroutines.delay
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -73,11 +59,11 @@ sealed class ChatEvents {
     }
 
     object CloseDialog : ChatEvents()
-    object ShareLocation: ChatEvents()
+    object ShareLocation : ChatEvents()
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
     class SendMessage(val chat_id: String, val message: String) : ChatEvents()
-    class SendReply(val chat_id: String, val message: String,var replyTo:String) : ChatEvents()
+    class SendReply(val chat_id: String, val message: String, var replyTo: String) : ChatEvents()
     object OpenChatSettings : ChatEvents()
     class Reply(val message: ChatMessage) : ChatEvents()
     object Report : ChatEvents()
@@ -100,25 +86,44 @@ fun createLatLngFromString(coordinates: String): LatLng? {
         null
     }
 }
+fun getChatNameAndImage(chat: Chat): Pair<String, String> {
+    var chatName = chat.name.toString()
+    var chatImage = chat.imageUrl.toString()
+
+    if (chat.type.equals("duo")) {
+        if (chat.user_one_username == UserData.user!!.username) {
+            chatName = chat.user_two_username.toString()
+        } else {
+            chatName = chat.user_one_username.toString()
+        }
+    }
+
+    if (chat.type.equals("duo")) {
+        if (chat.user_one_profile_pic == UserData.user!!.pictureUrl) {
+            chatImage =chat.user_two_profile_pic.toString()
+        } else {
+            chatImage = chat.user_one_profile_pic.toString()
+        }
+    }
+
+    return Pair(chatName, chatImage)
+}
 @Composable
 fun ChatContent(
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
     chatViewModel: ChatViewModel,
     displayLocation: (LatLng) -> Unit,
-    higlightDialog: (String) -> Unit
-) {
+    higlightDialog: (String) -> Unit,
+    chat:Chat,
+    data: MutableList<ChatMessage>,
+    new_data: MutableList<ChatMessage>,
+    first_data: MutableList<ChatMessage>,
+    valueExist: Boolean,
+
+    ) {
 
     var highlight_dialog by remember { mutableStateOf(false) }
-
-
-    var chat = remember { mutableStateOf<Chat?>(null) }
-    loadChat(modifier = Modifier, chatViewModel, chat,chatNonExistent={onEvent(ChatEvents.CreateNonExistingChatCollection)})
-
-    var data = remember { mutableStateListOf<ChatMessage>() }
-    var data_new = remember { mutableStateListOf<ChatMessage>() }
-    var frist_data = remember { mutableStateListOf<ChatMessage>() }
-    val valueExist = remember { mutableStateOf(false) }
 
     //HIGHLIGHT
     var highlite_message by remember { mutableStateOf(false) }
@@ -134,40 +139,9 @@ fun ChatContent(
     val permission_flow = chatViewModel.granted_permission.collectAsState()
     val location_flow = chatViewModel.location.collectAsState()
     val isImageAddedToStorage by chatViewModel.isImageAddedToStorageFlow.collectAsState()
-    var chatFinal = chat.value
-    if (chatFinal != null) {
-        loadMessages(
-            frist_data,
-            data,
-            data_new,
-            chatViewModel,
-            valueExist = valueExist,
-            chatFinal.id!!
-        )
-        if (chatFinal.highlited_message != null) {
-            if (chatFinal.highlited_message!!.isNotEmpty()) {
-                highlight_dialog = true
-            }
-        }
 
-        var chat_name = chatFinal.name.toString()
-        if (chatFinal.type.equals("duo")) {
-            if (chatFinal.user_one_username == UserData.user!!.username) {
-                chat_name = chatFinal.user_two_username.toString()
-            } else {
-                chat_name = chatFinal.user_one_username.toString()
 
-            }
-        }
-        var chat_image = chat.value!!.imageUrl.toString()
-        if (chat.value!!.type.equals("duo")) {
-            if (chat.value!!.user_one_profile_pic == UserData.user!!.pictureUrl) {
-                chat_image = chat.value!!.user_two_profile_pic.toString()
-            } else {
-                chat_image = chat.value!!.user_one_profile_pic.toString()
-
-            }
-        }
+        val (chat_name, chat_image) =  getChatNameAndImage(chat)
 
         Box(Modifier.fillMaxSize()) {
 
@@ -175,12 +149,12 @@ fun ChatContent(
                 HighLightDialog(modifier = Modifier.align(Alignment.TopCenter), onEvent = { it ->
                     when (it) {
                         is ChatEvents.CloseDialog -> {
-                            chatFinal.highlited_message = null
+                            chat.highlited_message = null
                             highlight_dialog = false
                         }
                         else -> {}
                     }
-                }, highlitedMessage = chatFinal.highlited_message!!)
+                }, highlitedMessage = chat.highlited_message!!)
             }
             Column(Modifier.background(SocialTheme.colors.uiBackground)) {
                 TopChatBar(
@@ -204,23 +178,23 @@ fun ChatContent(
                         }
                     },
                     data,
-                    data_new,
-                    frist_data,
-                    valueExist = valueExist.value,
-                    chat_id = chatFinal.id.toString(),
+                    new_data,
+                    first_data,
+                    valueExist = valueExist,
+                    chat_id = chat.id.toString(),
                     highlightMessage = { highlited_message_text = it },
-                    highlight_message = highlite_message
-                    , displayLocation = displayLocation,
-                    higlightDialog={
+                    highlight_message = highlite_message, displayLocation = displayLocation,
+                    higlightDialog = {
                         higlightDialog(it)
-                    highlite_message=false}
+                        highlite_message = false
+                    }
 
                 )
-                LoadingImage(showLoading =showLoading )
+                LoadingImage(showLoading = showLoading)
                 BottomChatBar(modifier = Modifier,
                     onEvent = onEvent,
                     replyMessage = replyMessage,
-                    chat.value!!.id.toString(),
+                    chat.id.toString(),
                     shareLocation = {
                         onEvent(ChatEvents.ShareLocation)
                     },
@@ -228,22 +202,22 @@ fun ChatContent(
                         highlite_message = !highlite_message
                     },
                     addImage = { onEvent(ChatEvents.OpenGallery) },
-                    liveActivity = {},highlite_message=highlite_message)
+                    liveActivity = {}, highlite_message = highlite_message
+                )
             }
 
         }
 
+
+    DisposableEffect(Unit) {
+        onDispose { showLoading = false }
     }
 
-    DisposableEffect(Unit ){
-        onDispose { showLoading=false }
-    }
-    
     flowimageaddition?.value.let {
         when (it) {
             is Response.Success -> {
-                if(it.data.equals("successfully added image"))
-                showLoading = false
+                if (it.data.equals("successfully added image"))
+                    showLoading = false
 
             }
             is Response.Failure -> {}
@@ -277,18 +251,32 @@ fun LoadingImage(showLoading: Boolean) {
     val iconTint = SocialTheme.colors.iconPrimary
     val textColor = SocialTheme.colors.textPrimary
     val backColor = SocialTheme.colors.uiBorder
-   if(showLoading){
-       Box(modifier = Modifier
-           .background(backColor.copy(0.4f))
-           .fillMaxWidth()
-           .padding(horizontal = 24.dp, vertical = 8.dp)){
-           Row(Modifier.fillMaxWidth()) {
-               Icon(painter = painterResource(id = R.drawable.ic_loading), contentDescription =null,tint=iconTint )
-               Spacer(modifier=Modifier.width(12.dp))
-               Text(text = "Hol up...",color=textColor.copy(0.8f), style = TextStyle(fontWeight = FontWeight.SemiBold, fontFamily = Lexend, fontSize = 14.sp))
-           }
-       }
-   } 
+    if (showLoading) {
+        Box(
+            modifier = Modifier
+                .background(backColor.copy(0.4f))
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            Row(Modifier.fillMaxWidth()) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_loading),
+                    contentDescription = null,
+                    tint = iconTint
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Hol up...",
+                    color = textColor.copy(0.8f),
+                    style = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = Lexend,
+                        fontSize = 14.sp
+                    )
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -300,9 +288,7 @@ fun loadMessages(
     valueExist: MutableState<Boolean>,
     chatID: String,
 ) {
-
-
-    val activitiesFetched = remember { mutableStateOf(false) }
+    val activitiesFetched = rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
 
@@ -315,9 +301,9 @@ fun loadMessages(
 
 
     /*Here clean up the loaded messages , otherwise when loading chat again loaded messages will double*/
-    DisposableEffect(Unit){
+    DisposableEffect(Unit) {
         onDispose {
-            Log.d("CHATDEBUGed","DISPOSE")
+            Log.d("CHATDEBUGed", "DISPOSE")
             chatViewModel.resetLoadedMessages()
         }
     }
@@ -334,7 +320,7 @@ fun loadMessages(
             }
             is Response.Loading -> {
 
-                CircularProgressIndicator(color=SocialTheme.colors.textPrimary)
+                CircularProgressIndicator(color = SocialTheme.colors.textPrimary)
                 fristData.clear()
             }
             is Response.Failure -> {
@@ -348,7 +334,7 @@ fun loadMessages(
             is Response.Success -> {
                 dataNew.clear()
                 it.data.forEach {
-                    if( it.collectionId==chatID){
+                    if (it.collectionId == chatID) {
                         dataNew.add(it)
                     }
                 }
@@ -363,7 +349,7 @@ fun loadMessages(
             is Response.Failure -> {
                 data.clear()
             }
-            else->{}
+            else -> {}
         }
     }
     chatViewModel.moreMessagesState.value.let {
@@ -387,7 +373,12 @@ fun loadMessages(
 }
 
 @Composable
-fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableState<Chat?>,chatNonExistent:()->Unit) {
+fun loadChat(
+    modifier: Modifier,
+    chatViewModel: ChatViewModel,
+    chat: MutableState<Chat?>,
+    chatNonExistent: () -> Unit,
+) {
 
 
     val chatState = chatViewModel.chatCollectionState.collectAsState()
@@ -402,7 +393,7 @@ fun loadChat(modifier: Modifier, chatViewModel: ChatViewModel, chat: MutableStat
         }
         is Response.Success -> {
             chat.value = result.data
-            chatViewModel.resetChat()
+
         }
         is Response.Failure -> {
             Log.d("CHATREPOSITYIMPLCHATCOLLECT", "FAILURE")
@@ -432,7 +423,7 @@ fun ChatMessages(
     highlightMessage: (String) -> Unit,
     highlight_message: Boolean,
     displayLocation: (LatLng) -> Unit,
-    higlightDialog:(String)->Unit
+    higlightDialog: (String) -> Unit,
 
     ) {
 
@@ -461,7 +452,8 @@ fun ChatMessages(
                 openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-               displayLocation = displayLocation)
+                displayLocation = displayLocation
+            )
 
             lastMessageSenderID = message.sender_id
         }
@@ -479,7 +471,8 @@ fun ChatMessages(
                 openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-               displayLocation =displayLocation )
+                displayLocation = displayLocation
+            )
 
             lastMessageSenderID = message.sender_id
         }
@@ -495,8 +488,7 @@ fun ChatMessages(
                 highlightMessage = highlightMessage,
                 openDialog = higlightDialog,
                 onEvent = onEvent,
-                shouldGroup = shouldGroup
-                , displayLocation =displayLocation
+                shouldGroup = shouldGroup, displayLocation = displayLocation
             )
 
             lastMessageSenderID = message.sender_id
@@ -538,6 +530,7 @@ fun convertUTCtoLocal(utcDate: String, outputFormat: String): String {
 
     return localDateFormat.format(utcCalendar.time)
 }
+
 @Composable
 fun ChatBox(
     chat: ChatMessage,
@@ -548,7 +541,7 @@ fun ChatBox(
     displayPicture: (String) -> Unit,
     highlightMessage: (String) -> Unit,
     shouldGroup: Boolean = false,
-    displayLocation: (LatLng) -> Unit
+    displayLocation: (LatLng) -> Unit,
 ) {
     var padding = if (shouldGroup) {
         0.dp
@@ -580,8 +573,9 @@ fun ChatBox(
                     }
                 }
             },
-            displayLocation = displayLocation,highlite_message=highlite_message
-        , replyTo = chat.replyTo
+            displayLocation = displayLocation,
+            highlite_message = highlite_message,
+            replyTo = chat.replyTo
         )
     } else {
         Spacer(modifier = Modifier.height(padding))
@@ -589,11 +583,12 @@ fun ChatBox(
         ChatItemLeft(
             text_type = chat.message_type,
             text = chat.text,
-            timeSent =  convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"), onEvent = onEvent,
-            chat = chat, onClick = {
+            timeSent = convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"),
+            onEvent = onEvent,
+            chat = chat,
+            onClick = {
                 if (highlite_message) {
                     if (chat.message_type.equals("live") || chat.message_type.equals("latLng")) {
-
                     } else {
                         openDialog(chat.text)
                         highlightMessage(chat.text)
@@ -601,11 +596,13 @@ fun ChatBox(
                 } else {
                     if (chat.message_type.equals("uri")) {
                         displayPicture(chat.text)
-
                     }
                 }
             },
-            displayLocation = displayLocation, highlite_message = highlite_message)
+            displayLocation = displayLocation,
+            highlite_message = highlite_message,
+            replyTo = chat.replyTo
+        )
 
     }
 
@@ -646,275 +643,6 @@ fun ChatButtonItemLeft(icon: Int, label: String, onClick: () -> Unit) {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-fun ChatItemLeft(
-    text_type: String,
-    text: String,
-    timeSent: String = "12:12",
-    onClick: () -> Unit,
-    onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
-    displayLocation: (LatLng) -> Unit,
-    highlite_message: Boolean,
-    isReply:Boolean=false
-) {
-    var clicked by remember {
-        mutableStateOf(false)
-    }
-    var selected by remember {
-        mutableStateOf(false)
-    }
-
-    var elevation = if (selected) {
-        4.dp
-    } else {
-        0.dp
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp)
-            .padding(horizontal = 12.dp)
-    ) {
-        AnimatedVisibility(visible = clicked) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = Lexend,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal
-                ),
-                text = timeSent,
-                color = SocialTheme.colors.iconPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-
-        /*todo add emoji reaction to text message
-        AnimatedVisibility(visible = selected) {
-            Row(
-                Modifier
-
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            }
-        }*/
-
-        if (text_type.equals("uri")) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(chat.text)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.ic_image_300),
-                contentDescription = "image sent",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 8.dp,
-                            bottomEnd = 0.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            if (highlite_message) {
-                                clicked = !clicked
-                            } else {
-                                onClick()
-                                clicked = !clicked
-                            }
-                        },
-                        onLongClick = {
-                            selected = !selected
-                        },
-                    )
-
-            )
-        } else if (text_type.equals("text")) {
-            Box(
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 8.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            if (highlite_message) {
-                                onClick()
-
-                            } else {
-                                onClick()
-                                clicked = !clicked
-                            }
-
-                        },
-                        onLongClick = {
-                            selected = !selected
-                        },
-                    )
-                    .background(color = SocialTheme.colors.uiBackground)
-
-                    .border(
-                        border = BorderStroke(0.8.dp, SocialTheme.colors.uiBorder),
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 8.dp
-                        )
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = text,
-                    style = TextStyle(
-                        fontFamily = Lexend,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = SocialTheme.colors.textPrimary
-                    )
-                )
-            }
-        } else if (text_type.equals("latLng")) {
-            Box(modifier = Modifier
-                .clip(
-                    shape = RoundedCornerShape(
-                        topEnd = 8.dp,
-                        topStart = 8.dp,
-                        bottomStart = 0.dp,
-                        bottomEnd = 8.dp
-                    )
-                )
-                .combinedClickable(
-                    onClick = {
-                        val latLng = createLatLngFromString(text)
-                        if (latLng != null) {
-                            displayLocation(latLng)
-                        }
-
-                    },
-                    onLongClick = {
-                        clicked = !clicked
-                        onClick()
-                        selected = !selected
-                    },
-                )
-                .background(color = SocialTheme.colors.uiBackground)
-
-                .border(
-                    border = BorderStroke(0.8.dp, SocialTheme.colors.uiBorder),
-                    shape = RoundedCornerShape(
-                        topEnd = 8.dp,
-                        topStart = 8.dp,
-                        bottomStart = 0.dp,
-                        bottomEnd = 8.dp
-                    )
-                )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material.Icon(
-                        painter = painterResource(id = R.drawable.ic_location),
-                        tint = SocialTheme.colors.textPrimary,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                   Text(
-                        text ="Shared location",
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            color = SocialTheme.colors.textPrimary,
-                        ),
-                    )
-                }
-
-            }
-        } else if (text_type.equals("live")) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material.Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        tint = SocialTheme.colors.iconPrimary,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    ClickableText(
-                        text = AnnotatedString("Live activity shared"),
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            color = SocialTheme.colors.textPrimary,
-                            textDecoration = TextDecoration.Underline,
-                        ),
-                        onClick = {
-                            /*todo join live*/
-                        }
-                    )
-                }
-
-            }
-        }else if(text_type.equals("reply")){
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material.Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        tint = SocialTheme.colors.iconPrimary,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
-
-            }
-        }
-
-        AnimatedVisibility(visible = selected) {
-            Row(
-                Modifier
-
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ChatSettingItem(
-                    label = "Reply",
-                    icon = R.drawable.ic_reply,
-                    onClick = { onEvent(ChatEvents.Reply(chat)) })
-                ChatSettingItem(
-                    label = "Copy",
-                    icon = R.drawable.ic_copy,
-                    onClick = { onEvent(ChatEvents.Copy(chat.text)) })
-                ChatSettingItem(
-                    label = "Share",
-                    icon = R.drawable.ic_share,
-                    onClick = { onEvent(ChatEvents.Share) })
-                ChatSettingItem(
-                    label = "Delete",
-                    icon = R.drawable.ic_delete,
-                    onClick = { onEvent(ChatEvents.Delete(chat.id)) })
-                ChatSettingItem(
-                    label = "Report",
-                    icon = R.drawable.ic_flag,
-                    onClick = { onEvent(ChatEvents.Report) })
-            }
-        }
-
-    }
-}
-
 @Composable
 fun ChatSettingItem(label: String, icon: Int, onClick: () -> Unit) {
     val color = SocialTheme.colors.uiBorder.copy(0.2f)
@@ -950,341 +678,6 @@ fun ChatSettingItem(label: String, icon: Int, onClick: () -> Unit) {
 
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-fun ChatItemRight(
-    text_type: String,
-    text: String,
-    timeSent: String = "12:12",
-    onEvent: (ChatEvents) -> Unit, chat: ChatMessage,
-    onClick: () -> Unit,
-    displayLocation:(LatLng)->Unit,
-    highlite_message:Boolean,
-    isReply:Boolean=false,
-    replyTo: String?
-) {
-    var clicked by remember {
-        mutableStateOf(false)
-    }
-
-    var selected by remember {
-        mutableStateOf(false)
-    }
-
-    Column(
-        horizontalAlignment = Alignment.End,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp)
-            .padding(horizontal = 12.dp)
-    ) {
-        AnimatedVisibility(visible = clicked) {
-            Text(
-                modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontFamily = Lexend,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal
-                ), text = timeSent, color = SocialTheme.colors.iconPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-
-        if (text_type.equals("uri")) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(chat.text)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.ic_image_300),
-                contentDescription = "image sent",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 8.dp,
-                            bottomEnd = 0.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            if (!isReply) {
-                                if (highlite_message) {
-                                    clicked = !clicked
-
-                                } else {
-                                    onClick()
-                                    clicked = !clicked
-                                }
-                            }
-
-
-                        },
-                        onLongClick = {
-                            if (!isReply) {
-                                selected = !selected
-                            }
-
-                        },
-                    )
-
-            )
-        } else if (text_type.equals("text")) {
-            Box(
-                modifier = Modifier
-                    .clip(
-                        shape = RoundedCornerShape(
-                            topEnd = 8.dp,
-                            topStart = 8.dp,
-                            bottomStart = 8.dp,
-                            bottomEnd = 0.dp
-                        )
-                    )
-                    .combinedClickable(
-                        onClick = {
-                            if (!isReply) {
-                                if (highlite_message) {
-                                    onClick()
-                                } else {
-                                    onClick()
-                                    clicked = !clicked
-                                }
-                            }
-
-                        },
-                        onLongClick = {
-                            if (!isReply) {
-                                selected = !selected
-                            }
-
-                        },
-                    )
-
-                    .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
-
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = text,
-                    style = TextStyle(
-                        fontFamily = Lexend,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-
-                    ),
-                    color = SocialTheme.colors.uiBackground
-                )
-            }
-        } else if (text_type.equals("latLng")) {
-            Box(modifier = Modifier
-                .clip(
-                    shape = RoundedCornerShape(
-                        topEnd = 8.dp,
-                        topStart = 8.dp,
-                        bottomStart = 8.dp,
-                        bottomEnd = 0.dp
-                    )
-                )
-                .combinedClickable(
-                    onClick = {
-                        if (!isReply) {
-                            val latLng = createLatLngFromString(text)
-                            if (latLng != null) {
-                                displayLocation(latLng)
-                            }
-                        }
-
-
-                    },
-                    onLongClick = {
-                        if (!isReply) {
-                            clicked = !clicked
-                            onClick()
-                            selected = !selected
-                        }
-
-                    },
-                )
-
-                .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
-                .padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material.Icon(
-                        painter = painterResource(id = R.drawable.ic_location),
-                        tint =  SocialTheme.colors.textSecondary,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = "Shared location",
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-
-                        ),                     color = SocialTheme.colors.uiBackground
-
-                    )
-                }
-
-            }
-        } else if (text_type.equals("live")) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material.Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        tint = SocialTheme.colors.iconPrimary,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    ClickableText(
-                        text = AnnotatedString("Live activity shared"),
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            color = SocialTheme.colors.textPrimary,
-                            textDecoration = TextDecoration.Underline,
-                        ),
-                        onClick = {
-                            /*todo join live*/
-                        }
-                    )
-                }
-
-            }
-        }else if(text_type.equals("reply")){
-
-
-
-                Box(
-                    modifier = Modifier
-                        .clip(
-                            shape = RoundedCornerShape(
-                                topEnd = 8.dp,
-                                topStart = 8.dp,
-                                bottomStart = 8.dp,
-                                bottomEnd = 0.dp
-                            )
-                        )
-                        .combinedClickable(
-                            onClick = {
-                                if (!isReply) {
-                                    if (highlite_message) {
-                                        onClick()
-                                    } else {
-                                        onClick()
-                                        clicked = !clicked
-                                    }
-                                }
-
-                            },
-                            onLongClick = {
-                                if (!isReply) {
-                                    selected = !selected
-                                }
-
-                            },
-                        )
-
-                        .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.1f))
-
-                        .padding(horizontal = 12.dp, vertical = 8.dp).padding(bottom=12.dp)
-                ) {
-                    Text(
-                        text = replyTo!!,
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-
-                            ),
-                        color = SocialTheme.colors.textPrimary
-                    )
-                }
-
-                        Box(
-                            modifier = Modifier
-                                .clip(
-                                    shape = RoundedCornerShape(
-                                        topEnd = 8.dp,
-                                        topStart = 8.dp,
-                                        bottomStart = 8.dp,
-                                        bottomEnd = 0.dp
-                                    )
-                                )
-                                .combinedClickable(
-                                    onClick = {
-                                        if (!isReply) {
-                                            if (highlite_message) {
-                                                onClick()
-                                            } else {
-                                                onClick()
-                                                clicked = !clicked
-                                            }
-                                        }
-
-                                    },
-                                    onLongClick = {
-                                        if (!isReply) {
-                                            selected = !selected
-                                        }
-
-                                    },
-                                ) .background(color = SocialTheme.colors.uiBackground)
-                                .background(color = SocialTheme.colors.textPrimary.copy(alpha = 0.8f))
-
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = text,
-                                style = TextStyle(
-                                    fontFamily = Lexend,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp,
-
-                                    ),
-                                color = SocialTheme.colors.uiBackground
-                            )
-                        }
-
-
-        }
-
-
-        AnimatedVisibility(visible = selected) {
-            Row(
-                Modifier
-
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ChatSettingItem(
-                    label = "Reply",
-                    icon = R.drawable.ic_reply,
-                    onClick = { onEvent(ChatEvents.Reply(chat)) })
-                ChatSettingItem(
-                    label = "Copy",
-                    icon = R.drawable.ic_copy,
-                    onClick = { onEvent(ChatEvents.Copy(chat.text)) })
-                ChatSettingItem(
-                    label = "Share",
-                    icon = R.drawable.ic_share,
-                    onClick = { onEvent(ChatEvents.Share) })
-                ChatSettingItem(
-                    label = "Delete",
-                    icon = R.drawable.ic_delete,
-                    onClick = { onEvent(ChatEvents.Delete(chat.id)) })
-
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1387,7 +780,7 @@ fun chatButtonsRow(
     highlightMessage: () -> Unit,
     addImage: () -> Unit,
     liveActivity: () -> Unit,
-    highlite_message:Boolean=false
+    highlite_message: Boolean = false,
 ) {
 
 
@@ -1450,7 +843,7 @@ fun BottomChatBar(
     highlightMessage: () -> Unit,
     addImage: () -> Unit,
     liveActivity: () -> Unit,
-    highlite_message:Boolean
+    highlite_message: Boolean,
 ) {
     var focused by remember { mutableStateOf(false) }
     var text by rememberSaveable(stateSaver = MessageStateSaver) {
@@ -1470,7 +863,8 @@ fun BottomChatBar(
             highlightMessage = {
                 highlightMessage()
 
-            },highlite_message=highlite_message)
+            }, highlite_message = highlite_message
+        )
         if (replyMessage.value != null) {
             ReplyMessage(replyMessage.value!!)
         }
@@ -1495,11 +889,17 @@ fun BottomChatBar(
             )
             eButtonSimpleBlue(icon = R.drawable.ic_send, onClick = {
                 if (text.text.isNotEmpty()) {
-                    if (replyMessage.value!=null){
-                        onEvent(ChatEvents.SendReply(chat_id = chat_id, text.text,replyTo=replyMessage.value!!.text.toString()))
-                        replyMessage.value=null
+                    if (replyMessage.value != null) {
+                        onEvent(
+                            ChatEvents.SendReply(
+                                chat_id = chat_id,
+                                text.text,
+                                replyTo = replyMessage.value!!.text.toString()
+                            )
+                        )
+                        replyMessage.value = null
                         text.text = ""
-                    }else{
+                    } else {
                         onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text))
                         text.text = ""
                     }
@@ -1528,7 +928,12 @@ fun ReplyMessage(chat: ChatMessage) {
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {}, displayLocation = {}, highlite_message = false,isReply=true    , replyTo = null)
+                onClick = {},
+                displayLocation = {},
+                highlite_message = false,
+                isReply = true,
+                replyTo = null
+            )
 
         } else {
 
@@ -1537,7 +942,9 @@ fun ReplyMessage(chat: ChatMessage) {
                 text = chat.text,
                 onEvent = {},
                 chat = chat,
-                onClick = {},displayLocation = {}, highlite_message = false,isReply=true)
+                onClick = {}, displayLocation = {}, highlite_message = false, isReply = true,
+                replyTo = null
+            )
 
         }
     }

@@ -33,7 +33,7 @@ class ChatRepositoryImpl @Inject constructor(
     private var lastVisibleDataGroup: DocumentSnapshot? = null
     private var lastVisibleChatCollectionData: DocumentSnapshot? = null
     private  var loaded_messages: ArrayList<ChatMessage> = ArrayList()
-    override suspend fun getChatCollection(id: String): Flow<Response<Chat>> = callbackFlow {
+    override suspend fun getChatCollection(id: String): Flow<Response<Chat>> = flow {
         chatCollectionsRef.document(id).get().addOnSuccessListener { documentSnapshot ->
             val response = if (documentSnapshot != null) {
                 val activity = documentSnapshot.toObject<Chat>()
@@ -54,11 +54,9 @@ class ChatRepositoryImpl @Inject constructor(
                     )
                 )
             }
-            trySend(response as Response<Chat>)
+            emit(response)
         }
-        awaitClose() {
 
-        }
     }
 
 

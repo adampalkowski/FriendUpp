@@ -3,23 +3,13 @@ package com.example.friendupp.Navigation
 import android.Manifest
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.window.Dialog
-import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -32,15 +22,12 @@ import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
-import com.example.friendupp.ui.theme.SocialTheme
-import com.example.friendupp.util.getTime
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.firestore.auth.User
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -205,6 +192,8 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 }
             }
         ) {
+
+
             ChatSettings(
                 TYPE.GROUP
                 , chatSettingsEvents = {event->
@@ -213,7 +202,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                         is ChatSettingsEvents.GoToUserProfile->{navController.navigate("Profile")}
                         else ->{}
                     }
-                })
+                },chatViewModel)
         }
 
         composable("ChatCamera",
@@ -353,10 +342,15 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
             val chatID = backStackEntry.arguments?.getString("chatID")
             LaunchedEffect(chatID) {
                 if (chatID != null) {
+
                     Log.d("CHATDEBUG","GET CHAT CALLED "+chatID)
                     chatViewModel.getChatCollection(chatID)
+
+
                 }
             }
+
+
 
             val locationPermissionState = rememberPermissionState(
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -375,6 +369,63 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                     currentLocation = latLng
                 }
             }
+            LaunchedEffect(Unit) {
+                Log.d("RESETCHAT","RESET")
+                chatViewModel.resetChat()
+
+            }
+
+            var chat = rememberSaveable { mutableStateOf<Chat?>(null) }
+            loadChat(
+                modifier = Modifier,
+                chatViewModel,
+                chat,
+                chatNonExistent = {
+                    Log.d("CHATREPOSITYIMPLCHATCOLLECT","Creatae colleciton")
+                    when(chatViewModel.chat_type.value) {
+                        "duo" -> {
+                            Log.d("CHATREPOSITYIMPLCHATCOLLECT","duo")
+
+                        }
+                        "activity" -> {
+
+                        }
+                        "group" -> {
+
+                        }
+                        else -> {
+
+                        }
+                    }
+                })
+            var chatFinal = chat.value
+            val dataSaver = ChatMessageListSaver()
+            var data = rememberSaveable(
+                saver = dataSaver,
+                init = { mutableStateListOf<ChatMessage>() }
+            )
+            val dataNewSaver = ChatMessageListSaver()
+            var data_new = rememberSaveable(
+                saver = dataNewSaver,
+                init = { mutableStateListOf<ChatMessage>() }
+            )
+            val dataFirstSaver = ChatMessageListSaver()
+            var frist_data = rememberSaveable(
+                saver = dataFirstSaver,
+                init = { mutableStateListOf<ChatMessage>() }
+            )
+            val valueExist = rememberSaveable { mutableStateOf(false) }
+
+            if (chatFinal != null) {
+                loadMessages(
+                    frist_data,
+                    data,
+                    data_new,
+                    chatViewModel,
+                    valueExist = valueExist,
+                    chatFinal.id!!
+                )
+
             ChatContent(
                 modifier = Modifier,
                 onEvent = { event ->
@@ -410,22 +461,7 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
 
                         }
                         is ChatEvents.CreateNonExistingChatCollection->{
-                            Log.d("CHATREPOSITYIMPLCHATCOLLECT","Creatae colleciton")
-                            when(chatViewModel.chat_type.value) {
-                                "duo" -> {
-                                    Log.d("CHATREPOSITYIMPLCHATCOLLECT","duo")
 
-                                }
-                                "activity" -> {
-
-                                }
-                                "group" -> {
-
-                                }
-                                else -> {
-
-                                }
-                           }
                         }
                         is ChatEvents.SendMessage->{
                             chatViewModel.addMessage(
@@ -465,8 +501,8 @@ fun NavGraphBuilder.chatGraph(navController: NavController, chatViewModel:ChatVi
                 },chatViewModel=chatViewModel, displayLocation = {displayLocationDialog=it}, higlightDialog = {messageToHighlight->
                     highlightDialog=messageToHighlight
 
-                })
-
+                },chatFinal!!,data=data, first_data = frist_data, new_data = data_new, valueExist = valueExist.value)
+            }
             if(highlightDialog!=null){
                 val trunctuatedMessage =highlightDialog
                 if(trunctuatedMessage!!.length>30){
