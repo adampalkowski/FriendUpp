@@ -120,6 +120,7 @@ fun ChatContent(
     new_data: MutableList<ChatMessage>,
     first_data: MutableList<ChatMessage>,
     valueExist: Boolean,
+    displayImage:(String)->Unit
 
     ) {
     DisposableEffect(Unit) {
@@ -192,8 +193,8 @@ fun ChatContent(
                     higlightDialog = {
                         higlightDialog(it)
                         highlite_message = false
-                    }
-
+                    },
+                    displayImage = displayImage
                 )
                 LoadingImage(showLoading = showLoading)
                 BottomChatBar(modifier = Modifier,
@@ -428,6 +429,7 @@ fun ChatMessages(
     highlight_message: Boolean,
     displayLocation: (LatLng) -> Unit,
     higlightDialog: (String) -> Unit,
+    displayImage:(String)->Unit
 
     ) {
 
@@ -456,7 +458,8 @@ fun ChatMessages(
                 openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-                displayLocation = displayLocation
+                displayLocation = displayLocation,
+                displayImage=displayImage
             )
 
             lastMessageSenderID = message.sender_id
@@ -475,7 +478,8 @@ fun ChatMessages(
                 openDialog = higlightDialog,
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
-                displayLocation = displayLocation
+                displayLocation = displayLocation,
+                displayImage = displayImage
             )
 
             lastMessageSenderID = message.sender_id
@@ -492,7 +496,9 @@ fun ChatMessages(
                 highlightMessage = highlightMessage,
                 openDialog = higlightDialog,
                 onEvent = onEvent,
-                shouldGroup = shouldGroup, displayLocation = displayLocation
+                shouldGroup = shouldGroup, displayLocation = displayLocation,
+                displayImage=displayImage
+
             )
 
             lastMessageSenderID = message.sender_id
@@ -546,6 +552,8 @@ fun ChatBox(
     highlightMessage: (String) -> Unit,
     shouldGroup: Boolean = false,
     displayLocation: (LatLng) -> Unit,
+    displayImage:(String)->Unit
+
 ) {
     var padding = if (shouldGroup) {
         0.dp
@@ -579,7 +587,8 @@ fun ChatBox(
             },
             displayLocation = displayLocation,
             highlite_message = highlite_message,
-            replyTo = chat.replyTo
+            replyTo = chat.replyTo,
+            displayImage=displayImage
         )
     } else {
         Spacer(modifier = Modifier.height(padding))
@@ -605,7 +614,9 @@ fun ChatBox(
             },
             displayLocation = displayLocation,
             highlite_message = highlite_message,
-            replyTo = chat.replyTo
+            replyTo = chat.replyTo,
+            displayImage=displayImage
+
         )
 
     }
@@ -937,7 +948,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 highlite_message = false,
                 isReply = true,
                 replyTo = null
-            )
+            , displayImage = {})
 
         } else {
 
@@ -948,7 +959,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 chat = chat,
                 onClick = {}, displayLocation = {}, highlite_message = false, isReply = true,
                 replyTo = null
-            )
+                , displayImage = {})
 
         }
     }

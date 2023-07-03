@@ -35,11 +35,20 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LiveUserItem(imageUrl: String, text: String = "",onClick: () -> Unit) {
+fun LiveUserItem(imageUrl: String, text: String = "",onClick: () -> Unit,clickable:Boolean=false) {
+    var modifier =if(clickable){
+        Modifier
+            .height(72.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick, interactionSource = remember {
+                MutableInteractionSource()
+            }, indication = rememberRipple(color = Color.Black))}else{
 
+        Modifier
+            .height(72.dp)
+            .clip(RoundedCornerShape(12.dp))}
     Box(
-        modifier = Modifier
-            .height(72.dp).clip(RoundedCornerShape(12.dp))
+        modifier = modifier
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)

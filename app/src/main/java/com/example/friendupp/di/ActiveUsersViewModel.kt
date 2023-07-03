@@ -11,6 +11,7 @@ import com.example.friendupp.model.SocialException
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
@@ -27,6 +28,10 @@ import kotlin.collections.ArrayList
 class ActiveUsersViewModel @Inject constructor(
     private val repo: ActivityRepository
 ) : ViewModel() {
+
+    private val _currentUserActive = mutableStateOf<Response<kotlin.collections.List<ActiveUser>>?>(null)
+    val currentUserActive: State<Response<List<ActiveUser>>?> = _currentUserActive
+
 
     private val _activeUsersListState = mutableStateOf<Response<List<ActiveUser>>>(Response.Loading)
     val activeUsersListState: State<Response<List<ActiveUser>>> = _activeUsersListState
@@ -72,6 +77,27 @@ class ActiveUsersViewModel @Inject constructor(
 
                 }
          }
+    }
+    fun getCurrentUserActive(id:String){
+        viewModelScope.launch {
+            repo.watchCurrentUserActive(id).collect(){response->
+                _currentUserActive.value=response
+            }
+        }
+    }
+    fun resetLiveUsers(){
+        viewModelScope.launch {
+            _activeUsersListState.value=Response.Loading
+        }
+    }
+    fun resetCurrentUser(){
+        viewModelScope.launch {
+           _currentUserActive.value=null
+        }
+    }
+    // Function to cancel the listener and flow
+    fun cancelCurrentUserActiveListener() {
+        viewModelScope.coroutineContext.cancelChildren()
     }
     fun permissionGranted(){
         _granted_permission.value=true

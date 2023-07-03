@@ -14,10 +14,10 @@ import com.example.friendupp.R
 import com.example.friendupp.ui.theme.SocialTheme
 
 @Composable
-fun LiveUserSettingsDialog(onDismissRequest:()->Unit){
+fun LiveUserSettingsDialog(onDismissRequest:()->Unit,deleteActiveUser:()->Unit){
     Dialog(onDismissRequest =onDismissRequest) {
         Column(Modifier.clip(RoundedCornerShape(24.dp))) {
-            ProfileDisplaySettingsItem(label="Hide",icon= R.drawable.ic_visibility_off, textColor = SocialTheme.colors.textPrimary, onClick = {  })
+            ProfileDisplaySettingsItem(label="Delete",icon= R.drawable.ic_delete, textColor = SocialTheme.colors.error, onClick = { deleteActiveUser() })
             ProfileDisplaySettingsItem(label="Cancel" , turnOffIcon = true, textColor = SocialTheme.colors.textPrimary.copy(0.5f), onClick = onDismissRequest)
         }
     }

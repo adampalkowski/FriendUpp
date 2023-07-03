@@ -64,9 +64,9 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
         SettingsItem(label = "Search", icon = R.drawable.ic_search) {
             onEvent(DrawerEvents.GoToSearch)
         }
-        SettingsItem(label = "Inbox", icon = R.drawable.ic_notify) {
+       /* SettingsItem(label = "Inbox", icon = R.drawable.ic_notify) {
             onEvent(DrawerEvents.GoToInbox)
-        }
+        }*/
         SettingsItem(label = "Trending", icon = R.drawable.ic_trending) {
             onEvent(DrawerEvents.GoToTrending)
         }
@@ -76,15 +76,15 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
         SettingsItem(label = "Created", icon = R.drawable.ic_history) {
             onEvent(DrawerEvents.GoToCreated)
         }
-        SettingsItem(label = "For you", icon = R.drawable.ic_recommend) {
+     /*   SettingsItem(label = "For you", icon = R.drawable.ic_recommend) {
             onEvent(DrawerEvents.GoToForYou)
-        }
+        }*/
         SettingsItem(label = "Groups", icon = R.drawable.ic_group) {
             onEvent(DrawerEvents.GoToGroups)
         }
-        SettingsItem(label = "Rate app", icon = R.drawable.ic_rate) {
+    /*    SettingsItem(label = "Rate app", icon = R.drawable.ic_rate) {
             onEvent(DrawerEvents.GoToRate)
-        }
+        }*/
         SettingsItem(label = "Settings", icon = R.drawable.ic_settings) {
             onEvent(DrawerEvents.GoToSettings)
         }

@@ -109,6 +109,7 @@ fun HomeScreen(
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
     val activeUsers = remember { mutableStateListOf<ActiveUser>() }
     val moreActiveUsers = remember { mutableStateListOf<ActiveUser>() }
+    val currentUserActiveUser = remember { mutableStateListOf<ActiveUser>() }
     var publicActivitiesExist = remember { mutableStateOf(false) }
     var activeUsersExist = remember { mutableStateOf(false) }
 
@@ -144,7 +145,7 @@ fun HomeScreen(
         val formattedDate = startOfDay.format(formatter)
         datePicked.value = formattedDate
     }
-    loadActiveUsers(activeUserViewModel,activeUsers,moreActiveUsers,activeUsersExist)
+    loadActiveUsers(activeUserViewModel,activeUsers,moreActiveUsers,currentUserActiveUser,activeUsersExist)
     if (selectedOption.option == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
         loadMoreFriendsActivities(activityViewModel, moreActivities)
@@ -236,7 +237,7 @@ fun HomeScreen(
                             calendarClicked = calendarView,
                             filterClicked = filterView,
                             displayFilters = selectedOption.option == Option.PUBLIC
-                        , activeUsers = activeUsers,moreActiveUsers=moreActiveUsers)
+                        , activeUsers = activeUsers,moreActiveUsers=moreActiveUsers,currentUserActiveUser=currentUserActiveUser)
                     }
 
                     if (selectedOption.option == Option.FRIENDS) {
@@ -339,14 +340,34 @@ fun HomeScreen(
 }
 
 @Composable
- fun loadActiveUsers(activeUserViewModel: ActiveUsersViewModel, activeUsers: MutableList<ActiveUser>, moreActiveUsers: MutableList<ActiveUser>,activeUsersExist:MutableState<Boolean>) {
+ fun loadActiveUsers(activeUserViewModel: ActiveUsersViewModel, activeUsers: MutableList<ActiveUser>, moreActiveUsers: MutableList<ActiveUser>, currentUserActiveUser: MutableList<ActiveUser>,activeUsersExist:MutableState<Boolean>) {
     //call active userse only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
             activeUserViewModel.getActiveUsersForUser(UserData.user!!.id)
+            activeUserViewModel.getCurrentUserActive(UserData.user!!.id)
             activitiesFetched.value = true
         }
+    }
+    activeUserViewModel.currentUserActive.value.let {response ->
+        when (response) {
+            is Response.Success -> {
+                currentUserActiveUser.clear()
+                currentUserActiveUser.addAll(response.data)
+                activeUserViewModel.resetCurrentUser()
+
+            }
+            is Response.Failure -> {
+
+            }
+            is Response.Loading -> {
+            }
+            null -> {
+
+            }
+        }
+
     }
     activeUserViewModel.activeUsersListState.value.let { response ->
         when (response) {
@@ -354,6 +375,7 @@ fun HomeScreen(
                 activeUsers.clear()
                 activeUsers.addAll(response.data)
                 activeUsersExist.value = true
+                activeUserViewModel.resetLiveUsers()
 
             }
             is Response.Failure -> {

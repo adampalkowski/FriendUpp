@@ -1,5 +1,6 @@
 package com.example.friendupp.Home
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -28,7 +29,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 @Composable
 fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onClick: () -> Unit,
                  calendarClicked: Boolean,
-                 filterClicked: Boolean,displayFilters:Boolean=true,activeUsers:MutableList<ActiveUser>,moreActiveUsers:MutableList<ActiveUser>) {
+                 filterClicked: Boolean,displayFilters:Boolean=true,activeUsers:MutableList<ActiveUser>,moreActiveUsers:MutableList<ActiveUser>,currentUserActiveUser:MutableList<ActiveUser>) {
     val dividerColor = SocialTheme.colors.uiBorder
     Row(
         horizontalArrangement = Arrangement.Start,
@@ -70,30 +71,45 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
         }
         LazyRow(verticalAlignment = Alignment.CenterVertically){
             item{
-                CreateLive(
-                    onClick = { onEvent(HomeEvents.CreateLive) },
-                    imageUrl =  UserData.user!!.pictureUrl.toString()
+                if (currentUserActiveUser.isNotEmpty()){
+                }else{
+                    CreateLive(
+                        onClick = { onEvent(HomeEvents.CreateLive) },
+                        imageUrl =  UserData.user!!.pictureUrl.toString()
 
-                )
-                Spacer(
-                    modifier = Modifier
-                        .width(8.dp)
-                        .height(1.dp)
-                        .background(dividerColor)
-                )
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .width(8.dp)
+                            .height(1.dp)
+                            .background(dividerColor)
+                    )
+                }
+
             }
-            items(activeUsers){activeUser->
+            items(currentUserActiveUser){activeUser->
                 LiveUserItem(
                     text = activeUser.note,
                     imageUrl =activeUser.participants_profile_pictures.get(activeUser.creator_id).toString(),
-                    onClick = {onEvent(HomeEvents.OpenLiveUser(activeUser.creator_id))}
+                    onClick = {onEvent(HomeEvents.OpenLiveUser(activeUser.creator_id))}, clickable = true
                 )
-                Spacer(
-                    modifier = Modifier
-                        .width(8.dp)
-                        .height(1.dp)
-                        .background(dividerColor)
-                )
+            }
+            items(activeUsers){activeUser->
+                if (currentUserActiveUser.isNotEmpty() && activeUser==currentUserActiveUser.get(0)){
+                }else{
+                    LiveUserItem(
+                        text = activeUser.note,
+                        imageUrl =activeUser.participants_profile_pictures.get(activeUser.creator_id).toString(),
+                        onClick = {onEvent(HomeEvents.OpenLiveUser(activeUser.creator_id))}
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .width(8.dp)
+                            .height(1.dp)
+                            .background(dividerColor)
+                    )
+                }
+
             }
             items(moreActiveUsers){activeUser->
                 LiveUserItem(

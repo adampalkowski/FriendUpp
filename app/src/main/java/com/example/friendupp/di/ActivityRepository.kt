@@ -12,6 +12,7 @@ interface ActivityRepository {
 
     suspend fun getActivity(id:String) : Flow<Response<Activity>>
     suspend fun getUserActivities(id: String): Flow<Response<List<Activity>>>
+    suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>>
     suspend fun getJoinedActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun getClosestActivities(lat: Double,lng:Double,radius:Double): Flow<Response<List<Activity>>>
     suspend fun getClosestFilteredActivities(lat: Double,lng:Double,tags:ArrayList<String>,radius:Double): Flow<Response<List<Activity>>>

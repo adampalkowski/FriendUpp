@@ -3,23 +3,42 @@ package com.example.friendupp.Navigation
 import android.Manifest
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.DisplayLocationDialog
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
 import com.google.accompanist.navigation.animation.composable
@@ -402,7 +421,9 @@ fun NavGraphBuilder.chatGraph(
             var highlightDialog by remember { mutableStateOf<String?>(null) }
             //keep current location for send location
             var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-
+            var imageDisplay by remember {
+                mutableStateOf<String?>(null)
+            }
             val flow = mapViewModel.currentLocation.collectAsState()
             flow.value.let { latLng ->
                 if (latLng != null) {
@@ -546,9 +567,50 @@ fun NavGraphBuilder.chatGraph(
                     data = data,
                     first_data = frist_data,
                     new_data = data_new,
-                    valueExist = valueExist.value
+                    valueExist = valueExist.value,
+                    displayImage = {image->
+                        imageDisplay=image
+                    }
                 )
             }
+            AnimatedVisibility(visible =imageDisplay!=null, enter = scaleIn(), exit = scaleOut() ) {
+                Box(modifier = Modifier.fillMaxSize()){
+                    BackHandler() {
+                        imageDisplay=null
+                    }
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageDisplay)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(R.drawable.ic_image_300),
+                        contentDescription = "image sent",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(
+                                shape = RoundedCornerShape(
+                                    topEnd = 8.dp,
+                                    topStart = 8.dp,
+                                    bottomStart = 8.dp,
+                                    bottomEnd = 0.dp
+                                )
+                            )
+                    )
+                    Box(modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(24.dp)){
+                        Box(modifier = Modifier
+                            .clickable(onClick = { imageDisplay = null })
+                            .padding(12.dp)){
+                            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription =null, tint = Color.White )
+
+                        }
+                    }
+                }
+            }
+
             if (highlightDialog != null) {
                 val trunctuatedMessage = highlightDialog
                 if (trunctuatedMessage!!.length > 30) {

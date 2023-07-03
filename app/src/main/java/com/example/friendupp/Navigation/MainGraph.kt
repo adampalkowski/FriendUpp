@@ -160,6 +160,11 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
         ) {
+            DisposableEffect(Unit){
+                onDispose{
+                    activeUserViewModel.cancelCurrentUserActiveListener()
+                }
+            }
             homeViewModel.deep_link.value.let { deep_link ->
                 when (deep_link?.pathSegments?.get(0)) {
                     "Activity" -> {
@@ -200,8 +205,8 @@ fun NavGraphBuilder.mainGraph(
                     }
                 }
             }
-            var liveUserDialogSettings by rememberSaveable {
-                mutableStateOf(false)
+            var liveUserDialogSettings by remember {
+                mutableStateOf<String?>(null)
 
             }
             HomeScreen(modifier = Modifier, onEvent = { event ->
@@ -238,13 +243,20 @@ fun NavGraphBuilder.mainGraph(
                         navController.navigate("ProfileDisplay/"+event.id)
                     }
                     is HomeEvents.OpenLiveUser->{
-                        liveUserDialogSettings= true
+                        liveUserDialogSettings= event.id
                     }
                 }
             }, activityViewModel = activityViewModel, mapViewModel = mapViewModel,activeUserViewModel=activeUserViewModel)
-            if(liveUserDialogSettings){
-                LiveUserSettingsDialog(onDismissRequest = {liveUserDialogSettings=false})
+            if(liveUserDialogSettings!=null){
+                LiveUserSettingsDialog(onDismissRequest = {liveUserDialogSettings=null},
+                deleteActiveUser = {
+                    activeUserViewModel.deleteActiveUser(liveUserDialogSettings!!)
+                    liveUserDialogSettings=null
+
+
+                })
             }
+
 
         }
         composable(

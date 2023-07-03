@@ -1309,4 +1309,54 @@ class ActivityRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>> = callbackFlow {
+        Log.d("ACTIVEUSERDEBUG","CALLED")
+        val activeUsersQuery = activeUsersRef
+            .whereEqualTo("creator_id", id)
+        val registration = activeUsersQuery.addSnapshotListener { snapshot, exception ->
+            // Handle exceptions and send responses accordingly
+            if (exception != null) {
+                trySend(
+                    Response.Failure(
+                        e = SocialException(
+                            message = "failed to get more active users",
+                            e = exception
+                        )
+                    )
+                )
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && !snapshot.isEmpty) {
+
+                val documents = snapshot.documents
+                val newActiveUsers = ArrayList<ActiveUser>()
+                for (document in documents) {
+                    val activity = document.toObject<ActiveUser>()
+                    Log.d("ACTIVEUSERDEBUG","got"+activity.toString())
+                    if (activity != null) {
+                        newActiveUsers.add(activity)
+                    }
+                }
+
+                trySend(Response.Success(newActiveUsers))
+            } else {
+                // There are no more messages to load
+                trySend(
+                    Response.Failure(
+                        e = SocialException(
+                            message = "failed to get more active users",
+                            e = Exception()
+                        )
+                    )
+                )
+            }
+        }
+
+        awaitClose {
+            registration.remove() // Remove the snapshot listener when the flow is cancelled
+        }
+
+
+    }
 }
