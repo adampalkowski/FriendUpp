@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -25,15 +26,18 @@ import androidx.navigation.NavGraphBuilder
 import com.example.friendupp.ActivityUi.ActivityPreview
 import com.example.friendupp.ActivityUi.ActivityPreviewEvents
 import com.example.friendupp.Camera.getActivity
+import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Home.LiveUserSettingsDialog
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.MapEvent
 import com.example.friendupp.MapScreen
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
+import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
@@ -63,8 +67,8 @@ fun NavGraphBuilder.mainGraph(
     activityViewModel: ActivityViewModel,
     userViewModel: UserViewModel,chatViewModel:ChatViewModel,
     homeViewModel:HomeViewModel,
-    mapViewModel:MapViewModel
-
+    mapViewModel:MapViewModel,
+    activeUserViewModel:ActiveUsersViewModel
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
@@ -196,7 +200,10 @@ fun NavGraphBuilder.mainGraph(
                     }
                 }
             }
+            var liveUserDialogSettings by rememberSaveable {
+                mutableStateOf(false)
 
+            }
             HomeScreen(modifier = Modifier, onEvent = { event ->
                 when (event) {
                     is HomeEvents.OpenDrawer -> {
@@ -230,9 +237,14 @@ fun NavGraphBuilder.mainGraph(
                     is HomeEvents.GoToProfile->{
                         navController.navigate("ProfileDisplay/"+event.id)
                     }
+                    is HomeEvents.OpenLiveUser->{
+                        liveUserDialogSettings= true
+                    }
                 }
-            }, activityViewModel = activityViewModel, mapViewModel = mapViewModel)
-
+            }, activityViewModel = activityViewModel, mapViewModel = mapViewModel,activeUserViewModel=activeUserViewModel)
+            if(liveUserDialogSettings){
+                LiveUserSettingsDialog(onDismissRequest = {liveUserDialogSettings=false})
+            }
 
         }
         composable(

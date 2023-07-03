@@ -30,6 +30,8 @@ class ActiveUsersViewModel @Inject constructor(
 
     private val _activeUsersListState = mutableStateOf<Response<List<ActiveUser>>>(Response.Loading)
     val activeUsersListState: State<Response<List<ActiveUser>>> = _activeUsersListState
+    private val _moreActiveUsers = mutableStateOf<Response<List<ActiveUser>>>(Response.Loading)
+    val moreActiveUsers: State<Response<List<ActiveUser>>> = _moreActiveUsers
 
 
     private val _isActiveUsersAddedState= MutableStateFlow<Response<Boolean>?>(null)
@@ -125,7 +127,47 @@ class ActiveUsersViewModel @Inject constructor(
         }
 
     }
+    fun getMoreActiveUsers(id:String){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<ActiveUser> = ArrayList()
+            repo.getMoreActiveUsers(id).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            list_without_removed_activites.add(it)
+                            Log.d("ActiveUsersViewModel_CHECKING",list_without_removed_activites.toString())
+                            if(checkIfEnded(it.destroy_time)){
+                                Log.d("ActiveUsersViewModel_CHECKING","NOT EDNED")
+                            }else{
+                                Log.d("ActiveUsersViewModel_CHECKING","Ended")
+                                deleteActiveUser(it.creator_id)
+                                list_without_removed_activites.remove(it)
+                                Log.d("ActiveUsersViewModel_CHECKING",list_without_removed_activites.toString())
 
+                                Log.d("ActiveUsersViewModel_CHECKING", "delete users")
+                            }
+                            if(list_without_removed_activites.isEmpty()){
+                                Log.d("ActiveUsersViewModel_CHECKING", "Empty")
+
+                                _moreActiveUsers.value =
+                                    Response.Success(emptyList())
+                            }else{
+                                Log.d("ActiveUsersViewModel_CHECKING",list_without_removed_activites.toString())
+
+
+                                _moreActiveUsers.value =
+                                    Response.Success(list_without_removed_activites as List<ActiveUser>)
+                            }
+
+
+                        }
+                    }
+                    else->{}
+                }
+
+            }
+        }
+    }
     fun compareDates(date1: String, date2: String, deleteActivity: () -> Unit): Long {
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
         val d1 = format.parse(date1)

@@ -27,10 +27,7 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
-import com.example.friendupp.di.ActivityViewModel
-import com.example.friendupp.di.AuthViewModel
-import com.example.friendupp.di.ChatViewModel
-import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.di.*
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
@@ -55,6 +52,7 @@ class MainActivity : ComponentActivity() {
     private val chatViewModel by viewModels<ChatViewModel>()
     private val authViewModel by viewModels<AuthViewModel>()
     private val homeViewModel by viewModels<HomeViewModel>()
+    private val activeUserViewModel by viewModels<ActiveUsersViewModel>()
     private val activityViewModel by viewModels<ActivityViewModel>()
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
@@ -72,23 +70,23 @@ class MainActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
     }
+
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        UserData.user= User()
+        UserData.user = User()
 
-        if(authViewModel.isUserAuthenticated)
-        {
-            Log.d("MAINACTIVItyDebug","auth")
-            userViewModel.currentUserState.value.let {response->
-            when(response){
-                is Response.Success->{
-                    UserData.user=response.data
-                    Log.d("MAINACTIVItyDebug",response.data.toString())
+        if (authViewModel.isUserAuthenticated) {
+            Log.d("MAINACTIVItyDebug", "auth")
+            userViewModel.currentUserState.value.let { response ->
+                when (response) {
+                    is Response.Success -> {
+                        UserData.user = response.data
+                        Log.d("MAINACTIVItyDebug", response.data.toString())
 
+                    }
+                    else -> {}
                 }
-                else->{}
-            }
             }
         }
         requestCameraPermission()
@@ -107,7 +105,8 @@ class MainActivity : ComponentActivity() {
 
                 if (deepLink != null && !deepLinkHasBeenSet) {
                     homeViewModel.setDeepLink(deepLink)
-                    deepLinkHasBeenSet = true  // Set the flag to indicate that deep link has been set
+                    deepLinkHasBeenSet =
+                        true  // Set the flag to indicate that deep link has been set
                 }
             }
             .addOnFailureListener(this) { e ->
@@ -116,9 +115,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FriendUppTheme {
-                NavigationComponent(outputDirectory =outputDirectory, executor = cameraExecutor,
-                    authViewModel=authViewModel, chatViewModel = chatViewModel,
-                userViewModel = userViewModel,homeViewModel=homeViewModel, activityViewModel = activityViewModel)
+                NavigationComponent(
+                    outputDirectory = outputDirectory,
+                    executor = cameraExecutor,
+                    authViewModel = authViewModel,
+                    chatViewModel = chatViewModel,
+                    userViewModel = userViewModel,
+                    homeViewModel = homeViewModel,
+                    activityViewModel = activityViewModel,
+                    activeUserViewModel=activeUserViewModel
+                )
             }
 
         }
@@ -138,9 +144,11 @@ class MainActivity : ComponentActivity() {
                 this,
                 android.Manifest.permission.CAMERA
 
-            ) -> {}
+            ) -> {
+            }
 
-            else -> requestPermissionLauncher.launch(                android.Manifest.permission.CAMERA
+            else -> requestPermissionLauncher.launch(
+                android.Manifest.permission.CAMERA
             )
         }
     }
@@ -178,7 +186,7 @@ class MainActivity : ComponentActivity() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             permissionGranted()
-        }else{
+        } else {
             permissionDenied()
 
         }

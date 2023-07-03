@@ -48,7 +48,7 @@ fun TimeSelection(modifier: Modifier,startTimeState: TimeState,endTimeState: Tim
             )
             Spacer(modifier = Modifier.height(1.dp).background(SocialTheme.colors.uiBorder).weight(1f))
             Text(     modifier = Modifier.padding(bottom = 4.dp).padding(horizontal = 4.dp),
-                text ="12:30",
+                text =startTimeState.hours.toString()+":"+startTimeState.minutes.toString(),
                style=timeTextStyleDisabled
             )
             Spacer(modifier = Modifier.height(1.dp).background(SocialTheme.colors.uiBorder).weight(1f))

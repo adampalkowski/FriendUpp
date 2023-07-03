@@ -7,36 +7,54 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.friendupp.Components.Calendar.HorizontalDateState2
 import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Components.TimePicker.rememberTimeState
+import com.example.friendupp.Login.TextFieldState
 
 class LiveActivityState(
-    val note: String,
+    val note: TextFieldState,
     val timeEndState: TimeState,
-    val endDateState: HorizontalDateState2
+    val endDateState: HorizontalDateState2,
+    val timeStartState: TimeState,
+    val startDateState: HorizontalDateState2,
+
 ) {
     companion object {
         val Saver: Saver<LiveActivityState, *> = Saver<LiveActivityState, String>(
             save = { state ->
                 listOf(
-                    state.note,
+                    state.note.text,
+                    state.timeStartState.hours,
+                    state.timeStartState.minutes,
                     state.timeEndState.hours,
                     state.timeEndState.minutes,
+                    state.startDateState.selectedDay,
+                    state.startDateState.selectedMonth,
+                    state.startDateState.selectedYear,
                     state.endDateState.selectedDay,
                     state.endDateState.selectedMonth,
-                    state.endDateState.selectedYear
+                    state.endDateState.selectedYear,
                 ).joinToString(",")
             },
             restore = { savedStateString ->
                 val savedStates = savedStateString.split(",")
                 LiveActivityState(
-                    note = savedStates[0],
-                    timeEndState = TimeState(
+                    note =  NoteState().apply { text=savedStates[0] },
+                    timeStartState = TimeState(
                         hours = savedStates[1].toInt(),
                         minutes = savedStates[2].toInt()
                     ),
+                    timeEndState = TimeState(
+                        hours = savedStates[3].toInt(),
+                        minutes = savedStates[4].toInt()
+                    ),
+                    startDateState = HorizontalDateState2(
+                        selectedDay = savedStates[5].toInt(),
+                        selectedMonth = savedStates[6].toInt(),
+                        selectedYear = savedStates[7].toInt()
+                    ),
                     endDateState = HorizontalDateState2(
-                        selectedDay = savedStates[3].toInt(),
-                        selectedMonth = savedStates[4].toInt(),
-                        selectedYear = savedStates[5].toInt()
+                        selectedDay = savedStates[8].toInt(),
+                        selectedMonth = savedStates[9].toInt(),
+                        selectedYear = savedStates[10].toInt()
                     )
                 )
             }
@@ -44,16 +62,22 @@ class LiveActivityState(
     }
 }
 @Composable
-fun rememberActivityState(
+fun rememberLiveActivityState(
+    initialNote: String,
+    initialStartHours: Int,
+    initialStartMinutes: Int,
     initialEndHours: Int,
     initialEndMinutes: Int,
+    initialStartDay: Int,
+    initialStartMonth: Int,
+    initialStartYear: Int,
     initialEndDay: Int,
     initialEndMonth: Int,
     initialEndYear: Int,
-    initialNote: String
 ): LiveActivityState {
     // Existing code...
-
+    val noteState = rememberSaveable(saver = NoteStateSaver){ NoteState() }
+    val timeStartState = rememberTimeState(initialStartHours, initialStartMinutes)
     val timeEndState = rememberTimeState(initialEndHours, initialEndMinutes)
 
     val endDateState = remember {
@@ -64,11 +88,22 @@ fun rememberActivityState(
         )
     }
 
+
+    val startDateState = remember {
+        HorizontalDateState2(
+            selectedDay = initialStartDay,
+            selectedMonth = initialStartMonth,
+            selectedYear = initialStartYear
+        )
+    }
+
     val liveActivityState = rememberSaveable(saver = LiveActivityState.Saver) {
         LiveActivityState(
-            note = initialNote,
+            note = noteState,
+            timeStartState = timeStartState,
             timeEndState = timeEndState,
-            endDateState = endDateState
+            startDateState = startDateState,
+            endDateState = endDateState,
         )
     }
 

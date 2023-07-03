@@ -422,6 +422,7 @@ class ActivityViewModel @Inject constructor(
 
     }
 
+
     fun addTimes(time1: String, time2: String): String {
         val (hours1, minutes1) = time1.split(":").map { it.toInt() }
         val (hours2, minutes2) = time2.split(":").map { it.toInt() }

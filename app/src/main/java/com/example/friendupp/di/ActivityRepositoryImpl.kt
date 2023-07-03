@@ -23,7 +23,8 @@ import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-val TAG= "ActivityRepositoryImpl"
+val TAG = "ActivityRepositoryImpl"
+
 @Singleton
 @ExperimentalCoroutinesApi
 class ActivityRepositoryImpl @Inject constructor(
@@ -36,6 +37,7 @@ class ActivityRepositoryImpl @Inject constructor(
     private val lowResStorage: StorageReference,
 ) : ActivityRepository {
     private var lastVisibleData: DocumentSnapshot? = null
+    private var lastVisibleActiveUserData: DocumentSnapshot? = null
     private var lastVisibleUserData: DocumentSnapshot? = null
     private var lastVisibleJoinedData: DocumentSnapshot? = null
     private var lastVisibleDataForUserProfile: DocumentSnapshot? = null
@@ -43,6 +45,7 @@ class ActivityRepositoryImpl @Inject constructor(
     private var lastVisibleFilteredClosestData: DocumentSnapshot? = null
     private var loaded_public_activities: ArrayList<Activity> = ArrayList()
     private var loaded_user_activities: ArrayList<Activity> = ArrayList()
+    private var loaded_active_users: ArrayList<ActiveUser> = ArrayList()
     override suspend fun getClosestFilteredActivities(
         lat: Double,
         lng: Double,
@@ -961,7 +964,7 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun getActivitiesForUser(id: String): Flow<Response<List<Activity>>> =
         callbackFlow {
 
-            val snapshotListener = activitiesRef.whereArrayContains("invited_users", id)
+            activitiesRef.whereArrayContains("invited_users", id)
                 .orderBy("creation_time", Query.Direction.DESCENDING).limit(5).get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -1045,17 +1048,81 @@ class ActivityRepositoryImpl @Inject constructor(
     //TODO CHANGE WHERE_EQUAL_TO
     override suspend fun getActiveUsers(id: String): Flow<Response<List<ActiveUser>>> =
         callbackFlow {
-            val snapshotListener = activeUsersRef.whereArrayContains("invited_users", id).get()
-                .addOnSuccessListener { documents ->
-                    var activitiesList: List<ActiveUser> = mutableListOf()
+            activeUsersRef.whereArrayContains("invited_users", id)
+                .orderBy("create_time", Query.Direction.DESCENDING)
+                .limit(5).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documents = task.result?.documents
+                        if (documents != null && documents.isNotEmpty()) {
 
-                    val response = if (documents != null) {
-                        activitiesList = documents.map { it.toObject<ActiveUser>() }
-                        Response.Success(activitiesList)
-                    } else {
-                        Response.Failure(e = SocialException("getActiveUsers", Exception()))
+                            val newActiviteUsers = ArrayList<ActiveUser>()
+                            for (document in documents) {
+                                val activity = document.toObject<ActiveUser>()
+                                if (activity != null) {
+                                    newActiviteUsers.add(activity)
+                                }
+                            }
+                            Log.d("HOMESCREENTEST", documents.size.toString())
+
+                            lastVisibleActiveUserData = documents[documents.size - 1]
+                            trySend(Response.Success(newActiviteUsers))
+
+
+                        } else {
+                            // There are no more messages to load
+                            trySend(
+                                Response.Failure(
+                                    e = SocialException(
+                                        message = "failed to get more active users",
+                                        e = Exception()
+                                    )
+                                )
+                            )
+                        }
+
                     }
-                    trySend(response).isSuccess
+
+
+                }
+            awaitClose {
+            }
+        }
+
+    override suspend fun getMoreActiveUsers(id: String): Flow<Response<List<ActiveUser>>> =
+        callbackFlow {
+           activeUsersRef.whereArrayContains("invited_users", id)  .orderBy("create_time", Query.Direction.DESCENDING)
+               .startAfter(lastVisibleData?.data?.get("create_time")).limit(5).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documents = task.result?.documents
+                        if (documents != null && documents.isNotEmpty()) {
+                            val newActivities = ArrayList<ActiveUser>()
+                            for (document in documents) {
+                                val activity = document.toObject<ActiveUser>()
+                                if (activity != null) {
+                                    newActivities.add(activity)
+                                }
+                            }
+                            loaded_active_users.addAll(newActivities)
+                            val new_instance = ArrayList<ActiveUser>()
+                            new_instance.addAll(loaded_active_users)
+                            lastVisibleActiveUserData= documents[documents.size - 1]
+                            trySend(Response.Success(new_instance))
+
+                        }
+                    } else {
+                        // There are no more messages to load
+                        trySend(
+                            Response.Failure(
+                                e = SocialException(
+                                    message = "failed to get more activities",
+                                    e = Exception()
+                                )
+                            )
+                        )
+                    }
+
                 }
             awaitClose {
             }
@@ -1089,7 +1156,7 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun getClosestFilteredDateActivities(
         lat: Double,
         lng: Double,
-        date:String,
+        date: String,
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
 
@@ -1102,8 +1169,8 @@ class ActivityRepositoryImpl @Inject constructor(
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public",true).whereEqualTo("date",date)
-              .orderBy("geoHash")
+            val q = activitiesRef.whereEqualTo("public", true).whereEqualTo("date", date)
+                .orderBy("geoHash")
                 .startAt(b.startHash)
                 .endAt(b.endHash)
                 .limit(2)
@@ -1166,7 +1233,7 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun getMoreFilteredDateClosestActivities(
         lat: Double,
         lng: Double,
-        date:String,
+        date: String,
         radius: Double,
     ): Flow<Response<List<Activity>>> = callbackFlow {
         val center = GeoLocation(lat, lng)
@@ -1177,8 +1244,8 @@ class ActivityRepositoryImpl @Inject constructor(
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public",true)
-                .whereGreaterThan("start_time",date)
+            val q = activitiesRef.whereEqualTo("public", true)
+                .whereGreaterThan("start_time", date)
                 .orderBy("start_time", Query.Direction.ASCENDING)
                 .orderBy("geoHash")
                 .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))

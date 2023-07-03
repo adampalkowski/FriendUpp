@@ -39,10 +39,7 @@ import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
-import com.example.friendupp.di.ActivityViewModel
-import com.example.friendupp.di.AuthViewModel
-import com.example.friendupp.di.ChatViewModel
-import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.di.*
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.UserData
@@ -85,6 +82,7 @@ fun NavigationComponent(
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
     activityViewModel: ActivityViewModel,
+    activeUserViewModel: ActiveUsersViewModel
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -274,7 +272,8 @@ fun NavigationComponent(
                     coroutineScope.launch {
                         scaffoldState.drawerState.open()
                     }
-                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel, mapViewModel =mapViewModel )
+                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel,
+                    mapViewModel =mapViewModel,activeUserViewModel=activeUserViewModel )
                 chatGraph(navController, chatViewModel, currentChat  ,outputDirectory = outputDirectory,
                     executor = executor,mapViewModel=mapViewModel)
                 profileGraph(
@@ -295,7 +294,7 @@ fun NavigationComponent(
                     chatViewModel = chatViewModel,
                     userViewModel = userViewModel,
                     activityState=activityState
-                , mapViewModel = mapViewModel)
+                , mapViewModel = mapViewModel,activeUserViewModel=activeUserViewModel, authViewModel = authViewModel)
                 settingsGraph(navController, authViewModel, userViewModel)
                 drawerGraph(navController, activityViewModel,homeViewModel=homeViewModel)
                 groupGraph(navController, chatViewModel)

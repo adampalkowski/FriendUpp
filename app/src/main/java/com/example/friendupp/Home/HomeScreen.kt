@@ -48,8 +48,11 @@ import com.example.friendupp.Create.Option
 import com.example.friendupp.Create.rememberSelectedOptionState
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.R
+import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.model.ActiveUser
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
@@ -69,6 +72,7 @@ sealed class HomeEvents {
     class LeaveActivity(val id: String) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
     class GoToProfile(val id: String) : HomeEvents()
+    class OpenLiveUser(val id: String) : HomeEvents()
 }
 
 val TAG = "HOMESCREENDEBUG"
@@ -80,6 +84,7 @@ fun HomeScreen(
     onEvent: (HomeEvents) -> Unit,
     activityViewModel: ActivityViewModel,
     mapViewModel: MapViewModel,
+    activeUserViewModel: ActiveUsersViewModel,
 ) {
 
     var calendarView by rememberSaveable {
@@ -102,7 +107,10 @@ fun HomeScreen(
 
     val publicActivities = remember { mutableStateListOf<Activity>() }
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
+    val activeUsers = remember { mutableStateListOf<ActiveUser>() }
+    val moreActiveUsers = remember { mutableStateListOf<ActiveUser>() }
     var publicActivitiesExist = remember { mutableStateOf(false) }
+    var activeUsersExist = remember { mutableStateOf(false) }
 
     // PUBLIC OR FRIENDS ACTIVITIEWS
     val selectedOption = rememberSelectedOptionState(
@@ -136,7 +144,7 @@ fun HomeScreen(
         val formattedDate = startOfDay.format(formatter)
         datePicked.value = formattedDate
     }
-
+    loadActiveUsers(activeUserViewModel,activeUsers,moreActiveUsers,activeUsersExist)
     if (selectedOption.option == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
         loadMoreFriendsActivities(activityViewModel, moreActivities)
@@ -228,7 +236,7 @@ fun HomeScreen(
                             calendarClicked = calendarView,
                             filterClicked = filterView,
                             displayFilters = selectedOption.option == Option.PUBLIC
-                        )
+                        , activeUsers = activeUsers,moreActiveUsers=moreActiveUsers)
                     }
 
                     if (selectedOption.option == Option.FRIENDS) {
@@ -328,6 +336,53 @@ fun HomeScreen(
     }
 
 
+}
+
+@Composable
+ fun loadActiveUsers(activeUserViewModel: ActiveUsersViewModel, activeUsers: MutableList<ActiveUser>, moreActiveUsers: MutableList<ActiveUser>,activeUsersExist:MutableState<Boolean>) {
+    //call active userse only once
+    val activitiesFetched = remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = activitiesFetched.value) {
+        if (!activitiesFetched.value) {
+            activeUserViewModel.getActiveUsersForUser(UserData.user!!.id)
+            activitiesFetched.value = true
+        }
+    }
+    activeUserViewModel.activeUsersListState.value.let { response ->
+        when (response) {
+            is Response.Success -> {
+                activeUsers.clear()
+                activeUsers.addAll(response.data)
+                activeUsersExist.value = true
+
+            }
+            is Response.Failure -> {
+
+            }
+            is Response.Loading -> {
+            }
+            null -> {
+
+            }
+        }
+    }
+    activeUserViewModel.moreActiveUsers.value.let { response ->
+        when (response) {
+            is Response.Success -> {
+                moreActiveUsers.clear()
+                moreActiveUsers.addAll(response.data)
+
+            }
+            is Response.Failure -> {
+
+            }
+            is Response.Loading -> {
+            }
+            null -> {
+
+            }
+        }
+    }
 }
 
 

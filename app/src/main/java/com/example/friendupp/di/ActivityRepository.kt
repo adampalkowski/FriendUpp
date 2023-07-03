@@ -47,6 +47,7 @@ interface ActivityRepository {
     suspend fun getMoreActivitiesForUser(id:String) : Flow<Response<List<Activity>>>
 
     suspend fun getActiveUsers(id:String) : Flow<Response<List<ActiveUser>>>
+    suspend fun getMoreActiveUsers(id:String) : Flow<Response<List<ActiveUser>>>
 
     suspend fun addActiveUser(activeUser: ActiveUser) : Response<Boolean>
     suspend fun deleteActiveUser(id: String) :  Flow<Response<Void?>>

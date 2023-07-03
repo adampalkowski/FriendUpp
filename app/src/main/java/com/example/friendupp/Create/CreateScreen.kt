@@ -94,7 +94,9 @@ fun parseDateTime(dateTimeString: String): Date {
 }
 
 @Composable
-fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activity: Activity,activityState: ActivityState) {
+fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
+                 activity: Activity
+                 ,activityState: ActivityState) {
     val titleState = activityState.titleState
     val descriptionState = activityState.descriptionState
     val selectedOption = activityState.selectedOptionState
@@ -160,11 +162,10 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column() {
             Column(
-                modifier = Modifier
+                modifier = Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .weight(1f)
+
             ) {
                 CreateTopBar(
                     onClick = {
@@ -187,8 +188,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                 if (progressBlocked) {
                     TextFieldError(textError = errorMessage)
                 }
-            }
-
+            Spacer(modifier = Modifier.weight(1f))
 
             BottomBarCreate(
                 photo = activityState.imageUrl,
@@ -215,6 +215,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {}, activ
                 }, locationPicker = {onEvent(CreateEvents.LocationPicker)},
                 openCamera = { onEvent(CreateEvents.OpenCamera) }, disabled = progressBlocked
             )
+
         }
     }
 

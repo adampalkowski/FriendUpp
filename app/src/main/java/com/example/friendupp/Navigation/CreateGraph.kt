@@ -20,17 +20,12 @@ import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.TimePicker.rememberTimeState
+import com.example.friendupp.Components.connectTimeAndDate
 import com.example.friendupp.Create.*
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Map.MapViewModel
-import com.example.friendupp.di.ActivityViewModel
-import com.example.friendupp.di.AuthViewModel
-import com.example.friendupp.di.ChatViewModel
-import com.example.friendupp.di.UserViewModel
-import com.example.friendupp.model.Activity
-import com.example.friendupp.model.Chat
-import com.example.friendupp.model.Response
-import com.example.friendupp.model.UserData
+import com.example.friendupp.di.*
+import com.example.friendupp.model.*
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
@@ -58,7 +53,8 @@ fun NavGraphBuilder.createGraph(
     userViewModel: UserViewModel,
     mapViewModel: MapViewModel,
     activityState: ActivityState,
-
+    activeUserViewModel:ActiveUsersViewModel,
+    authViewModel:AuthViewModel
     ) {
 
     navigation(startDestination = "FriendPicker", route = "CreateGraph") {
@@ -664,6 +660,29 @@ fun NavGraphBuilder.createGraph(
                 }
             }
         ) {
+            val context = LocalContext.current
+
+            val calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault())
+            val activityState=rememberLiveActivityState(
+                initialStartHours = LocalTime.now().hour,
+                initialStartMinutes =  LocalTime.now().minute,
+                initialEndHours = LocalTime.now().plusHours(2).hour,
+                initialEndMinutes = LocalTime.now().minute ,
+                initialStartDay =calendar.get(Calendar.DAY_OF_MONTH) ,
+                initialStartMonth = calendar.get(Calendar.MONTH)+1,
+                initialStartYear = calendar.get(Calendar.YEAR),
+                initialEndDay = calendar.get(Calendar.DAY_OF_MONTH) ,
+                initialEndMonth = calendar.get(Calendar.MONTH)+1,
+                initialEndYear =calendar.get(Calendar.YEAR) ,
+                initialNote = ""
+
+            )
+
+            val timeStartState = activityState.timeStartState
+            val timeEndState = activityState.timeEndState
+            val startDateState = activityState.startDateState
+            val endDateState = activityState.endDateState
+
             LiveScreen(onEvent = { event ->
                 when (event) {
                     is LiveScreenEvents.GoBack -> {
@@ -672,8 +691,55 @@ fun NavGraphBuilder.createGraph(
                     is LiveScreenEvents.GoToFriendPicker -> {
                         navController.navigate("FriendPicker")
                     }
+                    is LiveScreenEvents.CreateLive -> {
+
+                        var startTime = connectTimeAndDate(
+                            year = startDateState!!.selectedYear,
+                            month = startDateState.selectedMonth,
+                            day = startDateState.selectedDay,
+                            hour = timeStartState!!.hours,
+                            minute = timeStartState.minutes
+                        )
+                        var endTime = connectTimeAndDate(
+                            year = endDateState!!.selectedYear,
+                            month = endDateState.selectedMonth,
+                            day = endDateState.selectedDay,
+                            hour = timeEndState!!.hours,
+                            minute = timeEndState.minutes
+                        )
+
+                        val uuid: UUID = UUID.randomUUID()
+                        val id:String = uuid.toString()
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val current = LocalDateTime.now().format(formatter)
+
+                        //todo what if current user is null
+                        val participants_profile_pictures: java.util.HashMap<String, String> = hashMapOf()
+                        val participants_usernames: java.util.HashMap<String, String> = hashMapOf()
+                        participants_profile_pictures[authViewModel.currentUser!!.uid]=UserData.user!!.pictureUrl!!
+                        participants_usernames[authViewModel.currentUser!!.uid]=UserData.user!!.username!!
+                        val invited_users=ArrayList<String>(UserData.user!!.friends_ids.keys)
+                        invited_users.add(authViewModel.currentUser!!.uid)
+
+                        activeUserViewModel.addActiveUser(
+                            ActiveUser(id=id,
+                                creator_id = if (authViewModel.currentUser==null){""}else{ authViewModel.currentUser!!.uid.toString()},
+                                participants_profile_pictures = participants_profile_pictures,
+                                participants_usernames =  participants_usernames,
+                                latLng =null,
+                                time_end = endTime,
+                                time_start = startTime,
+                                create_time = current,
+                                invited_users = invited_users,
+                                destroy_time=endTime,
+                                note=activityState.note.text.toString()
+                            )
+                        )
+
+                        navController.navigate("Home")
+                    }
                 }
-            })
+            },liveActivityState=activityState)
 
         }
 
