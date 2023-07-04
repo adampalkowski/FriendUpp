@@ -60,8 +60,10 @@ class ChatViewModel @Inject constructor(
     val messagesState: State<Response<ArrayList<ChatMessage>>?> = _messagesState
     private val _firstMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>?>(null)
     val firstMessagesState: State<Response<ArrayList<ChatMessage>>?> = _firstMessagesState
-    private val _groupsState = MutableStateFlow<Response<ArrayList<Chat>>>(Response.Loading)
-    val groupsState: StateFlow<Response<ArrayList<Chat>>> = _groupsState
+    private val _groupsState = MutableStateFlow<Response<ArrayList<Chat>>?>(null)
+    val groupsState: StateFlow<Response<ArrayList<Chat>>?> = _groupsState
+    private val _moreGroupsState = MutableStateFlow<Response<ArrayList<Chat>>?>(null)
+    val moreGroupsState: StateFlow<Response<ArrayList<Chat>>?> = _moreGroupsState
     private val _moreMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>?>(null)
     val moreMessagesState: State<Response<ArrayList<ChatMessage>>?> = _moreMessagesState
     private val _addedMessagesState = mutableStateOf<Response<ArrayList<ChatMessage>>>(Response.Loading)
@@ -156,6 +158,59 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
+    fun resetGroups(){
+        _groupsState.value=null
+    }
+    fun resetMoreGroups(){
+        _moreGroupsState.value=null
+    }
+    fun getMoreGroups(id: String) {
+        viewModelScope.launch {
+            repo.getMoreGroups(id).collect{
+                    response->
+                _moreGroupsState.value=response
+            }
+        }
+    }
+    fun addGroupAlone(chatCollection: Chat,url:String?,onFinished:(String)->Unit={}) {
+        viewModelScope.launch {
+            val uuid: UUID = UUID.randomUUID()
+            val id:String = uuid.toString()
+            if (chatCollection.id!!.isEmpty()||chatCollection.id==null){
+                chatCollection.id=id
+            }
+            if(url!=null && url.isNotEmpty()){
+                repo.addLoweResImageFromGalleryToStorage(id, url.toUri()).collect{ response ->
+                    when(response){
+                        is Response.Success ->{
+                            chatCollection.create_date= getTime()
+                            chatCollection.imageUrl=response.data
+                            repo.addChatCollection(chatCollection).collect{
+                                    response->
+                                _addChatCollectionState.value=response
+                            }
+                            onFinished(response.data)
+                        }
+                        is Response.Loading ->{
+                            _addChatCollectionState.value=Response.Loading
+                        }
+                        is Response.Failure ->{}
+
+                    }
+                }
+            }else{
+                chatCollection.create_date= getTime()
+                repo.addChatCollection(chatCollection).collect{
+                        response->
+                    _addChatCollectionState.value=response
+                }
+                onFinished("")
+            }
+
+
+        }
+    }
+
     fun addChatCollection(chatCollection: Chat,url:String?,onFinished:(String)->Unit={}) {
         viewModelScope.launch {
             val uuid: UUID = UUID.randomUUID()
@@ -199,6 +254,7 @@ class ChatViewModel @Inject constructor(
             repo.deleteChatCollection(id).collect{
                     response->
                 _deleteChatCollectionState.value=response
+                /*todo delete the chat image from storage*/
             }
         }
     }

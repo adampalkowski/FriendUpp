@@ -53,9 +53,9 @@ fun NavGraphBuilder.createGraph(
     userViewModel: UserViewModel,
     mapViewModel: MapViewModel,
     activityState: ActivityState,
-    activeUserViewModel:ActiveUsersViewModel,
-    authViewModel:AuthViewModel
-    ) {
+    activeUserViewModel: ActiveUsersViewModel,
+    authViewModel: AuthViewModel,
+) {
 
     navigation(startDestination = "FriendPicker", route = "CreateGraph") {
 
@@ -231,7 +231,8 @@ fun NavGraphBuilder.createGraph(
                 modifier = Modifier,
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
-                selectedUsers,
+                chatViewModel=chatViewModel,
+                selectedUsers = selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
                 onUserDeselected = { selectedUsers.remove(it) },
                 createActivity = {
@@ -315,7 +316,8 @@ fun NavGraphBuilder.createGraph(
                             activityViewModel = activityViewModel,
                             context,
                             chatViewModel = chatViewModel,
-                            group_picture = currentActivity.value.image ?: ""
+                            group_picture = currentActivity.value.image ?: "",
+                            public= activityState.selectedOptionState.option==Option.PUBLIC
                         )
                     } else {
                         Toast.makeText(
@@ -663,17 +665,17 @@ fun NavGraphBuilder.createGraph(
             val context = LocalContext.current
 
             val calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault())
-            val activityState=rememberLiveActivityState(
+            val activityState = rememberLiveActivityState(
                 initialStartHours = LocalTime.now().hour,
-                initialStartMinutes =  LocalTime.now().minute,
+                initialStartMinutes = LocalTime.now().minute,
                 initialEndHours = LocalTime.now().plusHours(2).hour,
-                initialEndMinutes = LocalTime.now().minute ,
-                initialStartDay =calendar.get(Calendar.DAY_OF_MONTH) ,
-                initialStartMonth = calendar.get(Calendar.MONTH)+1,
+                initialEndMinutes = LocalTime.now().minute,
+                initialStartDay = calendar.get(Calendar.DAY_OF_MONTH),
+                initialStartMonth = calendar.get(Calendar.MONTH) + 1,
                 initialStartYear = calendar.get(Calendar.YEAR),
-                initialEndDay = calendar.get(Calendar.DAY_OF_MONTH) ,
-                initialEndMonth = calendar.get(Calendar.MONTH)+1,
-                initialEndYear =calendar.get(Calendar.YEAR) ,
+                initialEndDay = calendar.get(Calendar.DAY_OF_MONTH),
+                initialEndMonth = calendar.get(Calendar.MONTH) + 1,
+                initialEndYear = calendar.get(Calendar.YEAR),
                 initialNote = ""
 
             )
@@ -709,37 +711,45 @@ fun NavGraphBuilder.createGraph(
                         )
 
                         val uuid: UUID = UUID.randomUUID()
-                        val id:String = uuid.toString()
+                        val id: String = uuid.toString()
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val current = LocalDateTime.now().format(formatter)
 
                         //todo what if current user is null
-                        val participants_profile_pictures: java.util.HashMap<String, String> = hashMapOf()
+                        val participants_profile_pictures: java.util.HashMap<String, String> =
+                            hashMapOf()
                         val participants_usernames: java.util.HashMap<String, String> = hashMapOf()
-                        participants_profile_pictures[authViewModel.currentUser!!.uid]=UserData.user!!.pictureUrl!!
-                        participants_usernames[authViewModel.currentUser!!.uid]=UserData.user!!.username!!
-                        val invited_users=ArrayList<String>(UserData.user!!.friends_ids.keys)
+                        participants_profile_pictures[authViewModel.currentUser!!.uid] =
+                            UserData.user!!.pictureUrl!!
+                        participants_usernames[authViewModel.currentUser!!.uid] =
+                            UserData.user!!.username!!
+                        val invited_users = ArrayList<String>(UserData.user!!.friends_ids.keys)
                         invited_users.add(authViewModel.currentUser!!.uid)
 
                         activeUserViewModel.addActiveUser(
-                            ActiveUser(id=id,
-                                creator_id = if (authViewModel.currentUser==null){""}else{ authViewModel.currentUser!!.uid.toString()},
+                            ActiveUser(
+                                id = id,
+                                creator_id = if (authViewModel.currentUser == null) {
+                                    ""
+                                } else {
+                                    authViewModel.currentUser!!.uid.toString()
+                                },
                                 participants_profile_pictures = participants_profile_pictures,
-                                participants_usernames =  participants_usernames,
-                                latLng =null,
+                                participants_usernames = participants_usernames,
+                                latLng = null,
                                 time_end = endTime,
                                 time_start = startTime,
                                 create_time = current,
                                 invited_users = invited_users,
-                                destroy_time=endTime,
-                                note=activityState.note.text.toString()
+                                destroy_time = endTime,
+                                note = activityState.note.text.toString()
                             )
                         )
 
                         navController.navigate("Home")
                     }
                 }
-            },liveActivityState=activityState)
+            }, liveActivityState = activityState)
 
         }
 
@@ -783,6 +793,7 @@ fun createGroup(
     context: Context,
     chatViewModel: ChatViewModel,
     group_picture: String,
+    public: Boolean
 ) {
     val members = arrayListOf(UserData.user!!.id)
     members.addAll(currentActivity.invited_users)
@@ -804,7 +815,8 @@ fun createGroup(
         highlited_message = "",
         description = "",
         numberOfUsers = 1,
-        numberOfActivities = 1
+        numberOfActivities = 1,
+        public = public
     )
     chatViewModel.addChatCollection(chat, group_picture, onFinished = { picture ->
         if (picture.isEmpty()) {
@@ -817,6 +829,50 @@ fun createGroup(
         }
 
 
+    })
+
+
+}
+
+fun createGroupAlone(
+    create_date: String,
+    owner_id: String,
+    public:Boolean,
+    id: String,
+    name: String,
+    image: String,
+    description: String,
+    context: Context,
+    chatViewModel: ChatViewModel,
+    invited_users: List<String>
+) {
+    val members = arrayListOf(UserData.user!!.id)
+
+    members.addAll(invited_users)
+
+    val chat = Chat(
+        create_date = create_date,
+        owner_id = owner_id,
+        id = id,
+        name = name,
+        imageUrl = image,
+        recent_message = "say hi!",
+        recent_message_time = create_date,
+        type = "group",
+        members = members,
+        user_one_username = null,
+        user_two_username = null,
+        user_one_profile_pic = null,
+        user_two_profile_pic = null,
+        highlited_message = "",
+        description = description,
+        numberOfUsers = 1,
+        numberOfActivities = 1,
+        public = public
+
+    )
+    chatViewModel.addGroupAlone(chat, image, onFinished = { picture ->
+        Toast.makeText(context,"Crated group",Toast.LENGTH_SHORT).show()
     })
 
 

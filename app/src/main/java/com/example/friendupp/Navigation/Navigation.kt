@@ -34,6 +34,7 @@ import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerSta
 import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Create.*
 import com.example.friendupp.Drawer.drawerGraph
+import com.example.friendupp.Groups.rememberGroupState
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
@@ -82,7 +83,7 @@ fun NavigationComponent(
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
     activityViewModel: ActivityViewModel,
-    activeUserViewModel: ActiveUsersViewModel
+    activeUserViewModel: ActiveUsersViewModel,
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -227,23 +228,22 @@ fun NavigationComponent(
             val context = LocalContext.current
 
             val calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault())
-            val activityState= rememberActivityState(
+            val activityState = rememberActivityState(
                 initialTitle = "Init",
                 initialStartHours = LocalTime.now().plusHours(1).hour,
-                initialStartMinutes =  LocalTime.now().minute,
+                initialStartMinutes = LocalTime.now().minute,
                 initialEndHours = LocalTime.now().plusHours(2).hour,
-                initialEndMinutes = LocalTime.now().minute ,
-                initialStartDay =calendar.get(Calendar.DAY_OF_MONTH) ,
-                initialStartMonth = calendar.get(Calendar.MONTH)+1,
+                initialEndMinutes = LocalTime.now().minute,
+                initialStartDay = calendar.get(Calendar.DAY_OF_MONTH),
+                initialStartMonth = calendar.get(Calendar.MONTH) + 1,
                 initialStartYear = calendar.get(Calendar.YEAR),
-                initialEndDay = calendar.get(Calendar.DAY_OF_MONTH) ,
-                initialEndMonth = calendar.get(Calendar.MONTH)+1,
-                initialEndYear =calendar.get(Calendar.YEAR) ,
-                initialOption =Option.PUBLIC,
-                initialDescription="Init desc",
+                initialEndDay = calendar.get(Calendar.DAY_OF_MONTH),
+                initialEndMonth = calendar.get(Calendar.MONTH) + 1,
+                initialEndYear = calendar.get(Calendar.YEAR),
+                initialOption = Option.PUBLIC,
+                initialDescription = "Init desc",
                 initialTags = arrayListOf(),
-                initialImageUrl = ""
-            , initialLocation =  LatLng(0.0,0.0)
+                initialImageUrl = "", initialLocation = LatLng(0.0, 0.0)
             )
 
 
@@ -262,20 +262,36 @@ fun NavigationComponent(
                     mapViewModel.stopLocationUpdates()
                 }
             }
-            val currentChatViewModel :ChatViewModel= hiltViewModel()
-
+            val currentChatViewModel: ChatViewModel = hiltViewModel()
+            val groupState = rememberGroupState(
+                initialName = "Init",
+                initialOption = Option.PUBLIC,
+                initialDescription = "Init desc",
+                initialTags = arrayListOf(),
+                initialImageUrl = ""
+            )
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
             AnimatedNavHost(navController, startDestination = "Welcome") {
                 loginGraph(navController, userViewModel, authViewModel = authViewModel)
-                mainGraph(navController, openDrawer = {
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.open()
-                    }
-                }, activityViewModel, userViewModel, chatViewModel, homeViewModel = homeViewModel,
-                    mapViewModel =mapViewModel,activeUserViewModel=activeUserViewModel )
-                chatGraph(navController, chatViewModel, currentChat  ,outputDirectory = outputDirectory,
-                    executor = executor,mapViewModel=mapViewModel)
+                mainGraph(
+                    navController,
+                    openDrawer = {
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.open()
+                        }
+                    },
+                    activityViewModel,
+                    userViewModel,
+                    chatViewModel,
+                    homeViewModel = homeViewModel,
+                    mapViewModel = mapViewModel,
+                    activeUserViewModel = activeUserViewModel
+                )
+                chatGraph(
+                    navController, chatViewModel, currentChat, outputDirectory = outputDirectory,
+                    executor = executor, mapViewModel = mapViewModel
+                )
                 profileGraph(
                     navController,
                     outputDirectory = outputDirectory,
@@ -283,7 +299,7 @@ fun NavigationComponent(
                     userViewModel = userViewModel,
                     chatViewModel = chatViewModel,
                     authViewModel = authViewModel,
-                    homeViewModel=homeViewModel
+                    homeViewModel = homeViewModel
                 )
                 createGraph(
                     navController,
@@ -293,15 +309,19 @@ fun NavigationComponent(
                     activityViewModel = activityViewModel,
                     chatViewModel = chatViewModel,
                     userViewModel = userViewModel,
-                    activityState=activityState
-                , mapViewModel = mapViewModel,activeUserViewModel=activeUserViewModel, authViewModel = authViewModel)
+                    activityState = activityState,
+                    mapViewModel = mapViewModel,
+                    activeUserViewModel = activeUserViewModel,
+                    authViewModel = authViewModel
+                )
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController, activityViewModel,homeViewModel=homeViewModel)
-                groupGraph(navController, chatViewModel)
+                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel)
+                groupGraph(
+                    navController, chatViewModel, groupState, outputDirectory = outputDirectory,
+                    executor = executor, userViewModel = userViewModel
+                ,activityViewModel=activityViewModel)
                 cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
             }
-
-
 
 
             /* SPLASH SCREEN*/

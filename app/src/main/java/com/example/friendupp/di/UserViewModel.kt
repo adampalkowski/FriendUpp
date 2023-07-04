@@ -37,14 +37,17 @@ class UserViewModel @Inject constructor(
     val userState: StateFlow<Response<User?>?> = _userState
 
 
-    private val _friendState = MutableStateFlow<Response<ArrayList<User>>>(Response.Loading)
-    val friendState: StateFlow<Response<ArrayList<User>>> = _friendState
+    private val _friendState = MutableStateFlow<Response<ArrayList<User>>?>(null)
+    val friendState: StateFlow<Response<ArrayList<User>>?> = _friendState
     fun resetFriendState() {
-        _friendState.value=Response.Loading
+        _friendState.value=null
+    }
+    fun resetMoreFriends() {
+        _friendMoreState.value=null
     }
 
-    private val _friendMoreState = MutableStateFlow<Response<ArrayList<User>>>(Response.Loading)
-    val friendMoreState: StateFlow<Response<ArrayList<User>>> = _friendMoreState
+    private val _friendMoreState = MutableStateFlow<Response<ArrayList<User>>?>(null)
+    val friendMoreState: StateFlow<Response<ArrayList<User>>?> = _friendMoreState
 
 
     private val _isUserAddedState = mutableStateOf<Response<Void?>?>(Response.Success(null))

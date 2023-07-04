@@ -1,5 +1,6 @@
 package com.example.friendupp.FriendPicker
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -34,7 +35,12 @@ import androidx.compose.runtime.setValue
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
+import com.example.friendupp.Groups.SelectedUsersState
+import com.example.friendupp.Profile.friendsLoading
+import com.example.friendupp.Profile.groupsLoading
+import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
@@ -54,8 +60,7 @@ val user1 = User(
     activities = ArrayList(),
     activitiesCreated = 10,
     usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL.label,Category.CREATIVE.label)
-        , accountCreateTime = ""
+    tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label), accountCreateTime = ""
 )
 
 val user2 = User(
@@ -73,8 +78,7 @@ val user2 = User(
     activities = ArrayList(),
     activitiesCreated = 5,
     usersReached = 50,
-    tags = arrayListOf(Category.CREATIVE.label,Category.FoodAndDrink.label)
-,         accountCreateTime = ""
+    tags = arrayListOf(Category.CREATIVE.label, Category.FoodAndDrink.label), accountCreateTime = ""
 )
 
 val user3 = User(
@@ -92,22 +96,30 @@ val user3 = User(
     activities = ArrayList(),
     activitiesCreated = 2,
     usersReached = 20,
-    tags = arrayListOf(Category.ARTS.label, Category.ComputerGames.label)
-    , accountCreateTime = ""
+    tags = arrayListOf(Category.ARTS.label, Category.ComputerGames.label), accountCreateTime = ""
 )
 
 @Composable
 fun FriendPickerScreen(
-    modifier: Modifier,userViewModel: UserViewModel, goBack: () -> Unit, selectedUsers: List<String>,
+    modifier: Modifier,
+    userViewModel: UserViewModel,
+    chatViewModel: ChatViewModel,
+    goBack: () -> Unit,
+    selectedUsers: List<String>,
     onUserSelected: (String) -> Unit,
     onUserDeselected: (String) -> Unit,
-    createActivity: () -> Unit
+    createActivity: () -> Unit,
 ) {
-    val friends_flow = userViewModel.friendState.collectAsState()
-    val more_friends_flow = userViewModel.friendMoreState.collectAsState()
-    val users = rememberSaveable { mutableStateOf(listOf<User>()) }
+    val friendsList = remember { mutableStateListOf<User>() }
+    val moreFriendsList = remember { mutableStateListOf<User>() }
+    val groupList = remember { mutableStateListOf<Chat>() }
+    val moreGroupList = remember { mutableStateListOf<Chat>() }
+    val selectedList = rememberSaveable(saver = SelectedUsersState.Saver) {
+        SelectedUsersState(mutableStateListOf())
+    }
     val IconTint = SocialTheme.colors.textPrimary.copy(0.8f)
-
+    friendsLoading(userViewModel = userViewModel, friendsList = friendsList, moreFriendsList =moreFriendsList )
+    groupsLoading(chatViewModel = chatViewModel, groupList = groupList, moreGroupList =moreGroupList,id=UserData.user!!.id)
     var grayColor = SocialTheme.colors.uiBorder.copy(0.3f)
     val usersExist = remember { mutableStateOf(false) }
 
@@ -117,23 +129,36 @@ fun FriendPickerScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn{
+        LazyColumn {
             item {
                 ScreenHeading(title = "Select users", backButton = true, onBack = goBack) {
                 }
             }
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                pickerDivider(title = "Groups", icon = com.example.friendupp.R.drawable.ic_group_add, iconTint = IconTint)
-                GroupPicker(  selectedUsers = selectedUsers,
+                pickerDivider(
+                    title = "Groups",
+                    icon = com.example.friendupp.R.drawable.ic_group_add,
+                    iconTint = IconTint
+                )
+                GroupPicker(
+                    selectedUsers = selectedUsers,
                     onUserSelected = onUserSelected,
-                    onUserDeselected = onUserDeselected)
+                    onUserDeselected = onUserDeselected,
+                    addGroupName = {    selectedList.list.add(it)},
+                    removeGroupName= {    selectedList.list
+                        .remove(it)}
+                )
             }
             item {
 
             }
             item {
-                pickerDivider(title = "Friends", icon = com.example.friendupp.R.drawable.ic_person_add, iconTint = IconTint) {
+                pickerDivider(
+                    title = "Friends",
+                    icon = com.example.friendupp.R.drawable.ic_person_add,
+                    iconTint = IconTint
+                ) {
                     Text(
                         text = "All friends",
                         style = TextStyle(
@@ -145,7 +170,7 @@ fun FriendPickerScreen(
                     )
                     Switch(
                         checked = allFriends,
-                        onCheckedChange = {allFriends=!allFriends},
+                        onCheckedChange = { allFriends = !allFriends },
                         modifier = Modifier.padding(start = 16.dp),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = SocialTheme.colors.textInteractive,
@@ -155,106 +180,107 @@ fun FriendPickerScreen(
                             uncheckedIconColor = Color.White,
                             uncheckedBorderColor = grayColor,
                             checkedBorderColor = grayColor
-                        )
-                        ,thumbContent={
+                        ), thumbContent = {
                             AnimatedVisibility(visible = allFriends) {
 
-                                Icon(painter = painterResource(id = com.example.friendupp.R.drawable.ic_done),tint= Color.White, contentDescription =null )
-                            } }
+                                Icon(
+                                    painter = painterResource(id = com.example.friendupp.R.drawable.ic_done),
+                                    tint = Color.White,
+                                    contentDescription = null
+                                )
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
                 }
 
             }
-            //todo paginate the friends and groups
-            friends_flow.value.let {
-                when (it) {
-                    is Response.Success -> {
-                        items(it.data) {user->
-                            FriendPickerItem(id=user.id,username = user.username?:"", onClick = {
-                            },
-                                imageUrl =user.pictureUrl?:"",
-                                onUserSelected = onUserSelected, onUserDeselected = onUserDeselected)
-                        }
-
-                        usersExist.value=true
-                    }
-
-                    is Response.Loading -> {}
-                    is Response.Failure -> {}
-                }
+            items(friendsList) { user ->
+                FriendPickerItem(
+                    id = user.id, username = user.username ?: "", onClick = {
+                    },
+                    imageUrl = user.pictureUrl ?: "",
+                    onUserSelected = onUserSelected, onUserDeselected = onUserDeselected,
+                    addUserName = {
+                        selectedList.list.add(it)
+                                  }, removeUsername = {selectedList.list.remove(it)}
+                )
             }
-            more_friends_flow.value.let {
-                when (it) {
-                    is Response.Success -> {
-                        items(it.data) {user->
-                            FriendPickerItem(id=user.id,username = user.username?:"", onClick = {
-                            },
-                                imageUrl =user.pictureUrl?:"",
-                                onUserSelected = onUserSelected, onUserDeselected = onUserDeselected)
-                        }
-                        item {
-                            Spacer(modifier = Modifier.height(48.dp))
-                        }
+            items(moreFriendsList) {   user ->
+                FriendPickerItem(
+                    id = user.id, username = user.username ?: "", onClick = {
+                    },
+                    imageUrl = user.pictureUrl ?: "",
+                    onUserSelected = onUserSelected, onUserDeselected = onUserDeselected,
+                    addUserName = {selectedList.list.add(it)}, removeUsername = {selectedList.list.remove(it)}
+                )
 
-                    }
-                    is Response.Loading -> {}
-                    is Response.Failure -> {}
-                }
             }
-
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
             item {
                 LaunchedEffect(true) {
                     if (usersExist.value) {
-                        userViewModel?.getMoreFriends(UserData.user!!.id)
+                        userViewModel.getMoreFriends(UserData.user!!.id)
                     }
                 }
             }
         }
 
-        SelectedUsers(modifier = Modifier.align(Alignment.BottomCenter),  selectedUsers = selectedUsers)
-        Box(modifier = Modifier
+
+
+
+
+    SelectedUsers(modifier = Modifier.align(Alignment.BottomCenter), selectedUsers = selectedList)
+    Box(
+        modifier = Modifier
             .padding(bottom = 24.dp, end = 24.dp)
-            .align(Alignment.BottomEnd), contentAlignment = Alignment.Center){
-            CreateButton("Create", createClicked = {createActivity()
-            }, disabled = false)
-        }
+            .align(Alignment.BottomEnd), contentAlignment = Alignment.Center
+    ) {
+        CreateButton("Create", createClicked = {
+            createActivity()
+        }, disabled = false)
     }
+    }
+
 
 }
 
 
 @Composable
-fun SelectedUsers(modifier: Modifier, selectedUsers: List<String>,) {
+fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
+    val list = remember { selectedUsers.list } // Make the list mutable using remember
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .background(Color(0xFF00FC3F).copy(0.2f))
             .padding(start = 24.dp)
-            .padding(vertical = 12.dp), contentAlignment = Alignment.CenterStart
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
         LazyRow {
-            items(selectedUsers){user->
-                val trunctuatedUsername = if (user.length > 15) {
-                    user.take(15) + "..." +", "
+            items(list) { user ->
+                val truncatedUsername = if (user.length > 15) {
+                    user.take(15) + "..."
                 } else {
-                    user+", "
-                }  // Limit the username to 30 letters
-                Text(text = trunctuatedUsername)
-            }
+                    user
+                } // Limit the username to 15 letters
 
+                Text(text = "$truncatedUsername, ")
+            }
         }
     }
 }
-
 @Composable
-fun GroupPicker( selectedUsers: List<String>,
-                 onUserSelected: (String) -> Unit,
-                 onUserDeselected: (String) -> Unit) {
+fun GroupPicker(
+    selectedUsers: List<String>,
+    onUserSelected: (String) -> Unit,
+    onUserDeselected: (String) -> Unit,
+    addGroupName:(String)->Unit,removeGroupName:(String)->Unit
+) {
 
     LazyRow {
         item {
@@ -265,49 +291,8 @@ fun GroupPicker( selectedUsers: List<String>,
                 onClick = {},
                 groupName = "Football group",
                 groupPic = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSI607P6C5l8VrALoVEh7laR0Tlv2Yr_NUlaQ&usqp=CAU",
-                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
-
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        item {
-            GroupPickerItem(
-                onClick = {},
-                groupName = "party team",
-                groupPic = "https://media.npr.org/assets/img/2022/11/04/gettyimages-1183414292-1-_slide-edff8c3fe6afcab5c6457e3c7bd011f5c1745161.jpg",
-                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
-
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        item {
-            GroupPickerItem(
-                onClick = {},
-                groupName = "Tenis club",
-                groupPic = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST3fzOMwla8nHm0NpDEnb7wf__M6Y-86hxqA&usqp=CAU",
-                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
-
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        item {
-            GroupPickerItem(
-                onClick = {},
-                groupName = "typy",
-                groupPic = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?" +
-                        "ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
-                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
-
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        item {
-            GroupPickerItem(
-                onClick = {},
-                groupName = "typy",
-                groupPic = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?" +
-                        "ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
-                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected
+                onUserDeselected = onUserDeselected, onUserSelected = onUserSelected,
+                addGroupName = addGroupName, removeGroupName = removeGroupName
 
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -321,8 +306,10 @@ fun GroupPicker( selectedUsers: List<String>,
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupPickerItem(onClick: () -> Unit, groupPic: String, groupName: String ,onUserSelected: (String) -> Unit,
-                    onUserDeselected: (String) -> Unit) {
+fun GroupPickerItem(
+    onClick: () -> Unit, groupPic: String, groupName: String, onUserSelected: (String) -> Unit,
+    onUserDeselected: (String) -> Unit    ,addGroupName:(String)->Unit,removeGroupName:(String)->Unit
+) {
     var selected by rememberSaveable {
         mutableStateOf(false)
     }
@@ -344,13 +331,15 @@ fun GroupPickerItem(onClick: () -> Unit, groupPic: String, groupName: String ,on
     Card(
         shape = RoundedCornerShape(24.dp),
         onClick = {
-            if(selected){
+            if (selected) {
                 selected = !selected
                 onUserDeselected(groupName)
-            }else{
+                removeGroupName(groupName)
+            } else {
 
                 selected = !selected
                 onUserSelected(groupName)
+                addGroupName(groupName)
             }
         },
         colors = CardDefaults.cardColors(
@@ -391,7 +380,7 @@ fun GroupPickerItem(onClick: () -> Unit, groupPic: String, groupName: String ,on
 }
 
 @Composable
-fun pickerDivider(title: String, icon: Int,iconTint:Color, content: @Composable () -> Unit = {}) {
+fun pickerDivider(title: String, icon: Int, iconTint: Color, content: @Composable () -> Unit = {}) {
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(

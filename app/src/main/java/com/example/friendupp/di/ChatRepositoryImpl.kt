@@ -439,7 +439,7 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun getGroups(id: String): Flow<Response<ArrayList<Chat>>> =
         callbackFlow {
 
-            chatCollectionsRef.whereEqualTo("type","group").whereArrayContains("members",id).limit(6)
+            chatCollectionsRef.whereEqualTo("type","group").whereArrayContains("members",id)  .orderBy("recent_message_time", Query.Direction.DESCENDING).limit(6)
                 .get().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -466,7 +466,36 @@ class ChatRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun getMoreGroups(id: String): Flow<Response<ArrayList<Chat>>> =
+        callbackFlow {
 
+            chatCollectionsRef.whereEqualTo("type","group").whereArrayContains("members",id)   .orderBy("recent_message_time", Query.Direction.DESCENDING)
+                .startAfter(lastVisibleDataGroup?.data?.get("recent_message_time")).limit(6)
+                .get().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documents = task.result?.documents
+                        if (documents != null && documents.isNotEmpty()) {
+                            val newMessages = ArrayList<Chat>()
+                            for (document in documents) {
+                                val message = document.toObject<Chat>()
+                                if (message!=null){
+                                    newMessages.add(message)
+                                }
+                            }
+                            lastVisibleDataGroup= documents[documents.size - 1]
+                            trySend(Response.Success(newMessages))
+
+                        }
+                    } else {
+                        // There are no more messages to load
+                        trySend(Response.Failure(e=SocialException(message="failed to get more groups",e=Exception())))
+                    }
+
+                }
+
+            awaitClose{
+            }
+        }
     override suspend fun getChatCollections(user_id: String): Flow<Response<ArrayList<Chat>>> =
         callbackFlow {
 

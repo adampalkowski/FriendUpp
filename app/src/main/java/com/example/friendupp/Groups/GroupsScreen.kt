@@ -1,5 +1,6 @@
 package com.example.friendupp.Groups
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -36,16 +37,10 @@ import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.CreateEvents
 import com.example.friendupp.Create.CreateHeading
 import com.example.friendupp.Home.eButtonSimpleBlue
-import com.example.friendupp.Profile.FriendItem
-import com.example.friendupp.Profile.FriendListEvents
-import com.example.friendupp.Profile.UsernameState
-import com.example.friendupp.Profile.UsernameStateSaver
+import com.example.friendupp.Profile.*
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
-import com.example.friendupp.model.Activity
-import com.example.friendupp.model.Chat
-import com.example.friendupp.model.Response
-import com.example.friendupp.model.UserData
+import com.example.friendupp.model.*
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
@@ -53,6 +48,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 sealed class GroupsEvents{
     object CreateGroup:GroupsEvents()
     object GoBack:GroupsEvents()
+    object GoToFriendPicker:GroupsEvents()
     class GoToGroupDisplay(val groupId:String):GroupsEvents()
 }
 
@@ -66,7 +62,8 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
     }
 
     val groups = remember { mutableStateListOf<Chat>() }
-
+    val moreGroups = remember { mutableStateListOf<Chat>() }
+    groupsLoading(chatViewModel = chatViewModel, groupList =groups , moreGroupList =moreGroups , id =UserData.user!!.id )
     BackHandler(true) {
         onEvent(GroupsEvents.GoBack)
     }
@@ -97,7 +94,7 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
             eButtonSimpleBlue(icon = R.drawable.ic_search, onClick = {}, modifier = Modifier.padding(top=8.dp))
         }
         CreateHeading(text = "Your groups", icon = R.drawable.ic_group, tip = false)
-
+        val context =LocalContext.current
         LazyColumn {
             items(groups){group->
                 GroupItem(groupname = group.name.toString(),
@@ -105,24 +102,27 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
                     groupPicture =group.imageUrl.toString(),
                     numberOfUsers =group.members.size.toString(),
                     isCreator = group.owner_id==UserData.user!!.id,
-                    onEvent = {groupId->
+                    onEvent = {
+                        Toast.makeText(context,group.id.toString(),Toast.LENGTH_SHORT).show()
                         onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
 
                     })
             }
+            items(moreGroups){group->
+                GroupItem(groupname = group.name.toString(),
+                    description = group.description.toString(),
+                    groupPicture =group.imageUrl.toString(),
+                    numberOfUsers =group.members.size.toString(),
+                    isCreator = group.owner_id==UserData.user!!.id,
+                    onEvent = {
+                        Toast.makeText(context,group.id.toString(),Toast.LENGTH_SHORT).show()
+                        onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
 
+                    })
+            }
             }
         }
-    groupFlow.value.let {response ->
-        when(response){
-            is Response.Success->{
-                groups.clear()
-                groups.addAll(response.data)
-            }
-            is Response.Loading->{}
-            is Response.Failure->{}
-        }
-    }
+
 }
 
 
@@ -136,12 +136,12 @@ sealed class GroupItemEvent{
 }
 
 @Composable
-fun GroupItem(groupname:String,description:String,numberOfUsers:String,groupPicture:String,isCreator:Boolean,onEvent: (String) -> Unit){
+fun GroupItem(groupname:String,description:String,numberOfUsers:String,groupPicture:String,isCreator:Boolean,onEvent: () -> Unit){
     var expand by remember { mutableStateOf(false) }
 
     Column() {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-            .clickable(onClick = { onEvent("12312312") })
+            .clickable(onClick = { onEvent() })
             .padding(horizontal = 24.dp, vertical = 8.dp)) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)

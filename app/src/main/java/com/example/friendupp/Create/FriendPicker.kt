@@ -3,11 +3,13 @@ package com.example.friendupp.Create
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +33,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @Composable
 fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit, onUserSelected: (String) -> Unit,
-                     onUserDeselected: (String) -> Unit){
+                     onUserDeselected: (String) -> Unit,addUserName:(String)->Unit,removeUsername:(String)->Unit){
     var selected by rememberSaveable{
         mutableStateOf(false)
     }
@@ -50,12 +52,17 @@ fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit,
                 if(selected){
                     selected = !selected
                     onUserDeselected(id)
+                    removeUsername(username)
                 }else{
                     selected = !selected
+
                     onUserSelected(id)
+                    addUserName(username)
+
                 }
 
-            })
+            }  ,interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(color = Color.Black))
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
         AsyncImage(
@@ -63,7 +70,7 @@ fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit,
                 .data(imageUrl)
                 .crossfade(true)
                 .build(),
-            placeholder = painterResource(R.drawable.ic_launcher_background),
+            placeholder = painterResource(R.drawable.ic_profile_300),
             contentDescription = "stringResource(R.string.description)",
             contentScale = ContentScale.Crop,
             modifier = Modifier
