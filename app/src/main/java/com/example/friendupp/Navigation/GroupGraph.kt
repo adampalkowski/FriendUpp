@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -34,6 +35,10 @@ import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import com.google.firebase.dynamiclinks.ktx.dynamicLink
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -163,15 +168,13 @@ fun NavGraphBuilder.groupGraph(
         }
 
         composable("Groups") {
-            chatViewModel.getGroups(UserData.user!!.id)
-
             GroupsScreen(onEvent = { event ->
                 when (event) {
                     is GroupsEvents.CreateGroup -> {
                         navController.navigate("GroupsCreate")
                     }
                     is GroupsEvents.GoBack -> {
-                        navController.navigate("Home")
+                        navController.popBackStack()
                     }
                     is GroupsEvents.GoToGroupDisplay -> {
                         navController.navigate("GroupDisplay/" + event.groupId)
@@ -331,6 +334,20 @@ fun NavGraphBuilder.groupGraph(
                         is GroupDisplayEvents.AddUsers -> {
                             navController.navigate("FriendPickerAddGroupUsers/"+chat.value!!.id)
                         }
+                        is GroupDisplayEvents.ShareGroupLink -> {
+                            //CREATE A DYNAMINC LINK TO DOMAIN
+                            val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                link = Uri.parse("https://link.friendup.app/" + "Group" + "/" + event.id)
+                                domainUriPrefix = "https://link.friendup.app/"
+                                // Open links with this app on Android
+                                androidParameters { }
+                            }
+                            val dynamicLinkUri = dynamicLink.uri
+                            //COPY LINK AND MAKE A TOAST
+                            localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                            Toast.makeText(context, "Copied group link to clipboard", Toast.LENGTH_LONG).show()
+
+                        }
                         else -> {}
                     }
 
@@ -452,8 +469,7 @@ fun NavGraphBuilder.groupGraph(
         }
         val context =LocalContext.current
         val selectedUsers = remember { mutableStateListOf<String>() }
-        userViewModel.getFriends(UserData.user!!.id)
-        chatViewModel.getGroups(UserData.user!!.id)
+
         FriendPickerScreen(
             modifier = Modifier,
             userViewModel = userViewModel,

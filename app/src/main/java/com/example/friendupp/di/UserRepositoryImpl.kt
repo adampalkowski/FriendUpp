@@ -508,54 +508,13 @@ class UserRepositoryImpl @Inject constructor(
 
             usersRef.whereArrayContains("friends_ids_list", id).orderBy("name")
                 .startAfter(lastVisibleDataFriends).limit(5).get().addOnCompleteListener { task ->
-                var activitiesList: List<User> = mutableListOf()
-                if (task.isSuccessful) {
-                    val documents = task.result?.documents
-                    if (documents != null && documents.isNotEmpty()) {
-                        val newActivities = ArrayList<User>()
-                        for (document in documents) {
-                            val activity = document.toObject<User>()
-                            if (activity != null) {
-                                newActivities.add(activity)
-                            }
-                        }
-                        lastVisibleDataFriends = documents[documents.size - 1]
-                        trySend(Response.Success(newActivities))
-
-                    }
-                } else {
-                    // There are no more messages to load
-                    trySend(
-                        Response.Failure(
-                            e = SocialException(
-                                message = "failed to get more activities",
-                                e = Exception()
-                            )
-                        )
-                    )
-                }
-
-            }
-            awaitClose {
-            }
-        }
-
-    override suspend fun getFriends(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
-        Log.d("GEETINGUSERS", "GETFRIENDS")
-        Log.d("GEETINGUSERS", id)
-        lastVisibleDataFriends = null
-
-            usersRef.whereArrayContains("friends_ids_list", id).orderBy("name").limit(5).get()
-                .addOnCompleteListener { task ->
+                    var activitiesList: List<User> = mutableListOf()
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
                         if (documents != null && documents.isNotEmpty()) {
                             val newActivities = ArrayList<User>()
                             for (document in documents) {
                                 val activity = document.toObject<User>()
-                                Log.d("GEETINGUSERS", activity.toString())
-
-
                                 if (activity != null) {
                                     newActivities.add(activity)
                                 }
@@ -577,6 +536,47 @@ class UserRepositoryImpl @Inject constructor(
                     }
 
                 }
+            awaitClose {
+            }
+        }
+
+    override suspend fun getFriends(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
+        Log.d("GEETINGUSERS", "GETFRIENDS")
+        Log.d("GEETINGUSERS", id)
+        lastVisibleDataFriends = null
+
+        usersRef.whereArrayContains("friends_ids_list", id).orderBy("name").limit(5).get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val documents = task.result?.documents
+                    if (documents != null && documents.isNotEmpty()) {
+                        val newActivities = ArrayList<User>()
+                        for (document in documents) {
+                            val activity = document.toObject<User>()
+                            Log.d("GEETINGUSERS", activity.toString())
+
+
+                            if (activity != null) {
+                                newActivities.add(activity)
+                            }
+                        }
+                        lastVisibleDataFriends = documents[documents.size - 1]
+                        trySend(Response.Success(newActivities))
+
+                    }
+                } else {
+                    // There are no more messages to load
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = "failed to get more activities",
+                                e = Exception()
+                            )
+                        )
+                    )
+                }
+
+            }
         awaitClose {
         }
     }
@@ -767,12 +767,15 @@ class UserRepositoryImpl @Inject constructor(
         try {
             emit(Response.Loading)
             val one = usersRef.document(my_id)
-                .update("friends_ids" + "." + friend_id, FieldValue.delete(),
+                .update(
+                    "friends_ids" + "." + friend_id, FieldValue.delete(),
                     "friends_ids_list", FieldValue.arrayRemove(friend_id)
-                    ).await1()
+                ).await1()
             val two = usersRef.document(friend_id)
-                .update("friends_ids" + "." + my_id, FieldValue.delete(),
-                    "friends_ids_list", FieldValue.arrayRemove(my_id)).await1()
+                .update(
+                    "friends_ids" + "." + my_id, FieldValue.delete(),
+                    "friends_ids_list", FieldValue.arrayRemove(my_id)
+                ).await1()
             emit(Response.Success(two))
 
         } catch (e: Exception) {

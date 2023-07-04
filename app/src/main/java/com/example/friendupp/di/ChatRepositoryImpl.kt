@@ -438,8 +438,9 @@ class ChatRepositoryImpl @Inject constructor(
         }
     override suspend fun getGroups(id: String): Flow<Response<ArrayList<Chat>>> =
         callbackFlow {
-
-            chatCollectionsRef.whereEqualTo("type","group").whereArrayContains("members",id)  .orderBy("recent_message_time", Query.Direction.DESCENDING).limit(6)
+            lastVisibleDataGroup=null
+            chatCollectionsRef.whereEqualTo("type","group").whereArrayContains("members",id)
+                .orderBy("recent_message_time", Query.Direction.DESCENDING).limit(5)
                 .get().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents

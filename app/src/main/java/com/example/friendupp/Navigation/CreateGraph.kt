@@ -224,9 +224,7 @@ fun NavGraphBuilder.createGraph(
 
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
-            Log.d("CHATDEBUG", "GETFRIENDSCALLED")
-            userViewModel.getFriends(UserData.user!!.id)
-            chatViewModel.getGroups(UserData.user!!.id)
+
             FriendPickerScreen(
                 modifier = Modifier,
                 userViewModel = userViewModel,

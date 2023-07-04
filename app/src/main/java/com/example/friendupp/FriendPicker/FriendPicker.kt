@@ -118,8 +118,17 @@ fun FriendPickerScreen(
         SelectedUsersState(mutableStateListOf())
     }
     val IconTint = SocialTheme.colors.textPrimary.copy(0.8f)
-    friendsLoading(userViewModel = userViewModel, friendsList = friendsList, moreFriendsList =moreFriendsList )
-    groupsLoading(chatViewModel = chatViewModel, groupList = groupList, moreGroupList =moreGroupList,id=UserData.user!!.id)
+    friendsLoading(
+        userViewModel = userViewModel,
+        friendsList = friendsList,
+        moreFriendsList = moreFriendsList
+    )
+    groupsLoading(
+        chatViewModel = chatViewModel,
+        groupList = groupList,
+        moreGroupList = moreGroupList,
+        id = UserData.user!!.id
+    )
     var grayColor = SocialTheme.colors.uiBorder.copy(0.3f)
     val usersExist = remember { mutableStateOf(false) }
 
@@ -145,9 +154,13 @@ fun FriendPickerScreen(
                     selectedUsers = selectedUsers,
                     onUserSelected = onUserSelected,
                     onUserDeselected = onUserDeselected,
-                    addGroupName = {    selectedList.list.add(it)},
-                    removeGroupName= {    selectedList.list
-                        .remove(it)}
+                    addGroupName = { selectedList.list.add(it) },
+                    removeGroupName = {
+                        selectedList.list
+                            .remove(it)
+                    },
+                    groupList, moreGroupList,
+                    chatViewModel = chatViewModel
                 )
             }
             item {
@@ -204,16 +217,20 @@ fun FriendPickerScreen(
                     onUserSelected = onUserSelected, onUserDeselected = onUserDeselected,
                     addUserName = {
                         selectedList.list.add(it)
-                                  }, removeUsername = {selectedList.list.remove(it)}
+                    }, removeUsername = { selectedList.list.remove(it) }
                 )
             }
-            items(moreFriendsList) {   user ->
+            items(moreFriendsList) { user ->
                 FriendPickerItem(
-                    id = user.id, username = user.username ?: "", onClick = {
+                    id = user.id,
+                    username = user.username ?: "",
+                    onClick = {
                     },
                     imageUrl = user.pictureUrl ?: "",
-                    onUserSelected = onUserSelected, onUserDeselected = onUserDeselected,
-                    addUserName = {selectedList.list.add(it)}, removeUsername = {selectedList.list.remove(it)}
+                    onUserSelected = onUserSelected,
+                    onUserDeselected = onUserDeselected,
+                    addUserName = { selectedList.list.add(it) },
+                    removeUsername = { selectedList.list.remove(it) }
                 )
 
             }
@@ -231,18 +248,19 @@ fun FriendPickerScreen(
 
 
 
-
-
-    SelectedUsers(modifier = Modifier.align(Alignment.BottomCenter), selectedUsers = selectedList)
-    Box(
-        modifier = Modifier
-            .padding(bottom = 24.dp, end = 24.dp)
-            .align(Alignment.BottomEnd), contentAlignment = Alignment.Center
-    ) {
-        CreateButton("Create", createClicked = {
-            createActivity()
-        }, disabled = false)
-    }
+        SelectedUsers(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            selectedUsers = selectedList
+        )
+        Box(
+            modifier = Modifier
+                .padding(bottom = 24.dp, end = 24.dp)
+                .align(Alignment.BottomEnd), contentAlignment = Alignment.Center
+        ) {
+            CreateButton("Create", createClicked = {
+                createActivity()
+            }, disabled = false)
+        }
     }
 
 
@@ -256,7 +274,7 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF00FC3F).copy(0.2f))
+            .background(SocialTheme.colors.textInteractive)
             .padding(start = 24.dp)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.CenterStart
@@ -269,37 +287,59 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
                     user
                 } // Limit the username to 15 letters
 
-                Text(text = "$truncatedUsername, ")
+                Text(text = "$truncatedUsername, ", style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 12.sp), color = Color.White)
             }
         }
     }
 }
+
 @Composable
 fun GroupPicker(
     selectedUsers: List<String>,
     onUserSelected: (String) -> Unit,
     onUserDeselected: (String) -> Unit,
-    addGroupName:(String)->Unit,removeGroupName:(String)->Unit
+    addGroupName: (String) -> Unit, removeGroupName: (String) -> Unit,
+    groupList: MutableList<Chat>,
+    moreGroupList: MutableList<Chat>,
+    chatViewModel: ChatViewModel,
 ) {
 
     LazyRow {
         item {
             Spacer(modifier = Modifier.width(24.dp))
         }
-        item {
+        items(groupList) { group ->
             GroupPickerItem(
                 onClick = {},
-                groupName = "Football group",
-                groupPic = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSI607P6C5l8VrALoVEh7laR0Tlv2Yr_NUlaQ&usqp=CAU",
+                groupName = group.name.toString(),
+                groupPic = group.imageUrl.toString(),
+                onUserDeselected = onUserDeselected,
+                onUserSelected = onUserSelected,
+                addGroupName = addGroupName,
+                removeGroupName = removeGroupName
+
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        items(moreGroupList) { group ->
+            GroupPickerItem(
+                onClick = {},
+                groupName = group.name.toString(),
+                groupPic = group.imageUrl.toString(),
                 onUserDeselected = onUserDeselected, onUserSelected = onUserSelected,
                 addGroupName = addGroupName, removeGroupName = removeGroupName
 
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
-
         item {
             Spacer(modifier = Modifier.width(24.dp))
+        }
+        item {
+            LaunchedEffect(true) {
+                /*called on init*/
+                chatViewModel.getMoreGroups(UserData.user!!.id)
+            }
         }
     }
 }
@@ -307,8 +347,13 @@ fun GroupPicker(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupPickerItem(
-    onClick: () -> Unit, groupPic: String, groupName: String, onUserSelected: (String) -> Unit,
-    onUserDeselected: (String) -> Unit    ,addGroupName:(String)->Unit,removeGroupName:(String)->Unit
+    onClick: () -> Unit,
+    groupPic: String,
+    groupName: String,
+    onUserSelected: (String) -> Unit,
+    onUserDeselected: (String) -> Unit,
+    addGroupName: (String) -> Unit,
+    removeGroupName: (String) -> Unit,
 ) {
     var selected by rememberSaveable {
         mutableStateOf(false)
@@ -351,19 +396,24 @@ fun GroupPickerItem(
             Modifier.padding(vertical = 8.dp, horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(groupPic)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.ic_launcher_background),
-                contentDescription = "stringResource(R.string.description)",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+            if(groupPic.isNullOrEmpty()){
+
+            }else{
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(groupPic)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.ic_group),
+                    contentDescription = "stringResource(R.string.description)",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+
             Text(
                 text = truncatedgroupName,
                 style = TextStyle(

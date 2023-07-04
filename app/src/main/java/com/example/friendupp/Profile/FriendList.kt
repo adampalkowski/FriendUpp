@@ -1,14 +1,17 @@
 package com.example.friendupp.Profile
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.ImageProcessor.Response
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -166,11 +170,12 @@ fun groupsLoading(
         }
     }
     val groupsFlow = chatViewModel.groupsState.collectAsState()
-    val moreGroupsFlow = chatViewModel.groupsState.collectAsState()
+    val moreGroupsFlow = chatViewModel.moreGroupsState.collectAsState()
     groupsFlow.value.let { response ->
         when (response) {
             is com.example.friendupp.model.Response.Success -> {
                 groupList.clear()
+                Log.d("GROUPDEBUG",response.data.size.toString())
                 groupList.addAll(response.data)
                 chatViewModel.resetGroups()
             }
@@ -190,6 +195,8 @@ fun groupsLoading(
         when (response) {
             is com.example.friendupp.model.Response.Success -> {
                 moreGroupList.clear()
+                Log.d("GROUPDEBUG","2 "+response.data.size.toString())
+
                 moreGroupList.addAll(response.data)
                 chatViewModel.resetMoreGroups()
 
@@ -224,7 +231,10 @@ fun FriendItem(
     Column() {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .clickable(onClick = { onEvent(FriendListEvents.ProfileDisplay(user.id)) })
+                .clickable(onClick = { onEvent(FriendListEvents.ProfileDisplay(user.id)) }
+                    ,interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = Color.Black)
+                )
                 .padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
             AsyncImage(

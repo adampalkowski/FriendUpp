@@ -182,6 +182,13 @@ fun NavGraphBuilder.mainGraph(
                         )
 
                     }
+                    "Group" -> {
+                        homeViewModel.resetDeepLink()
+                        navController.navigate(
+                            "GroupDisplay/" + deep_link.pathSegments?.get(1).toString()
+                        )
+
+                    }
                 }
             }
 
