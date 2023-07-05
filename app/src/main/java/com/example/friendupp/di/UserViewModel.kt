@@ -101,8 +101,10 @@ class UserViewModel @Inject constructor(
     private val _isChatAddedToUsersState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isChatAddedToUsersState: State<Response<Void?>> = _isChatAddedToUsersState
 
-    private val _invitesStateFlow = mutableStateOf<Response<ArrayList<User>>>(Response.Loading)
-    val invitesStateFlow: State<Response<ArrayList<User>>> = _invitesStateFlow
+    private val _invitesStateFlow = mutableStateOf<Response<ArrayList<User>>?>(null)
+    val invitesStateFlow: State<Response<ArrayList<User>>?> = _invitesStateFlow
+    private val _moreInvitesState = mutableStateOf<Response<ArrayList<User>>?>(null)
+    val moreInvitesState: State<Response<ArrayList<User>>?> = _moreInvitesState
 
     private val _pictureAddedStateFlow = mutableStateOf<Response<User>>(Response.Loading)
     val pictureAddedStateFlow: State<Response<User>> = _pictureAddedStateFlow
@@ -350,7 +352,13 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
+    fun getMoreInvites(id: String) {
+        viewModelScope.launch {
+            repo.getMoreInvites(id).collect { response ->
+                _moreInvitesState.value = response
+            }
+        }
+    }
 
     fun resetUserValue() {
         viewModelScope.launch {

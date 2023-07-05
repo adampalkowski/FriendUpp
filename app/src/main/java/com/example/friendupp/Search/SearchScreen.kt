@@ -127,6 +127,13 @@ fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
                     },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
                 Spacer(modifier = Modifier.width(16.dp))
             }
+            item { Spacer(modifier = Modifier.height(64.dp)) }
+            item { 
+             
+                LaunchedEffect(Unit ){
+                    userViewModel.getMoreInvites(UserData.user!!.id)
+                }
+            }
             items(5) {
                 var visibility by remember {
                     mutableStateOf(true)
@@ -161,6 +168,7 @@ fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>){
             is Response.Failure -> {
                 Toast.makeText(LocalContext.current,"Failed to load in invites ", Toast.LENGTH_SHORT).show()
             }
+            else->{}
         }
     }
 }

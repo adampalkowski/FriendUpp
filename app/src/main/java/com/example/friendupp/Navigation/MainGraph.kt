@@ -255,10 +255,12 @@ fun NavGraphBuilder.mainGraph(
                 }
             }, activityViewModel = activityViewModel, mapViewModel = mapViewModel,activeUserViewModel=activeUserViewModel)
             if(liveUserDialogSettings!=null){
+                val context = LocalContext.current
                 LiveUserSettingsDialog(onDismissRequest = {liveUserDialogSettings=null},
                 deleteActiveUser = {
                     activeUserViewModel.deleteActiveUser(liveUserDialogSettings!!)
                     liveUserDialogSettings=null
+                    Toast.makeText(context,"Live user deleted",Toast.LENGTH_SHORT).show()
 
 
                 })

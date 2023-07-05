@@ -359,9 +359,12 @@ fun HomeScreen(
 
             }
             is Response.Failure -> {
-
+                currentUserActiveUser.clear()
+                activeUserViewModel.resetCurrentUser()
             }
             is Response.Loading -> {
+                currentUserActiveUser.clear()
+                activeUserViewModel.resetCurrentUser()
             }
             null -> {
 
@@ -379,9 +382,12 @@ fun HomeScreen(
 
             }
             is Response.Failure -> {
-
+                activeUsers.clear()
+                activeUserViewModel.resetLiveUsers()
             }
             is Response.Loading -> {
+                activeUsers.clear()
+                activeUserViewModel.resetLiveUsers()
             }
             null -> {
 

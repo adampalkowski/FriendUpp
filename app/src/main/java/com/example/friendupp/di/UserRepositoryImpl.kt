@@ -32,7 +32,10 @@ class UserRepositoryImpl @Inject constructor(
     private val resStorage: StorageReference,
 ) : UserRepository {
     private var lastVisibleDataFriends: DocumentSnapshot? = null
+    private var lastVisibleInvite: DocumentSnapshot? = null
     private var lastVisibleUserActivityData: DocumentSnapshot? = null
+    private var loaded_invites: ArrayList<User> = ArrayList()
+
     override suspend fun getUser(id: String): Flow<Response<User>> = callbackFlow {
         val registration =
             usersRef.document(id).get().addOnSuccessListener { documents ->
@@ -817,40 +820,86 @@ class UserRepositoryImpl @Inject constructor(
 
     //todo paginate the daataaaaa
     override suspend fun getInvites(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
-        val registration = usersRef.whereArrayContains("invited_ids", id).limit(5)
-            .addSnapshotListener() { snapshots, exception ->
+        Log.d("INVITESDEBUG","get invites cfalled"+id)
 
-                if (exception != null) {
-                    channel.close(exception)
-                    return@addSnapshotListener
-                }
-                var invites_list = ArrayList<User>()
-                for (dc in snapshots!!.documentChanges) {
-                    when (dc.type) {
-                        DocumentChange.Type.ADDED -> {
-                            val user = dc.document.toObject(User::class.java)
-                            invites_list.add(user)
+      usersRef.whereArrayContains("invited_ids", id)  .orderBy("invited_ids", Query.Direction.DESCENDING).limit(5).get()
+            .addOnCompleteListener { task->
+                if (task.isSuccessful) {
+                    val documents = task.result?.documents
+                    if (documents != null && documents.isNotEmpty()) {
+                        val newInvites = ArrayList<User>()
+                        for (document in documents) {
+                            val user = document.toObject<User>()
+                            Log.d("INVITESDEBUG",user.toString())
+                            if (user != null) {
+                                newInvites.add(user)
+                            }
                         }
-                        DocumentChange.Type.MODIFIED -> {
-                            val user = dc.document.toObject(User::class.java)
-                            invites_list.add(user)
-                        }
-                        DocumentChange.Type.REMOVED -> {
-                            val user = dc.document.toObject(User::class.java)
-                            invites_list.remove(user)
-                        }
+
+
+
+                        lastVisibleInvite = documents[documents.size - 1]
+                        trySend(Response.Success(newInvites))
+
                     }
-
+                } else {
+                    // There are no more messages to load
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = "failed to get inivties",
+                                e = Exception()
+                            )
+                        )
+                    )
                 }
-                trySend(Response.Success(invites_list))
             }
 
         awaitClose() {
-            registration.remove()
+
         }
 
     }
+    override suspend fun getMoreInvites(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
+        usersRef.whereArrayContains("invited_ids", id)   .orderBy("invited_ids", Query.Direction.DESCENDING) .startAfter(lastVisibleInvite).limit(5).get()
+            .addOnCompleteListener { task->
+                if (task.isSuccessful) {
+                    val documents = task.result?.documents
+                    if (documents != null && documents.isNotEmpty()) {
+                        val newInvites = ArrayList<User>()
+                        for (document in documents) {
+                            val activity = document.toObject<User>()
+                            if (activity != null) {
+                                newInvites.add(activity)
+                            }
+                        }
+                        Log.d("HOMESCREENTEST", "ROzmuiar")
+                        Log.d("HOMESCREENTEST", documents.size.toString())
+                        loaded_invites.addAll(newInvites)
+                        val new_instance = ArrayList<User>()
+                        new_instance.addAll(loaded_invites)
+                        Log.d("HOMESCREENTEST", new_instance.size.toString())
 
+                        lastVisibleInvite = documents[documents.size - 1]
+                        trySend(Response.Success(new_instance))
+
+                    }
+                } else {
+                    // There are no more messages to load
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = "failed to get more invites",
+                                e = Exception()
+                            )
+                        )
+                    )
+                }
+
+            }
+        awaitClose {
+        }
+    }
     override suspend fun checkIfChatCollectionExists(
         id: String,
         chatter_id: String,

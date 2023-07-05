@@ -33,6 +33,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.friendupp.Categories.Category
+import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
 import com.example.friendupp.Groups.SelectedUsersState
@@ -254,7 +255,7 @@ fun FriendPickerScreen(
         )
         Box(
             modifier = Modifier
-                .padding(bottom = 24.dp, end = 24.dp)
+                .padding(bottom = 48.dp, end = 24.dp)
                 .align(Alignment.BottomEnd), contentAlignment = Alignment.Center
         ) {
             CreateButton("Create", createClicked = {
@@ -279,6 +280,8 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.CenterStart
     ) {
+        Row (verticalAlignment = Alignment.CenterVertically){
+
         LazyRow {
             items(list) { user ->
                 val truncatedUsername = if (user.length > 15) {
@@ -290,6 +293,11 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
                 Text(text = "$truncatedUsername, ", style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 12.sp), color = Color.White)
             }
         }
+            Spacer(modifier = Modifier.weight(1f))
+            ButtonAdd(onClick = { /*TODO*/ }, icon =R.drawable.ic_checkl)
+        }
+
+
     }
 }
 

@@ -1310,7 +1310,7 @@ class ActivityRepositoryImpl @Inject constructor(
     }
 
     override suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>> = callbackFlow {
-        Log.d("ACTIVEUSERDEBUG","CALLED")
+
         val activeUsersQuery = activeUsersRef
             .whereEqualTo("creator_id", id)
         val registration = activeUsersQuery.addSnapshotListener { snapshot, exception ->
@@ -1338,7 +1338,6 @@ class ActivityRepositoryImpl @Inject constructor(
                         newActiveUsers.add(activity)
                     }
                 }
-
                 trySend(Response.Success(newActiveUsers))
             } else {
                 // There are no more messages to load
@@ -1352,7 +1351,6 @@ class ActivityRepositoryImpl @Inject constructor(
                 )
             }
         }
-
         awaitClose {
             registration.remove() // Remove the snapshot listener when the flow is cancelled
         }

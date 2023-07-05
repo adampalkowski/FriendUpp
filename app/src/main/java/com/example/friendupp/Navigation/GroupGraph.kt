@@ -289,7 +289,7 @@ fun NavGraphBuilder.groupGraph(
             GroupsCreateScreen(onEvent = { event ->
                 when (event) {
                     is GroupCreateEvents.GoBack -> {
-                        navController.navigate("Groups")
+                        navController.popBackStack()
                     }
                     is GroupCreateEvents.GoToFriendPicker -> {
                         navController.navigate("FriendPickerGroup")
@@ -329,7 +329,7 @@ fun NavGraphBuilder.groupGraph(
                 GroupDisplayScreen(modifier = Modifier, onEvent = { event ->
                     when (event) {
                         is GroupDisplayEvents.GoBack -> {
-                            navController.navigate("Groups")
+                            navController.popBackStack()
                         }
                         is GroupDisplayEvents.AddUsers -> {
                             navController.navigate("FriendPickerAddGroupUsers/"+chat.value!!.id)

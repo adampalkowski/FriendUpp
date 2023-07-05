@@ -76,6 +76,9 @@ interface UserRepository {
     suspend fun getInvites(
         id: String,
     ): Flow<Response<ArrayList<User>>>
+    suspend fun getMoreInvites(
+        id: String,
+    ): Flow<Response<ArrayList<User>>>
     suspend fun checkIfChatCollectionExists(id: String,chatter_id: String): Flow<Response<User>>
 
 }

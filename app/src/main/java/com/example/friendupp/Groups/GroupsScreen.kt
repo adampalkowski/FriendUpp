@@ -74,7 +74,7 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
                 ButtonAdd(onClick = {onEvent(GroupsEvents.CreateGroup)}, icon = R.drawable.ic_add)
             }
         }
-
+/*
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -92,7 +92,7 @@ fun GroupsScreen(modifier: Modifier = Modifier,onEvent:(GroupsEvents)->Unit,chat
             )
             Spacer(modifier = Modifier.width(12.dp))
             eButtonSimpleBlue(icon = R.drawable.ic_search, onClick = {}, modifier = Modifier.padding(top=8.dp))
-        }
+        }*/
         CreateHeading(text = "Your groups", icon = R.drawable.ic_group, tip = false)
         val context =LocalContext.current
         LazyColumn {
