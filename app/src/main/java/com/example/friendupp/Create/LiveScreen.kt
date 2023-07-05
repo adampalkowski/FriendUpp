@@ -1,7 +1,9 @@
 package com.example.friendupp.Create
 
+import android.Manifest
 import android.content.Context
 import android.provider.Settings.Global.getString
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,9 +30,14 @@ import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Login.EmailState
 import com.example.friendupp.Login.PasswordState
 import com.example.friendupp.Login.TextFieldState
+import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.LatLng
 import java.time.LocalTime
 import java.util.*
 
@@ -47,8 +54,16 @@ sealed class LiveScreenEvents{
 
 
 @Composable
-fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityState){
+fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityState,mapViewModel:MapViewModel){
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
+    val flow = mapViewModel.currentLocation.collectAsState()
+    flow.value.let { latLng ->
+        if (latLng != null) {
+            currentLocation = latLng
+        }
+    }
+    val context = LocalContext.current
     val noteState = liveActivityState.note
     Column() {
         Column(modifier = Modifier
@@ -62,7 +77,13 @@ fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityS
             CreateHeading("Time", icon = com.example.friendupp.R.drawable.ic_time)
             TimeSelection(startTimeState = liveActivityState.timeStartState, endTimeState =liveActivityState.timeEndState, modifier = Modifier)
             NoteComponent(noteState= noteState)
-            LocationComponent()
+            LocationComponent(shareLocation = {
+                if(currentLocation!=null){
+                    liveActivityState.location=currentLocation!!
+                }else{
+                    Toast.makeText(context,"Couldn't access curent location",Toast.LENGTH_SHORT).show()
+                }
+            })
             Spacer(modifier = Modifier.weight(1f))
             CreateButton(modifier = Modifier.padding(horizontal = 48.dp), text = "Go live", disabled = false, createClicked = {
                 onEvent(LiveScreenEvents.CreateLive)
@@ -74,10 +95,15 @@ fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityS
 
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun LocationComponent() {
+fun LocationComponent(shareLocation:()->Unit) {
     var shareLocation by remember { mutableStateOf(false) }
+
     var grayColor = SocialTheme.colors.uiBorder.copy(0.6f)
+    val locationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
     Column() {
 
         Row(
@@ -111,7 +137,20 @@ fun LocationComponent() {
                 Spacer(modifier = Modifier.weight(1f))
                 androidx.compose.material3.Switch(
                     checked = shareLocation,
-                    onCheckedChange = { shareLocation = !shareLocation },
+                    onCheckedChange = {value->
+                        if(value){
+                            if (locationPermissionState.status.isGranted) {
+                                shareLocation()
+                                shareLocation = true
+                            } else {
+                                locationPermissionState.launchPermissionRequest()
+                            }
+
+                        }else{
+                            shareLocation = false
+                        }
+
+                                      },
                     modifier = Modifier.padding(start = 16.dp),
                     colors = androidx.compose.material3.SwitchDefaults.colors(
                         checkedThumbColor = SocialTheme.colors.textInteractive,

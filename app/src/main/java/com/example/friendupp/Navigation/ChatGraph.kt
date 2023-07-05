@@ -3,6 +3,7 @@ package com.example.friendupp.Navigation
 import android.Manifest
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -41,6 +42,7 @@ import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -222,7 +224,9 @@ fun NavGraphBuilder.chatGraph(
             var chat = remember { mutableStateOf<Chat?>(null) }
             loadChat(modifier = Modifier, chatViewModel = chatViewModel, chat = chat) { }
 
-
+            var openReportDialog by remember{mutableStateOf(false)}
+            var openBlockDialog by remember{mutableStateOf(false)}
+            val context = LocalContext.current
 
             if(chat.value!=null){
                 var type by remember {
@@ -244,7 +248,32 @@ fun NavGraphBuilder.chatGraph(
                                     navController.popBackStack()
                                 }
                                 is ChatSettingsEvents.GoToUserProfile -> {
-                                    navController.navigate("Profile")
+
+
+                                    when(chat.value!!.type){
+
+                                        "duo"->{
+                                            var otherUserID=""
+                                            chat.value!!.members.forEach {
+                                                if(it!=UserData.user?.id){
+                                                    otherUserID=it
+                                                }
+                                            }
+                                            navController.navigate("ProfileDisplay/"+otherUserID)
+
+                                        }
+                                        "activity"->{type=TYPE.ACTIVITY}
+                                        "group"->{type=TYPE.GROUP}
+                                    }
+
+                                }
+                                is ChatSettingsEvents.Report -> {
+                                    openReportDialog=true
+
+                                }
+                                is ChatSettingsEvents.Block -> {
+                                    openBlockDialog=true
+
                                 }
                                 else -> {}
                             }
@@ -252,6 +281,25 @@ fun NavGraphBuilder.chatGraph(
                     )
                 }
 
+                if(openReportDialog){
+                    FriendUppDialog(
+                        label = "If the chat contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
+                        icon = R.drawable.ic_flag,
+                        onCancel = { openReportDialog=false },
+                        onConfirm = {       chatViewModel.reportChat(chat.value!!.id.toString())
+                            Toast.makeText(context,"Chat reported",Toast.LENGTH_SHORT).show()
+                            openReportDialog=false}, confirmLabel = "Report")
+                }
+                if(openBlockDialog){
+                    FriendUppDialog(
+                        label = "Enabling the chat block feature restricts the ability of users to send messages. This action is reversible, allowing for the restoration of message-sending capabilities.",
+                        icon = R.drawable.ic_block,
+                        onCancel = { openBlockDialog=false },
+                        onConfirm = {
+                            chatViewModel.blockChat(chat.value!!.id.toString())
+                            Toast.makeText(context,"Chat blocked",Toast.LENGTH_SHORT).show()
+                            openBlockDialog=false}, confirmLabel = "Block", confirmTextColor = SocialTheme.colors.error)
+                }
             }else{
                 //Chat shouldn't be null
                 navController.popBackStack()
@@ -495,6 +543,23 @@ fun NavGraphBuilder.chatGraph(
                             }
                             is ChatEvents.SendImage -> {
 
+                            }
+                            is ChatEvents.GoToProfile -> {
+                                when (chatViewModel.chat_type.value) {
+                                    "duo" -> {
+                                        navController.navigate("ProfileDisplay/"+chat.value!!.id)
+
+                                    }
+                                    "activity" -> {
+
+                                    }
+                                    "group" -> {
+
+                                    }
+                                    else -> {
+
+                                    }
+                                }
                             }
                             is ChatEvents.OpenChatSettings -> {
                                 navController.navigate("ChatSettings")

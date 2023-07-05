@@ -50,6 +50,27 @@ import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.util.concurrent.Executor
 
+fun loadUser(userViewModel: UserViewModel, currentUser: MutableState<User?>) {
+    userViewModel.userListenerState.value.let {response ->
+        when (response) {
+            is Response.Success -> {
+                Log.d("EDITPROFILEDEBUG","GOT DATA ")
+                currentUser.value=response.data!!
+            }
+            is Response.Failure -> {
+                currentUser.value=null
+            }
+            is Response.Loading -> {
+                currentUser.value=null
+            }
+            null -> {
+
+            }
+        }
+
+    }
+}
+
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.profileGraph(
     navController: NavController, outputDirectory: File,
@@ -403,12 +424,31 @@ fun NavGraphBuilder.profileGraph(
             var openChangePasswordDialog by rememberSaveable {
                 mutableStateOf(false)
             }
-
             val user = UserData.user
+            var currentUser= remember{ mutableStateOf<User?>(user) }
+            val callMade=  rememberSaveable {
+                mutableStateOf(true)
+            }
+            LaunchedEffect(callMade){
+                userViewModel.getUserListener(user!!.id)
+                callMade.value=false
+            }
+           DisposableEffect(Unit ){
+                onDispose {
+                    userViewModel.cancelCurrentUserListener()
+                }
+            }
             if(user!=null){
+                loadUser(userViewModel,currentUser)
+            }else{
+                /*USER DATA NULL*/
+            }
+            Log.d("EDITPROFILEDEBUG",currentUser.value.toString())
+            if(currentUser.value!=null){
+
                 EditProfile(
                     modifier = Modifier,
-                    goBack = { navController.navigate("Profile") },user=user, onEvent = {
+                    goBack = { navController.navigate("Profile") },userVa=currentUser, onEvent = {
                             event->
                         when(event){
                             is EditProfileEvents.GoBack->{navController.popBackStack()}
@@ -873,4 +913,6 @@ fun NavGraphBuilder.profileGraph(
         }
     }
 }
+
+
 

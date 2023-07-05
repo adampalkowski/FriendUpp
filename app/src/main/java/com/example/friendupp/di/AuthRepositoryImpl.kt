@@ -102,7 +102,8 @@ class AuthRepositoryImpl @Inject constructor(
                 activitiesCreated = 0,
                 usersReached = 0,
                 tags = ArrayList(),
-                accountCreateTime = getCurrentDateTime()
+                accountCreateTime = getCurrentDateTime(),
+                geoHash = ""
             )
             db.collection("Users").document(uid).set(user).await()
         }

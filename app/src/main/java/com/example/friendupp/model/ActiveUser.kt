@@ -1,12 +1,14 @@
 package com.example.friendupp.model
 
+import com.google.firebase.firestore.GeoPoint
+
 data class ActiveUser(
     val id: String,
     val note: String,
     val creator_id: String,
     val participants_profile_pictures: HashMap<String, String>,
     val participants_usernames: HashMap<String, String>,
-    val latLng: String?,
+    val location: GeoPoint?,
     val time_start: String,
     val time_end: String,
     val create_time: String,
@@ -19,7 +21,7 @@ data class ActiveUser(
         creator_id = "",
         participants_profile_pictures = HashMap(),
         participants_usernames = HashMap(),
-        latLng = "",
+        location = null,
         time_start = "",
         time_end = "",
         create_time = "",

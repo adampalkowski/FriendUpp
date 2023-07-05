@@ -173,6 +173,7 @@ fun ChatSettingsGroup(
             chatSettingsEvents(ChatSettingsEvents.LeaveGroup)
         }
         SettingsItem(label = "Report", icon = R.drawable.ic_flag) {
+
             chatSettingsEvents(ChatSettingsEvents.Report)
         }
     }
@@ -211,7 +212,7 @@ fun ChatSettingsSingle(
                     .data(profilePictureUrl)
                     .crossfade(true)
                     .build(),
-                placeholder = painterResource(R.drawable.ic_launcher_background),
+                placeholder = painterResource(R.drawable.ic_profile_300),
                 contentDescription = "stringResource(R.string.description)",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -243,15 +244,12 @@ fun ChatSettingsSingle(
         SettingsItem(label = "Notifications", icon = R.drawable.ic_notify) {
             chatSettingsEvents(ChatSettingsEvents.Notification)
         }
-        SettingsItem(label = "Create group with user", icon = R.drawable.ic_group_add) {
+       /* SettingsItem(label = "Create group with user", icon = R.drawable.ic_group_add) {
             chatSettingsEvents(ChatSettingsEvents.CrateGroup)
-        }
-        SettingsItem(label = "Share profile", icon = R.drawable.ic_share) {
-            chatSettingsEvents(ChatSettingsEvents.Share)
-        }
-        SettingsItem(label = "Limit", icon = R.drawable.ic_limit) {
+        }*/
+       /* SettingsItem(label = "Limit", icon = R.drawable.ic_limit) {
             chatSettingsEvents(ChatSettingsEvents.Limit)
-        }
+        }*/
         SettingsItem(label = "Block", icon = R.drawable.ic_block) {
             chatSettingsEvents(ChatSettingsEvents.Block)
         }

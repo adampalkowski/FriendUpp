@@ -46,60 +46,6 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 
-val user1 = User(
-    name = "John Doe",
-    username = "johndoe",
-    email = "johndoe@example.com",
-    id = "123456789",
-    pictureUrl = "https://example.com/profile_picture1.jpg",
-    biography = "Hello, I'm John Doe!",
-    location = "New York",
-    blocked_ids = ArrayList(),
-    friends_ids = HashMap(),
-    invited_ids = ArrayList(),
-    user_requests = ArrayList(),
-    activities = ArrayList(),
-    activitiesCreated = 10,
-    usersReached = 100,
-    tags = arrayListOf(Category.SOCIAL.label, Category.CREATIVE.label), accountCreateTime = ""
-)
-
-val user2 = User(
-    name = "Jane Smith",
-    username = "janesmith",
-    email = "janesmith@example.com",
-    id = "987654321",
-    pictureUrl = "https://example.com/profile_picture2.jpg",
-    biography = "Hi, I'm Jane Smith!",
-    location = "Los Angeles",
-    blocked_ids = ArrayList(),
-    friends_ids = HashMap(),
-    invited_ids = ArrayList(),
-    user_requests = ArrayList(),
-    activities = ArrayList(),
-    activitiesCreated = 5,
-    usersReached = 50,
-    tags = arrayListOf(Category.CREATIVE.label, Category.FoodAndDrink.label), accountCreateTime = ""
-)
-
-val user3 = User(
-    name = "Alice Johnson",
-    username = "alicejohnson",
-    email = "alicejohnson@example.com",
-    id = "456789123",
-    pictureUrl = "https://example.com/profile_picture3.jpg",
-    biography = "Nice to meet you!",
-    location = "London",
-    blocked_ids = ArrayList(),
-    friends_ids = HashMap(),
-    invited_ids = ArrayList(),
-    user_requests = ArrayList(),
-    activities = ArrayList(),
-    activitiesCreated = 2,
-    usersReached = 20,
-    tags = arrayListOf(Category.ARTS.label, Category.ComputerGames.label), accountCreateTime = ""
-)
-
 @Composable
 fun FriendPickerScreen(
     modifier: Modifier,

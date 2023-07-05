@@ -38,6 +38,7 @@ import com.example.friendupp.Home.eButtonSimple
 import com.example.friendupp.Home.eButtonSimpleBlue
 import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.Navigation.getCurrentUTCTime
+import com.example.friendupp.Profile.ProfileDisplayEvents
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
@@ -54,6 +55,7 @@ import java.util.*
 
 sealed class ChatEvents {
     object GoBack : ChatEvents()
+    object GoToProfile : ChatEvents()
     class SendImage(message: Uri) : ChatEvents() {
         val message = message
     }
@@ -997,7 +999,7 @@ fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
+            Text(modifier=Modifier.clickable(onClick = {chatEvents(ChatEvents.GoToProfile)}),
                 text = title,
                 style = TextStyle(
                     fontFamily = Lexend,

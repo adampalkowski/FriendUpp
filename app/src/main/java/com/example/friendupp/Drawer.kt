@@ -67,7 +67,7 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
        /* SettingsItem(label = "Inbox", icon = R.drawable.ic_notify) {
             onEvent(DrawerEvents.GoToInbox)
         }*/
-        SettingsItem(label = "Trending", icon = R.drawable.ic_trending) {
+        SettingsItem(label = "Trending", icon = R.drawable.ic_trending,disabled=true) {
             onEvent(DrawerEvents.GoToTrending)
         }
         SettingsItem(label = "Joined", icon = R.drawable.ic_calendar_upcoming) {

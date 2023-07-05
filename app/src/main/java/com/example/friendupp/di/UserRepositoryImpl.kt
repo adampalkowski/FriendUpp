@@ -86,6 +86,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getUserListener(id: String): Flow<Response<User>> = callbackFlow {
 
         val registration = usersRef.document(id).addSnapshotListener { snapshot, exception ->
+            Log.d("EDITPROFILEDEBUG","LISTEN")
 
             if (exception != null) {
                 channel.close(exception)
@@ -93,7 +94,10 @@ class UserRepositoryImpl @Inject constructor(
             }
             if (snapshot != null && snapshot.exists()) {
                 val user: User? = snapshot.toObject<User>()
+                Log.d("EDITPROFILEDEBUG",user.toString())
+
                 if (user != null) {
+                    Log.d("EDITPROFILEDEBUG","SEND")
                     trySend(Response.Success(user))
                 }
 
@@ -105,6 +109,7 @@ class UserRepositoryImpl @Inject constructor(
             registration.remove()
         }
     }
+
 
     override suspend fun getUserByUsername(username: String): Flow<Response<User>> = callbackFlow {
         val registration =

@@ -270,19 +270,12 @@ fun FriendItem(
                     color = SocialTheme.colors.textPrimary.copy(0.6f)
                 )
             }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .size(36.dp)
-                    .background(SocialTheme.colors.uiBorder.copy(0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
+
                 Icon(
                     painter = painterResource(id = R.drawable.arrow_right),
                     contentDescription = null,
                     tint = SocialTheme.colors.textPrimary.copy(0.8f)
                 )
-            }
 
         }
 

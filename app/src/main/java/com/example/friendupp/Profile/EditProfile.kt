@@ -50,12 +50,11 @@ sealed class EditProfileEvents{
 }
 
 @Composable
-fun EditProfile(modifier: Modifier, goBack: () -> Unit,user:User, onEvent: (EditProfileEvents) -> Unit) {
-    val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+fun EditProfile(modifier: Modifier, goBack: () -> Unit,userVa:MutableState<User?>, onEvent: (EditProfileEvents) -> Unit) {
     BackHandler(true) {
         goBack()
     }
-
+   var user= userVa.value!!
    Column(modifier = modifier
        .fillMaxSize()
        .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -194,16 +193,7 @@ fun EditInfoContent(name:String,username:String,biography:String,location:String
             }, label = "Biography", textState = biographyState
         )
         Spacer(modifier = Modifier.height(12.dp))
-        NameEditText(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            focusRequester = focusRequester,
-            focus = false,
-            onFocusChange = { focusState ->
 
-            }, label = "Location", textState = locationState
-        )
     }
 
 

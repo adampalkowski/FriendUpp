@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 interface ChatRepository {
     //handle groups REPO
     suspend fun getChatCollection(id: String): Flow<Response<Chat>>
+    suspend fun reportChat(id: String): Flow<Response<Boolean>>
+    suspend fun blockChat(id: String): Flow<Response<Boolean>>
     suspend fun addChatCollection(chatCollection: Chat): Flow<Response<Void?>>
     suspend fun deleteChatCollection(id: String): Flow<Response<Void?>>
     suspend fun addGroupHighlight(group_id:String,text_message:String): Flow<Response<Void?>>

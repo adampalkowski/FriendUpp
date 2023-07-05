@@ -119,6 +119,23 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
+    fun reportChat(id:String){
+        viewModelScope.launch {
+            repo.reportChat(id).collect{
+                    response->
+
+            }
+        }
+    }
+    fun blockChat(id:String){
+        viewModelScope.launch {
+            repo.blockChat(id).collect{
+                    response->
+
+            }
+        }
+    }
+
     fun resetChat(){
         _chatCollectionState.value=null
     }

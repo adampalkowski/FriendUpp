@@ -603,7 +603,9 @@ fun NavGraphBuilder.mainGraph(
                                 description = "",
                                 numberOfUsers = 2,
                                 numberOfActivities = 0,
-                                public = false
+                                public = false,
+                                reports = 0,
+                                blocked=false
 
                                 )
                         )

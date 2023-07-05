@@ -67,6 +67,33 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun reportChat(id: String): Flow<Response<Boolean>> = flow {
+        try {
+            val response = chatCollectionsRef.document(id).update("reports",FieldValue.increment(1)).await()
+            emit(Response.Success(true))
+        } catch (e: Exception) {
+            emit(Response.Failure(
+                e = SocialException(
+                    "getChatCollection exception",
+                    e
+                )
+            ))
+        }
+    }
+    override suspend fun blockChat(id: String): Flow<Response<Boolean>> = flow {
+        try {
+            val response = chatCollectionsRef.document(id).update("blocked",true).await()
+            emit(Response.Success(true))
+        } catch (e: Exception) {
+            emit(Response.Failure(
+                e = SocialException(
+                    "getChatCollection exception",
+                    e
+                )
+            ))
+        }
+    }
+
 
     suspend fun keepTrying(triesRemaining: Int, storageRef: StorageReference): String {
         if (triesRemaining < 0) {

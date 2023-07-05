@@ -11,6 +11,7 @@ import com.example.friendupp.model.*
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,18 +30,25 @@ class UserViewModel @Inject constructor(
     fun onUriProcessed() {
         _uriReceived.value = false
     }
+
     private val _currentUserState = MutableStateFlow<Response<User?>?>(null)
     val currentUserState: StateFlow<Response<User?>?> = _currentUserState
 
 
     private val _userState = MutableStateFlow<Response<User?>?>(null)
     val userState: StateFlow<Response<User?>?> = _userState
+    private val _userListenerState = MutableStateFlow<Response<User?>?>(null)
+    val userListenerState: StateFlow<Response<User?>?> = _userListenerState
 
 
     private val _friendState = MutableStateFlow<Response<ArrayList<User>>?>(null)
     val friendState: StateFlow<Response<ArrayList<User>>?> = _friendState
     fun resetFriendState() {
         _friendState.value=null
+    }
+    // Function to cancel the listener and flow
+    fun cancelCurrentUserListener() {
+        viewModelScope.coroutineContext.cancelChildren()
     }
     fun resetMoreFriends() {
         _friendMoreState.value=null
@@ -381,7 +389,25 @@ class UserViewModel @Inject constructor(
     fun getUserListener(id: String) {
         viewModelScope.launch {
             repo.getUserListener(id).collect { response ->
-                _userState.value = response
+                when (response) {
+                    is Response.Success -> {
+                        Log.d("EDITPROFILEDEBUG","response Success"+response.data.toString())
+                        var user:User= response.data
+                        _userListenerState.value = Response.Success(user)
+                    }
+                    is Response.Failure -> {
+                        Log.d("EDITPROFILEDEBUG","response Fail")
+                        _userListenerState.value = response
+                    }
+                    is Response.Loading -> {
+                        Log.d("EDITPROFILEDEBUG","response Load")
+                        _userListenerState.value = response
+                    }
+                    null -> {
+
+                    }
+                }
+
             }
         }
     }

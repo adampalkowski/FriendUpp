@@ -110,10 +110,10 @@ fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            item {
+     /*       item {
                 DiscoverComponent()
                 Spacer(modifier = Modifier.height(12.dp))
-            }
+            }*/
             item {
                 CreateHeading(text = "Invites", icon = R.drawable.ic_invites, tip = false)
             }
@@ -124,6 +124,7 @@ fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
                     profilePictureUrl = user.pictureUrl.toString(),
                     onAccept = {
                         onEvent(SearchEvents.OnInviteAccepted(user))
+                        invitesList.remove(user)
                     },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
                 Spacer(modifier = Modifier.width(16.dp))
             }

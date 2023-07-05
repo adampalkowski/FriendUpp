@@ -8,6 +8,7 @@ import com.example.friendupp.Components.Calendar.HorizontalDateState2
 import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Login.TextFieldState
+import com.google.android.gms.maps.model.LatLng
 
 class LiveActivityState(
     val note: TextFieldState,
@@ -15,6 +16,8 @@ class LiveActivityState(
     val endDateState: HorizontalDateState2,
     val timeStartState: TimeState,
     val startDateState: HorizontalDateState2,
+    var location: LatLng
+
 
 ) {
     companion object {
@@ -32,6 +35,9 @@ class LiveActivityState(
                     state.endDateState.selectedDay,
                     state.endDateState.selectedMonth,
                     state.endDateState.selectedYear,
+                    state.location.latitude,
+                    state.location.longitude,
+
                 ).joinToString(",")
             },
             restore = { savedStateString ->
@@ -55,8 +61,10 @@ class LiveActivityState(
                         selectedDay = savedStates[8].toInt(),
                         selectedMonth = savedStates[9].toInt(),
                         selectedYear = savedStates[10].toInt()
+                    ),
+                    location =  LatLng(savedStates[11].toDouble(),savedStates[12].toDouble()),
+
                     )
-                )
             }
         )
     }
@@ -74,6 +82,7 @@ fun rememberLiveActivityState(
     initialEndDay: Int,
     initialEndMonth: Int,
     initialEndYear: Int,
+    initialLocation:LatLng,
 ): LiveActivityState {
     // Existing code...
     val noteState = rememberSaveable(saver = NoteStateSaver){ NoteState() }
@@ -104,6 +113,7 @@ fun rememberLiveActivityState(
             timeEndState = timeEndState,
             startDateState = startDateState,
             endDateState = endDateState,
+            location = initialLocation
         )
     }
 

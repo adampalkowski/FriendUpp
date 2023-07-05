@@ -674,8 +674,8 @@ fun NavGraphBuilder.createGraph(
                 initialEndDay = calendar.get(Calendar.DAY_OF_MONTH),
                 initialEndMonth = calendar.get(Calendar.MONTH) + 1,
                 initialEndYear = calendar.get(Calendar.YEAR),
-                initialNote = ""
-
+                initialNote = "",
+                initialLocation = LatLng(0.0, 0.0)
             )
 
             val timeStartState = activityState.timeStartState
@@ -734,7 +734,7 @@ fun NavGraphBuilder.createGraph(
                                 },
                                 participants_profile_pictures = participants_profile_pictures,
                                 participants_usernames = participants_usernames,
-                                latLng = null,
+                                location =GeoPoint(activityState.location.latitude,activityState.location.longitude),
                                 time_end = endTime,
                                 time_start = startTime,
                                 create_time = current,
@@ -747,7 +747,7 @@ fun NavGraphBuilder.createGraph(
                         navController.navigate("Home")
                     }
                 }
-            }, liveActivityState = activityState)
+            }, liveActivityState = activityState,mapViewModel=mapViewModel)
 
         }
 
@@ -814,7 +814,9 @@ fun createGroup(
         description = "",
         numberOfUsers = 1,
         numberOfActivities = 1,
-        public = public
+        public = public,
+        reports = 0,
+        blocked = false
     )
     chatViewModel.addChatCollection(chat, group_picture, onFinished = { picture ->
         if (picture.isEmpty()) {
@@ -866,7 +868,9 @@ fun createGroupAlone(
         description = description,
         numberOfUsers = 1,
         numberOfActivities = 1,
-        public = public
+        public = public,
+        reports = 0,
+        blocked = false
 
     )
     chatViewModel.addGroupAlone(chat, image, onFinished = { picture ->

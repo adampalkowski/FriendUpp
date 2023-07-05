@@ -135,7 +135,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 onBack = { settingsEvents(SettingsEvents.GoBack) }) {
 
             }
-           SettingsLabel("Search Range")
+            SettingsLabel("Search Range")
 
 
             SettingsItem(
@@ -222,8 +222,15 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
 
 
 }
+
 @Composable
-fun RangeItem(label: String, icon: Int, onClick: () -> Unit,sliderValue:Float,onValueChange:(Float)->Unit) {
+fun RangeItem(
+    label: String,
+    icon: Int,
+    onClick: () -> Unit,
+    sliderValue: Float,
+    onValueChange: (Float) -> Unit,
+) {
 
     val interactionSource = remember { MutableInteractionSource() }
     val rippleColor = SocialTheme.colors.iconPrimary.copy(0.2f)
@@ -257,10 +264,11 @@ fun RangeItem(label: String, icon: Int, onClick: () -> Unit,sliderValue:Float,on
                 ),
                 color = SocialTheme.colors.textPrimary
             )
-            Slider(modifier= Modifier
-                .padding(horizontal = 6.dp),
+            Slider(
+                modifier = Modifier
+                    .padding(horizontal = 6.dp),
                 value = sliderValue,
-                onValueChange =onValueChange,
+                onValueChange = onValueChange,
                 onValueChangeFinished = {
                     // this is called when the user completed selecting the value
                     Log.d("MainActivity", "sliderValue = $sliderValue")
@@ -277,9 +285,9 @@ fun RangeItem(label: String, icon: Int, onClick: () -> Unit,sliderValue:Float,on
         Spacer(modifier = Modifier.width(12.dp))
 
 
-
     }
 }
+
 @Composable
 fun BottomSheetContent(
     onConfirm: () -> Unit,
@@ -290,7 +298,7 @@ fun BottomSheetContent(
     description: String,
     icon: Int,
     title: String,
-    disableButtons: Boolean = false
+    disableButtons: Boolean = false,
 ) {
     Column(
         Modifier
@@ -381,7 +389,7 @@ fun BottomSheetContent(
 }
 
 @Composable
-fun SettingsItem(label: String, icon: Int, onClick: () -> Unit) {
+fun SettingsItem(label: String, icon: Int, disabled: Boolean = false, onClick: () -> Unit,) {
 
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -393,7 +401,12 @@ fun SettingsItem(label: String, icon: Int, onClick: () -> Unit) {
             .clickable(
                 interactionSource = interactionSource,
                 indication = rememberRipple(bounded = true, color = rippleColor),
-                onClick = onClick
+                onClick = {
+                    if (disabled) {
+                    } else {
+                        onClick()
+                    }
+                }
             )
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -404,15 +417,30 @@ fun SettingsItem(label: String, icon: Int, onClick: () -> Unit) {
             tint = SocialTheme.colors.iconPrimary
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            modifier = Modifier.padding(bottom = 4.dp), text = label,
-            color = SocialTheme.colors.textPrimary.copy(0.8f), style = TextStyle(
-                fontFamily = Lexend,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp), text = label,
+                color =if(disabled){SocialTheme.colors.textPrimary.copy(0.4f)}else{SocialTheme.colors.textPrimary.copy(0.8f)} , style = TextStyle(
+                    fontFamily = Lexend,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal
+                )
             )
-        )
+            if(disabled){
+                Text(
+                    modifier = Modifier.padding(bottom = 4.dp), text = "Coming soon",
+                    color = SocialTheme.colors.textPrimary.copy(0.8f), style = TextStyle(
+                        fontFamily = Lexend,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                )
+            }
+
+        }
+
     }
+
 }
 
 @Composable

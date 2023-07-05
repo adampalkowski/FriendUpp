@@ -19,7 +19,8 @@ data class User(
     val activitiesCreated:Int,
     val usersReached:Int,
     val tags:ArrayList<String>,
-    val accountCreateTime:String
+    val accountCreateTime:String,
+    val geoHash:String
 ) : Serializable {
     constructor() : this(
         name = "",
@@ -37,6 +38,7 @@ data class User(
         activitiesCreated = 0,
         usersReached =0,
         tags= arrayListOf(),
-        accountCreateTime=""
+        accountCreateTime="",
+        geoHash=""
     )
 }
