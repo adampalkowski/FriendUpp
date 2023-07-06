@@ -95,18 +95,15 @@ fun getChatNameAndImage(chat: Chat): Pair<String, String> {
     if (chat.type.equals("duo")) {
         if (chat.user_one_username == UserData.user!!.username) {
             chatName = chat.user_two_username.toString()
+            chatImage =chat.user_two_profile_pic.toString()
+
         } else {
             chatName = chat.user_one_username.toString()
+            chatImage = chat.user_one_profile_pic.toString()
+
         }
     }
 
-    if (chat.type.equals("duo")) {
-        if (chat.user_one_profile_pic == UserData.user!!.pictureUrl) {
-            chatImage =chat.user_two_profile_pic.toString()
-        } else {
-            chatImage = chat.user_one_profile_pic.toString()
-        }
-    }
 
     return Pair(chatName, chatImage)
 }

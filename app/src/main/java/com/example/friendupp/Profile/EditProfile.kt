@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,55 +34,82 @@ import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.*
+import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.R
 import com.example.friendupp.Settings.ChangeEmailDialog
 import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
+import com.example.friendupp.model.UserState
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
-sealed class EditProfileEvents{
-    object GoBack:EditProfileEvents()
-    object ConfirmChanges:EditProfileEvents()
-    object OpenCamera:EditProfileEvents()
-    object openEditEmailDialog:EditProfileEvents()
-    object openChangePasswordDialog:EditProfileEvents()
+sealed class EditProfileEvents {
+    object GoBack : EditProfileEvents()
+    object ConfirmChanges : EditProfileEvents()
+    object OpenCamera : EditProfileEvents()
+    object openEditEmailDialog : EditProfileEvents()
+    object openChangePasswordDialog : EditProfileEvents()
 }
 
 @Composable
-fun EditProfile(modifier: Modifier, goBack: () -> Unit,userVa:MutableState<User?>, onEvent: (EditProfileEvents) -> Unit) {
+fun EditProfile(
+    modifier: Modifier, goBack: () -> Unit, userVa: MutableState<User?>,
+    onEvent: (EditProfileEvents) -> Unit, userState: UserState,
+) {
     BackHandler(true) {
         goBack()
     }
-   var user= userVa.value!!
-   Column(modifier = modifier
-       .fillMaxSize()
-       .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenHeading(title = "Edit profile", backButton = true,
-                backIcon = com.example.friendupp.R.drawable.ic_back, onBack = {goBack()}) {
-                Row(Modifier,verticalAlignment = Alignment.CenterVertically){
-                    ButtonAdd(icon = R.drawable.ic_email, onClick = {onEvent(EditProfileEvents.openEditEmailDialog)})
-                    Spacer(modifier = Modifier
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ScreenHeading(title = "Edit profile", backButton = true,
+            backIcon = com.example.friendupp.R.drawable.ic_back, onBack = { goBack() }) {
+            Row(Modifier, verticalAlignment = Alignment.CenterVertically) {
+                ButtonAdd(
+                    icon = R.drawable.ic_email,
+                    onClick = { onEvent(EditProfileEvents.openEditEmailDialog) })
+                Spacer(
+                    modifier = Modifier
                         .background(SocialTheme.colors.uiBorder)
-                        .width(16.dp))
-                    ButtonAdd(icon = R.drawable.ic_password, onClick ={onEvent(EditProfileEvents.openChangePasswordDialog)})
+                        .width(16.dp)
+                )
+                ButtonAdd(
+                    icon = R.drawable.ic_password,
+                    onClick = { onEvent(EditProfileEvents.openChangePasswordDialog) })
 
-                }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+        }
+        Spacer(modifier = Modifier.height(24.dp))
 
-            EditProfileInfo(name=user.name?: "",username=user.username?: "",imageUrl=user.pictureUrl?: "",onClick={onEvent(EditProfileEvents.OpenCamera)})
-            Spacer(modifier = Modifier.height(24.dp))
-            EditInfoContent(name=user.name?: "",username=user.username?: "", biography =user.biography, location =user.location )
-            ActivityPreferences()
+        EditProfileInfo(
+            name = userState.nameState,
+            username = userState.usernameState,
+            imageUrl = userState.imageUrl,
+            onClick = { onEvent(EditProfileEvents.OpenCamera) })
+        Spacer(modifier = Modifier.height(24.dp))
+        EditInfoContent(
+            name = userState.nameState,
+            username = userState.usernameState,
+            biography = userState.bioState
+        )
+        TagsSettings(
+            tags = userState.tags,
+            onSelected = { userState.tags.add(it) },
+            onDeSelected = { userState.tags.remove(it) })
 
-
-
-            CreateButton("Confirm changes", modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp), disabled = false, createClicked = {onEvent(EditProfileEvents.ConfirmChanges)})
-            Spacer(modifier = Modifier.height(120.dp)) }
-
-
+        CreateButton(
+            "Confirm changes",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 48.dp),
+            disabled = false,
+            createClicked = { onEvent(EditProfileEvents.ConfirmChanges) })
+        Spacer(modifier = Modifier.height(120.dp))
+    }
 
 
 }
@@ -89,50 +117,85 @@ fun EditProfile(modifier: Modifier, goBack: () -> Unit,userVa:MutableState<User?
 @Composable
 fun ActivityPreferences() {
     Column() {
-        CreateHeading(text = "Activity preferences", icon = R.drawable.ic_tag,tip=false, description = "")
-        FilterList(    tags= SnapshotStateList(),
-        onSelected={},
-        onDeSelected={})
+        CreateHeading(
+            text = "Activity preferences",
+            icon = R.drawable.ic_tag,
+            tip = false,
+            description = ""
+        )
+        FilterList(tags = SnapshotStateList(),
+            onSelected = {},
+            onDeSelected = {})
     }
 }
 
 @Composable
-fun EditProfileInfo(name: String, username: String, imageUrl: String, onClick: () -> Unit) {
+fun EditProfileInfo(
+    name: TextFieldState,
+    username: TextFieldState,
+    imageUrl: String,
+    onClick: () -> Unit,
+) {
     val maxLength = 25
-    val limitedName = if (name.length > maxLength) name.substring(0, maxLength) +"..." else name
-
+    val name = name.text
+    val limitedName = if (name.length > maxLength) name.substring(0, maxLength) + "..." else name
+    val username = username.text
     val maxusernameLength = 25
-    val limitedUserName = if (username.length > maxLength) username.substring(0, maxLength)+"..." else username
+    val limitedUserName =
+        if (username.length > maxLength) username.substring(0, maxLength) + "..." else username
 
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 24.dp)) {
-        Row (verticalAlignment = Alignment.CenterVertically){
-            Box(modifier = Modifier){
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(imageUrl)
                         .crossfade(true)
                         .build(),
-                    placeholder = painterResource(R.drawable.ic_launcher_background),
+                    placeholder = painterResource(R.drawable.ic_profile_300),
                     contentDescription = "stringResource(R.string.description)",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(90.dp)
                         .clip(CircleShape)
                 )
-                Box(modifier = Modifier
-                    .size(90.dp)
-                    .clip(CircleShape).clickable(onClick = onClick)
-                    .background(color = Color.Black.copy(0.6f))){
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onClick)
+                        .background(color = Color.Black.copy(0.6f))
+                , contentAlignment = Alignment.Center) {
+                    Icon(painter = painterResource(id = R.drawable.ic_add_image), contentDescription =null,tint= Color.White )
+
                 }
             }
 
             Spacer(modifier = Modifier.width(12.dp))
             Column(horizontalAlignment = Alignment.Start) {
-                Text(text =limitedName , style = TextStyle(fontFamily = Lexend , fontWeight = FontWeight.SemiBold , fontSize =22.sp ), color = SocialTheme.colors.textPrimary)
-                Text(text = limitedUserName, style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Normal, fontSize =16.sp ), color = SocialTheme.colors.textPrimary.copy(0.5f))
+                Text(
+                    text = limitedName,
+                    style = TextStyle(
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 22.sp
+                    ),
+                    color = SocialTheme.colors.textPrimary
+                )
+                Text(
+                    text = limitedUserName,
+                    style = TextStyle(
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16.sp
+                    ),
+                    color = SocialTheme.colors.textPrimary.copy(0.5f)
+                )
             }
 
         }
@@ -140,26 +203,15 @@ fun EditProfileInfo(name: String, username: String, imageUrl: String, onClick: (
 }
 
 @Composable
-fun EditInfoContent(name:String,username:String,biography:String,location:String){
+fun EditInfoContent(name: TextFieldState, username: TextFieldState, biography: TextFieldState) {
     val focusRequester = remember { FocusRequester() }
-    val nameState by rememberSaveable(stateSaver = NameStateSaver) {
-        mutableStateOf(NameState())
-    }
-    nameState.text=name
-    val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
-        mutableStateOf(UsernameState())
-    }
-    usernameState.text=username
-    val locationState by rememberSaveable(stateSaver = LocationStateSaver) {
-        mutableStateOf(LocationState())
-    }
-    locationState.text=location
-    val biographyState by rememberSaveable(stateSaver = BiographyStateSaver) {
-        mutableStateOf(BiographyState())
-    }
-    biographyState.text=biography
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        CreateHeading(text = "Information", icon = R.drawable.ic_badge,tip=false, description = "")
+        CreateHeading(
+            text = "Information",
+            icon = R.drawable.ic_badge,
+            tip = false,
+            description = ""
+        )
         NameEditText(
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,7 +220,7 @@ fun EditInfoContent(name:String,username:String,biography:String,location:String
             focus = false,
             onFocusChange = { focusState ->
 
-            }, label = "Name", textState = nameState
+            }, label = "Name", textState = name
         )
         Spacer(modifier = Modifier.height(12.dp))
         NameEditText(
@@ -179,7 +231,7 @@ fun EditInfoContent(name:String,username:String,biography:String,location:String
             focus = false,
             onFocusChange = { focusState ->
 
-            }, label = "Username", textState = usernameState
+            }, label = "Username", textState = username
         )
         Spacer(modifier = Modifier.height(12.dp))
         NameEditText(
@@ -190,12 +242,11 @@ fun EditInfoContent(name:String,username:String,biography:String,location:String
             focus = false,
             onFocusChange = { focusState ->
 
-            }, label = "Biography", textState = biographyState
+            }, label = "Biography", textState = biography
         )
         Spacer(modifier = Modifier.height(12.dp))
 
     }
-
 
 
 }

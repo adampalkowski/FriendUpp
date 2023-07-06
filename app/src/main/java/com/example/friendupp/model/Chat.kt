@@ -23,7 +23,9 @@ data class Chat(
     val numberOfActivities: Int,
     var public: Boolean,
     var reports:Int,
-    var blocked:Boolean
+    var blocked:Boolean,
+    var user_one_id :String?,
+    var user_two_id :String?
 ) : Serializable {
     constructor() : this(
         create_date="",
@@ -45,6 +47,8 @@ data class Chat(
         numberOfActivities=0,
         public=false,
         reports=0,
-        blocked=false
-    )
+        blocked=false,
+        user_one_id="",
+         user_two_id="",
+       )
 }

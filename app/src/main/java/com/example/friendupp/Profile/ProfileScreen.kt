@@ -344,7 +344,7 @@ fun ProfileInfo(name:String,username:String,profilePictureUrl:String,location:St
                         .data(profilePictureUrl)
                         .crossfade(true)
                         .build(),
-                    placeholder = painterResource(R.drawable.ic_launcher_background),
+                    placeholder = painterResource(R.drawable.ic_profile_300),
                     contentDescription = "stringResource(R.string.description)",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

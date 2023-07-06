@@ -585,7 +585,6 @@ fun NavGraphBuilder.mainGraph(
                         val current = LocalDateTime.now().format(formatter)
                         userViewModel.acceptInvite(
                             UserData.user!!, event.user, Chat(
-
                                 current,
                                 owner_id = event.user.id,
                                 id = id,
@@ -605,8 +604,9 @@ fun NavGraphBuilder.mainGraph(
                                 numberOfActivities = 0,
                                 public = false,
                                 reports = 0,
-                                blocked=false
-
+                                blocked=false,
+                                user_one_id =  UserData.user!!.id.toString(),
+                                user_two_id = event.user.id.toString(),
                                 )
                         )
 

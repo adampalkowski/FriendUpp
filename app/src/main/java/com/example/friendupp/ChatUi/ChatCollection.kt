@@ -83,24 +83,8 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
 
         items(chatCollectionsToBeDisplayed.value.reversed()) {chat->
             if (chat!=null){
-                var chat_name = chat.name.toString()
-                if (chat.type.equals("duo")){
-                    if(chat.user_one_username== UserData.user!!.username){
-                        chat_name=chat.user_two_username.toString()
-                    }else{
-                        chat_name=chat.user_one_username.toString()
 
-                    }
-                }
-                var chat_image = chat.imageUrl.toString()
-                if (chat.type.equals("duo")){
-                    if(chat.user_one_profile_pic== UserData.user!!.pictureUrl){
-                        chat_image=chat.user_two_profile_pic.toString()
-                    }else{
-                        chat_image=chat.user_one_profile_pic.toString()
-
-                    }
-                }
+                val (chat_name, chat_image)=  getChatNameAndImage(chat)
 
                 ChatItem(
                 image=chat_image,

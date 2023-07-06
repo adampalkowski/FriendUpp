@@ -377,7 +377,9 @@ class UserViewModel @Inject constructor(
     fun setCurrentUser(user: User) {
         _currentUserProfile.value = user
     }
-
+    fun setUserData(user: User) {
+        UserData.user=user
+    }
     fun getUser(id: String) {
         viewModelScope.launch {
             repo.getUser(id).collect { response ->
@@ -466,6 +468,28 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    fun checkIfUsernameExists( username: String) {
+        viewModelScope.launch {
+            repo.getUserByUsername(username).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        _isUsernameAddedFlow.value =
+                            Response.Failure(
+                                e = SocialException(
+                                    "addUsernameToUser error user with same username has been found",
+                                    Exception()
+                                )
+                            )
+                    }
+                    is Response.Failure -> {
+                        _isUsernameAddedFlow.value =Response.Success(null)
+                    }
+                    else -> {}
+                }
+            }
+
+        }
+    }
 
     fun validateUser(firebaseUser: FirebaseUser) {
         val id: String = firebaseUser.uid

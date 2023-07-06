@@ -816,7 +816,9 @@ fun createGroup(
         numberOfActivities = 1,
         public = public,
         reports = 0,
-        blocked = false
+        blocked = false,
+        user_one_id = null,
+        user_two_id = null,
     )
     chatViewModel.addChatCollection(chat, group_picture, onFinished = { picture ->
         if (picture.isEmpty()) {
@@ -870,7 +872,9 @@ fun createGroupAlone(
         numberOfActivities = 1,
         public = public,
         reports = 0,
-        blocked = false
+        blocked = false,
+        user_one_id = null,
+        user_two_id = null
 
     )
     chatViewModel.addGroupAlone(chat, image, onFinished = { picture ->
