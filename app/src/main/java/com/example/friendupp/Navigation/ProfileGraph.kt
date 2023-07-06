@@ -23,6 +23,7 @@ import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ChatEvents
+import com.example.friendupp.Drawer.JoinedActivitiesEvents
 import com.example.friendupp.Groups.GroupItemEvent
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeViewModel
@@ -327,6 +328,18 @@ fun NavGraphBuilder.profileGraph(
                                 }
 
 
+                            }
+                            is ProfileEvents.Bookmark -> {
+                                activityViewModel.bookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is ProfileEvents.UnBookmark -> {
+                                activityViewModel.unBookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
                             }
                             is ProfileEvents.OpenCamera -> {
                                 navController.navigate("CameraProfile")
@@ -861,6 +874,7 @@ fun NavGraphBuilder.profileGraph(
                                     "User " + event.user_id + " invited ", Toast.LENGTH_LONG
                                 ).show()
                             }
+
                             is ProfileDisplayEvents.UnBlock -> {
                                 userViewModel.removeBlockedIdFromUser(
                                     UserData.user!!.id,
@@ -882,6 +896,13 @@ fun NavGraphBuilder.profileGraph(
                             }
                             is ProfileDisplayEvents.GoToSearch -> {
                                 navController.navigate("Search")
+                            }
+                            is ProfileDisplayEvents.Bookmark -> {
+                                activityViewModel.bookMarkActivity(event.id,UserData.user!!.id)
+                            }
+                            is ProfileDisplayEvents.UnBookmark -> {
+                              activityViewModel.unBookMarkActivity(event.id,UserData.user!!.id)
+
                             }
                             is ProfileDisplayEvents.GoToFriendList -> {
                                 navController.navigate("FriendList")

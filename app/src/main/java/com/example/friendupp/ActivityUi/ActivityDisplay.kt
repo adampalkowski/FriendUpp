@@ -40,6 +40,8 @@ sealed class ActivityEvents{
     class Expand(val activity:Activity):ActivityEvents()
     class Join(val id :String):ActivityEvents()
     class Leave(val id :String):ActivityEvents()
+    class Bookmark(val id :String):ActivityEvents()
+    class UnBookmark(val id :String):ActivityEvents()
     class OpenChat(val id :String):ActivityEvents()
     class GoToProfile(val id :String):ActivityEvents()
 }
@@ -191,11 +193,14 @@ fun activityItem(
                 )
                 var joined=activity.participants_ids.contains(UserData.user!!.id)
                 var switch by remember { mutableStateOf(joined) }
+                var bookmarked=activity.bookmarked.contains(UserData.user!!.id)
+                var bookmark by remember { mutableStateOf(bookmarked) }
+
 
                 buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,
                     joined=switch,joinChanged={it->
                     switch=it
-                },activity.participants_profile_pictures)
+                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it})
 
             }
         }

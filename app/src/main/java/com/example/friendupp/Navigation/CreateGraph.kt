@@ -295,7 +295,7 @@ fun NavGraphBuilder.createGraph(
                         val date = LocalDateTime.now().format(formatterDate)
                         currentActivity.value = currentActivity.value.copy(
                             creation_time = getCurrentUTCTime(),
-                            date = date
+                            date = date,
                         )
                         if (currentActivity.value.location != null) {
 

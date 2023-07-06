@@ -5,6 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -98,7 +102,18 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     event.id,
                                     UserData.user!!
                                 )
-
+                            }
+                            is JoinedActivitiesEvents.Bookmark -> {
+                                activityViewModel.bookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+                            is JoinedActivitiesEvents.UnBookmark -> {
+                                activityViewModel.unBookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
                             }
                             is JoinedActivitiesEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
@@ -115,6 +130,8 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                 homeViewModel.setExpandedActivity(event.activityData)
                                 navController.navigate("ActivityPreview")
                             }
+                            else->{}
+
                         }
 
                     },activityViewModel)
@@ -125,6 +142,20 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
                             is CreatedActivitiesEvents.GoToProfile->{
                                 navController.navigate("ProfileDisplay/"+event.id)
+                            }
+                            is CreatedActivitiesEvents.Bookmark -> {
+                                activityViewModel.bookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+
+                            }
+                            is CreatedActivitiesEvents.UnBookmark -> {
+                                activityViewModel.unBookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+
                             }
                             is CreatedActivitiesEvents.JoinActivity -> {
                                 activityViewModel.likeActivity(
@@ -143,6 +174,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     UserData.user!!.id
                                 )
                             }
+
                             is CreatedActivitiesEvents.ExpandActivity -> {
                                 Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
                                 homeViewModel.setExpandedActivity(event.activityData)
@@ -152,6 +184,63 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                     },activityViewModel)
 
+                }
+                "Bookmarked"->{
+                    val call = rememberSaveable{
+                        mutableStateOf(true)
+                    }
+                    LaunchedEffect(call){
+                        if(call.value){
+                            activityViewModel.getBookmarkedActivities(UserData.user!!.id)
+                            call.value=false
+                        }else{}
+                    }
+                    BookmarkedScreen(onEvent={event->
+                        when(event){
+                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
+                            is CreatedActivitiesEvents.GoToProfile->{
+                                navController.navigate("ProfileDisplay/"+event.id)
+                            }
+                            is CreatedActivitiesEvents.Bookmark -> {
+                                activityViewModel.bookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+
+                            }
+                            is CreatedActivitiesEvents.UnBookmark -> {
+                                activityViewModel.unBookMarkActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+
+                            }
+                            is CreatedActivitiesEvents.JoinActivity -> {
+                                activityViewModel.likeActivity(
+                                    event.id,
+                                    UserData.user!!
+                                )
+
+                            }
+                            is CreatedActivitiesEvents.OpenChat -> {
+                                navController.navigate("ChatItem/" + event.id)
+
+                            }
+                            is CreatedActivitiesEvents.LeaveActivity -> {
+                                activityViewModel?.unlikeActivity(
+                                    event.id,
+                                    UserData.user!!.id
+                                )
+                            }
+
+                            is CreatedActivitiesEvents.ExpandActivity -> {
+                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
+                                homeViewModel.setExpandedActivity(event.activityData)
+                                navController.navigate("ActivityPreview")
+                            }
+                        }
+
+                    },activityViewModel)
                 }
                 "ForYou"->{
                     NotificationScreen(onEvent = {event->

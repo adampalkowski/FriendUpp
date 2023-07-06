@@ -66,6 +66,8 @@ sealed class ProfileEvents {
     object OpenCamera : ProfileEvents()
     class ExpandActivity(val activityData: Activity) : ProfileEvents()
     class JoinActivity(val id: String) : ProfileEvents()
+    class UnBookmark(val id: String) : ProfileEvents()
+    class Bookmark(val id: String) : ProfileEvents()
     class GoToProfile(val id: String) : ProfileEvents()
     class LeaveActivity(val id: String) : ProfileEvents()
     class OpenChat(val id: String) : ProfileEvents()
@@ -636,6 +638,12 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileEvent
         }
         is ActivityEvents.GoToProfile->{
             onEvent(ProfileEvents.GoToProfile(event.id))
+        }
+        is ActivityEvents.Bookmark->{
+            onEvent(ProfileEvents.Bookmark(event.id))
+        }
+        is ActivityEvents.UnBookmark->{
+            onEvent(ProfileEvents.UnBookmark(event.id))
         }
     }
 }

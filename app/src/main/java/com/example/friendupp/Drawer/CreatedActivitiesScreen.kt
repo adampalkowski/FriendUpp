@@ -26,6 +26,8 @@ sealed class CreatedActivitiesEvents{
     object GoBack:CreatedActivitiesEvents()
     class ExpandActivity(val activityData: Activity) : CreatedActivitiesEvents()
     class JoinActivity(val id: String) : CreatedActivitiesEvents()
+    class UnBookmark(val id: String) : CreatedActivitiesEvents()
+    class Bookmark(val id: String) : CreatedActivitiesEvents()
     class GoToProfile(val id: String) : CreatedActivitiesEvents()
     class LeaveActivity(val id: String) : CreatedActivitiesEvents()
     class OpenChat(val id: String) : CreatedActivitiesEvents()
@@ -86,7 +88,7 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
 
 }
 
-private fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActivitiesEvents) -> Unit) {
+fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActivitiesEvents) -> Unit) {
     when (event) {
         is ActivityEvents.Expand -> {
             onEvent(CreatedActivitiesEvents.ExpandActivity(event.activity))
@@ -102,6 +104,12 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActiv
         }
         is ActivityEvents.GoToProfile->{
             onEvent(CreatedActivitiesEvents.GoToProfile(event.id))
+        }
+        is ActivityEvents.Bookmark->{
+            onEvent(CreatedActivitiesEvents.Bookmark(event.id))
+        }
+        is ActivityEvents.UnBookmark->{
+            onEvent(CreatedActivitiesEvents.UnBookmark(event.id))
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.friendupp.ActivityUi
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -51,8 +52,10 @@ sealed class ActivityPreviewEvents{
     class OpenChat(val id:String):ActivityPreviewEvents()
     class Leave(val id:String):ActivityPreviewEvents()
     class Join(val id:String):ActivityPreviewEvents()
+    class UnBookmark(val id:String):ActivityPreviewEvents()
+    class Bookmark(val id:String):ActivityPreviewEvents()
 }
-
+val TAG="ActivityPrewviewDebug"
 /*
 * Activity Preview screen
 * Date, time, title, description, profile info, check chat bookmark buttons, activity image, activity settings, creation date, creator,participants, location
@@ -81,6 +84,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                     .fillMaxWidth()
                     .heightIn(0.dp, 300.dp)){
                     if(activity!!.image!=null){
+                        Log.d(TAG,"image ")
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(activity!!.image)
@@ -93,6 +97,8 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 
                         )
                     }else if (activity.lat!=null){
+                        Log.d(TAG,"map")
+
                         displayMap=true
                     }
                     if(displayMap){
@@ -109,7 +115,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                     },mapIsDisplay=displayMap,imageAvaiable=activity.image!=null)
                 }
 
-                    Column(    modifier = Modifier
+                    Column( modifier = Modifier
                         .graphicsLayer { translationY = -50f }
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
@@ -142,13 +148,15 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 
             }
             var joined=activity?.participants_ids!!.contains(UserData.user!!.id)
+            var bookmarked=activity.bookmarked!!.contains(UserData.user!!.id)
 
             var switch by remember { mutableStateOf(joined) }
+            var bookmark by remember { mutableStateOf(bookmarked) }
 
-            ActivityPreviewButtonRow(onEvent = {},modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
+            ActivityPreviewButtonRow(onEvent = onEvent,modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
                 joined=switch,joinChanged={it->
                     switch=it
-                })
+                }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark)
         }
     }
 
@@ -383,9 +391,12 @@ fun TransButton(onClick: () -> Unit, icon: Int) {
 @Composable
 fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->Unit,id:String,
                              joined: Boolean = false,
-                             joinChanged: (Boolean) -> Unit,){
+                             joinChanged: (Boolean) -> Unit,
+                             bookmarked: Boolean = false,
+                             bookmarkChanged: (Boolean) -> Unit,
+){
 
-    var bookmarked by remember { mutableStateOf(false) }
+
 
     Column(modifier.background(Color.Transparent)) {
             Row( modifier = Modifier
@@ -394,7 +405,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                 Spacer(modifier = Modifier.height(1.dp).weight(1f).background(SocialTheme.colors.uiBorder))
                 ActionButtonDefault(
                     icon = R.drawable.ic_check_300,
-                    isSelected = false,
+                    isSelected = joined,
                     onClick =  {
                         if (joined) {
                             onEvent(ActivityPreviewEvents.Leave(id))
@@ -418,8 +429,17 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
 
                 ActionButtonDefault(
                     icon = R.drawable.ic_bookmark_300,
-                    isSelected = false,
-                    onClick =  {}
+                    isSelected = bookmarked,
+                    onClick =  {
+                        if (bookmarked) {
+                            onEvent(ActivityPreviewEvents.UnBookmark(id))
+                            bookmarkChanged(false)
+                        } else {
+                            onEvent(ActivityPreviewEvents.Bookmark(id))
+                            bookmarkChanged(true)
+
+                        }
+                    }
                 )
           /*      ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)*/
                 Spacer(modifier = Modifier.height(1.dp).width(24.dp).background(SocialTheme.colors.uiBorder))

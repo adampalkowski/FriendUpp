@@ -69,6 +69,11 @@ class ActivityViewModel @Inject constructor(
     private val _activitiesListState = mutableStateOf<Response<List<Activity>>?>(null)
     val activitiesListState: State<Response<List<Activity>>?> = _activitiesListState
 
+    private val _bookmarkedActivitiesState = mutableStateOf<Response<List<Activity>>?>(null)
+    val bookmarkedActivitiesState: State<Response<List<Activity>>?> = _bookmarkedActivitiesState
+    private val _moreBookmarkedActivitiesState = mutableStateOf<Response<List<Activity>>?>(null)
+    val moreBookmarkedActivitiesState: State<Response<List<Activity>>?> = _moreBookmarkedActivitiesState
+
     private val _moreActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val moreActivitiesListState: State<Response<List<Activity>>> = _moreActivitiesListState
 
@@ -97,6 +102,11 @@ class ActivityViewModel @Inject constructor(
 
     private val _isActivityDeletedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isActivityDeletedState: State<Response<Void?>> = _isActivityDeletedState
+    private val _isActivityBookmarked = mutableStateOf<Response<Void?>>(Response.Success(null))
+    val isActivityBookmarked: State<Response<Void?>> = _isActivityBookmarked
+
+    private val _isActivityUnBookmarked = mutableStateOf<Response<Void?>>(Response.Success(null))
+    val isActivityUnBookmarked: State<Response<Void?>> = _isActivityUnBookmarked
     private val _isChatDeleted = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isChatDeleted: State<Response<Void?>> = _isChatDeleted
 
@@ -364,6 +374,99 @@ class ActivityViewModel @Inject constructor(
         }
 
     }
+    fun getBookmarkedActivities(id: String?) {
+        _bookmarkedActivitiesState.value=Response.Loading
+        Log.d("ActivityLoadInDebug", "First get bookmarked call")
+        if (id == null) {
+            _bookmarkedActivitiesState.value = Response.Failure(
+                SocialException(
+                    "getBookmarkedActivities error id is null",
+                    Exception()
+                )
+            )
+        } else {
+            viewModelScope.launch {
+                val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+                repo.getBookmarkedActivities(id).collect { response ->
+                    when (response) {
+                        is Response.Success -> {
+                            response.data.forEach {
+                                list_without_removed_activites.add(it)
+                                /*todo if it.date is not a date there is error what then*/
+
+                                checkIfDelete(
+                                    it.end_time,
+                                    deleteActivity = {
+                                        Log.d("getActivitiesForUser", "delete activity")
+                                        deleteActivity(it.id)
+                                        deleteChat(it.id)
+                                        list_without_removed_activites.remove(it)
+                                    })
+
+                                _bookmarkedActivitiesState.value =
+                                    Response.Success(list_without_removed_activites as List<Activity>)
+                            }
+                        }
+                        is Response.Failure -> {
+                            _bookmarkedActivitiesState.value = response
+                        }
+                        is Response.Loading -> {
+                            _bookmarkedActivitiesState.value = response
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+    }
+
+    fun getMoreBookmarkedActivities(id: String?) {
+
+        if (id == null) {
+            _moreBookmarkedActivitiesState.value = Response.Failure(
+                SocialException(
+                    "getMoreBookmarkedActivities error id is null",
+                    Exception()
+                )
+            )
+        } else {
+            viewModelScope.launch {
+                val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+                repo.getMoreBookmarkedActivities(id).collect { response ->
+                    when (response) {
+                        is Response.Success -> {
+                            response.data.forEach {
+                                list_without_removed_activites.add(it)
+                                checkIfDelete(
+                                    it.end_time,
+                                    deleteActivity = {
+                                        Log.d("getActivitiesForUser", "delete activity")
+                                        deleteActivity(it.id)
+                                        deleteChat(it.id)
+                                        list_without_removed_activites.remove(it)
+                                    })
+
+
+                                _moreBookmarkedActivitiesState.value =
+                                    Response.Success(list_without_removed_activites as List<Activity>)
+                            }
+                        }
+                        is Response.Failure -> {
+                            _moreBookmarkedActivitiesState.value = response
+                        }
+                        is Response.Loading -> {
+                            _moreBookmarkedActivitiesState.value = response
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+    }
     fun getActivitiesForUser(id: String?) {
         _activitiesListState.value=Response.Loading
         Log.d("ActivityLoadInDebug", "First get activity call")
@@ -514,6 +617,21 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             repo.likeActivity(id, user).collect { response ->
                 _isActivityDeletedState.value = response
+            }
+        }
+    }
+
+    fun bookMarkActivity(activity_id: String, user_id:String) {
+        viewModelScope.launch {
+            repo.bookMarkActivity(activity_id, user_id).collect { response ->
+                _isActivityBookmarked.value = response
+            }
+        }
+    }
+    fun unBookMarkActivity(activity_id: String, user_id:String) {
+        viewModelScope.launch {
+            repo.unBookMarkActivity(activity_id, user_id).collect { response ->
+                _isActivityUnBookmarked.value = response
             }
         }
     }

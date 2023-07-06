@@ -29,6 +29,7 @@ sealed class DrawerEvents{
     object GoToTrending:DrawerEvents()
     object GoToJoined:DrawerEvents()
     object GoToCreated:DrawerEvents()
+    object GoToBookmarked:DrawerEvents()
     object GoToForYou:DrawerEvents()
     object GoToGroups:DrawerEvents()
     object GoToRate:DrawerEvents()
@@ -75,6 +76,9 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
         }
         SettingsItem(label = "Created", icon = R.drawable.ic_history) {
             onEvent(DrawerEvents.GoToCreated)
+        }
+        SettingsItem(label = "Bookmarked", icon = R.drawable.ic_bookmark_300) {
+            onEvent(DrawerEvents.GoToBookmarked)
         }
      /*   SettingsItem(label = "For you", icon = R.drawable.ic_recommend) {
             onEvent(DrawerEvents.GoToForYou)

@@ -69,6 +69,8 @@ sealed class HomeEvents {
     object CreateLive : HomeEvents()
     class ExpandActivity(val activityData: Activity) : HomeEvents()
     class JoinActivity(val id: String) : HomeEvents()
+    class Bookmark(val id: String) : HomeEvents()
+    class UnBookmark(val id: String) : HomeEvents()
     class LeaveActivity(val id: String) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
     class GoToProfile(val id: String) : HomeEvents()
@@ -659,8 +661,10 @@ fun buttonsRow(
     joined: Boolean = false,
     joinChanged: (Boolean) -> Unit,
     profilePictures: HashMap<String, String>,
+    bookmarked:Boolean=false,
+    bookmarkedChanged:(Boolean)->Unit
 ) {
-    var bookmarked by remember { mutableStateOf(false) }
+
     val bookmarkColor: Color by animateColorAsState(
         if (bookmarked) Color(0xFF00CCDF) else SocialTheme.colors.iconPrimary,
         animationSpec = tween(1000, easing = LinearEasing)
@@ -731,7 +735,15 @@ fun buttonsRow(
             eButtonSimple(
                 icon = R.drawable.ic_bookmark_300,
                 onClick = {
-                    bookmarked = !bookmarked
+                    if (bookmarked) {
+                        onEvent(ActivityEvents.UnBookmark(id))
+                        bookmarkedChanged(false)
+
+                    } else {
+                        onEvent(ActivityEvents.Bookmark(id))
+                        bookmarkedChanged(true)
+
+                    }
                 },
                 iconColor = bookmarkColor,
                 selected = bookmarked,
@@ -919,5 +931,12 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (HomeEvents) 
         is ActivityEvents.GoToProfile->{
             onEvent(HomeEvents.GoToProfile(event.id))
         }
+        is ActivityEvents.Bookmark->{
+            onEvent(HomeEvents.Bookmark(event.id))
+        }
+        is ActivityEvents.UnBookmark->{
+            onEvent(HomeEvents.UnBookmark(event.id))
+        }
+
     }
 }

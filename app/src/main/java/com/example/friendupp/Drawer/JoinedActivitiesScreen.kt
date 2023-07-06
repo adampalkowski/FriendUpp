@@ -23,6 +23,8 @@ sealed class JoinedActivitiesEvents{
     object GoBack:JoinedActivitiesEvents()
     class ExpandActivity(val activityData: Activity) : JoinedActivitiesEvents()
     class JoinActivity(val id: String) : JoinedActivitiesEvents()
+    class Bookmark(val id: String) : JoinedActivitiesEvents()
+    class UnBookmark(val id: String) : JoinedActivitiesEvents()
     class GoToProfile(val id: String) : JoinedActivitiesEvents()
     class LeaveActivity(val id: String) : JoinedActivitiesEvents()
     class OpenChat(val id: String) : JoinedActivitiesEvents()
@@ -94,6 +96,12 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (JoinedActivi
         }
         is ActivityEvents.GoToProfile->{
             onEvent(JoinedActivitiesEvents.GoToProfile(event.id))
+        }
+        is ActivityEvents.Bookmark->{
+            onEvent(JoinedActivitiesEvents.Bookmark(event.id))
+        }
+        is ActivityEvents.UnBookmark->{
+            onEvent(JoinedActivitiesEvents.UnBookmark(event.id))
         }
     }
 }

@@ -241,6 +241,18 @@ fun NavGraphBuilder.mainGraph(
                             UserData.user!!.id
                         )
                     }
+                    is HomeEvents.UnBookmark -> {
+                        activityViewModel.unBookMarkActivity(
+                            event.id,
+                            UserData.user!!.id
+                        )
+                    }
+                    is HomeEvents.Bookmark -> {
+                        activityViewModel?.bookMarkActivity(
+                            event.id,
+                            UserData.user!!.id
+                        )
+                    }
                     is HomeEvents.ExpandActivity -> {
                         Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
                         homeViewModel.setExpandedActivity(event.activityData)
@@ -387,6 +399,20 @@ fun NavGraphBuilder.mainGraph(
                         activityViewModel.likeActivity(
                             event.id,
                             UserData.user!!
+                        )
+
+                    }
+                    is ActivityPreviewEvents.Bookmark -> {
+                        activityViewModel.bookMarkActivity(
+                            event.id,
+                            UserData.user!!.id
+                        )
+
+                    }
+                    is ActivityPreviewEvents.UnBookmark -> {
+                        activityViewModel.unBookMarkActivity(
+                            event.id,
+                            UserData.user!!.id
                         )
 
                     }

@@ -142,6 +142,12 @@ fun NavigationComponent(
                             navController.navigate("Drawer/Created")
                         }
                     }
+                    is DrawerEvents.GoToBookmarked -> {
+                        coroutineScope.launch {
+                            scaffoldState.drawerState.close()
+                            navController.navigate("Drawer/Bookmarked")
+                        }
+                    }
                     is DrawerEvents.GoToForYou -> {
                         coroutineScope.launch {
                             scaffoldState.drawerState.close()

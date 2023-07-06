@@ -39,6 +39,7 @@ class ActivityRepositoryImpl @Inject constructor(
     private var lastVisibleData: DocumentSnapshot? = null
     private var lastVisibleActiveUserData: DocumentSnapshot? = null
     private var lastVisibleUserData: DocumentSnapshot? = null
+    private var lastVisibleBookmarkedData: DocumentSnapshot? = null
     private var lastVisibleJoinedData: DocumentSnapshot? = null
     private var lastVisibleDataForUserProfile: DocumentSnapshot? = null
     private var lastVisibleClosestData: DocumentSnapshot? = null
@@ -46,6 +47,7 @@ class ActivityRepositoryImpl @Inject constructor(
     private var loaded_public_activities: ArrayList<Activity> = ArrayList()
     private var loaded_user_activities: ArrayList<Activity> = ArrayList()
     private var loaded_active_users: ArrayList<ActiveUser> = ArrayList()
+    private var loaded_bookmarked_activities: ArrayList<ActiveUser> = ArrayList()
     override suspend fun getClosestFilteredActivities(
         lat: Double,
         lng: Double,
@@ -394,6 +396,28 @@ class ActivityRepositoryImpl @Inject constructor(
                 user.username,
                 "participants_ids",
                 FieldValue.arrayUnion(user.id)
+            ).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
+        }
+    }
+    override suspend fun bookMarkActivity(activity_id: String, user_id: String): Flow<Response<Void?>> = flow {
+        try {
+            emit(Response.Loading)
+            val update = activitiesRef.document(activity_id).update(
+                "bookmarked", FieldValue.arrayUnion(user_id)
+            ).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
+        }
+    }
+    override suspend fun unBookMarkActivity(activity_id: String, user_id: String): Flow<Response<Void?>> = flow {
+        try {
+            emit(Response.Loading)
+            val update = activitiesRef.document(activity_id).update(
+                "bookmarked", FieldValue.arrayRemove(user_id)
             ).await()
             emit(Response.Success(update))
         } catch (e: Exception) {
@@ -801,6 +825,85 @@ class ActivityRepositoryImpl @Inject constructor(
                             Response.Failure(
                                 e = SocialException(
                                     message = "failed to get more activities",
+                                    e = Exception()
+                                )
+                            )
+                        )
+                    }
+
+                }
+            awaitClose {
+            }
+        }
+
+    override suspend fun getBookmarkedActivities(id: String): Flow<Response<List<Activity>>> =
+        callbackFlow {
+
+            activitiesRef.whereArrayContains("bookmarked", id)
+                .orderBy("start_time", Query.Direction.DESCENDING).limit(5).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documents = task.result?.documents
+                        if (documents != null && documents.isNotEmpty()) {
+                            val newActivities = ArrayList<Activity>()
+                            for (document in documents) {
+                                val activity = document.toObject<Activity>()
+                                if (activity != null) {
+                                    newActivities.add(activity)
+                                }
+                            }
+
+                            lastVisibleBookmarkedData = documents[documents.size - 1]
+                            trySend(Response.Success(newActivities))
+
+                        }
+                    } else {
+                        // There are no more messages to load
+                        trySend(
+                            Response.Failure(
+                                e = SocialException(
+                                    message = "failed to get bookmarked ",
+                                    e = Exception()
+                                )
+                            )
+                        )
+                    }
+
+                }
+            awaitClose {
+            }
+        }
+
+    override suspend fun getMoreBookmarkedActivities(id: String): Flow<Response<List<Activity>>> =
+        callbackFlow {
+            Log.d("HOMESCREENTEST", "getMoreBookmarkedActivities")
+
+            activitiesRef.whereArrayContains("bookmarked", id)
+                .orderBy("start_time", Query.Direction.DESCENDING)
+                .startAfter(lastVisibleBookmarkedData?.data?.get("start_time")).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val documents = task.result?.documents
+                        if (documents != null && documents.isNotEmpty()) {
+                            val newActivities = ArrayList<Activity>()
+                            for (document in documents) {
+                                val activity = document.toObject<Activity>()
+                                if (activity != null) {
+                                    newActivities.add(activity)
+                                }
+                            }
+
+
+                            lastVisibleBookmarkedData = documents[documents.size - 1]
+                            trySend(Response.Success(newActivities))
+
+                        }
+                    } else {
+                        // There are no more messages to load
+                        trySend(
+                            Response.Failure(
+                                e = SocialException(
+                                    message = "failed to get more bookmarked activities",
                                     e = Exception()
                                 )
                             )
