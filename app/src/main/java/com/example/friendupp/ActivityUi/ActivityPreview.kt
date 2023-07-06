@@ -40,6 +40,7 @@ import com.example.friendupp.Profile.ProfileDisplaySettingsItem
 import com.example.friendupp.Profile.ProfilePickerItem
 import com.example.friendupp.Profile.TagDivider
 import com.example.friendupp.TimeFormat.getFormattedDateNoSeconds
+import com.example.friendupp.model.UserData
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -47,6 +48,9 @@ import com.google.maps.android.compose.*
 sealed class ActivityPreviewEvents{
     object GoBack:ActivityPreviewEvents()
     class ShareActivityLink(val link:String):ActivityPreviewEvents()
+    class OpenChat(val id:String):ActivityPreviewEvents()
+    class Leave(val id:String):ActivityPreviewEvents()
+    class Join(val id:String):ActivityPreviewEvents()
 }
 
 /*
@@ -137,8 +141,14 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                 Spacer(modifier = Modifier.height(128.dp))
 
             }
+            var joined=activity?.participants_ids!!.contains(UserData.user!!.id)
 
-            ActivityPreviewButtonRow(onEvent = {},modifier=Modifier.align(Alignment.BottomCenter))
+            var switch by remember { mutableStateOf(joined) }
+
+            ActivityPreviewButtonRow(onEvent = {},modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
+                joined=switch,joinChanged={it->
+                    switch=it
+                })
         }
     }
 
@@ -371,10 +381,11 @@ fun TransButton(onClick: () -> Unit, icon: Int) {
 
 
 @Composable
-fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->Unit){
+fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->Unit,id:String,
+                             joined: Boolean = false,
+                             joinChanged: (Boolean) -> Unit,){
 
     var bookmarked by remember { mutableStateOf(false) }
-    var joined by remember { mutableStateOf(false) }
 
     Column(modifier.background(Color.Transparent)) {
             Row( modifier = Modifier
@@ -384,14 +395,23 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                 ActionButtonDefault(
                     icon = R.drawable.ic_check_300,
                     isSelected = false,
-                    onClick =  {joined=!joined}
+                    onClick =  {
+                        if (joined) {
+                            onEvent(ActivityPreviewEvents.Leave(id))
+                            joinChanged(false)
+                        } else {
+                            onEvent(ActivityPreviewEvents.Join(id))
+                            joinChanged(true)
+
+                        }
+                    }
                 )
                /* ActivityPreviewButtonRowItem(icon=R.drawable.ic_check_300, onClick = {joined=!joined}, selected = joined )*/
                 Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
                 ActionButtonDefault(
                     icon = R.drawable.ic_chat_300,
                     isSelected = false,
-                    onClick =  {joined=!joined}
+                    onClick =  {onEvent(ActivityPreviewEvents.OpenChat(id)) }
                 )
               /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
                 Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
@@ -399,7 +419,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                 ActionButtonDefault(
                     icon = R.drawable.ic_bookmark_300,
                     isSelected = false,
-                    onClick =  {joined=!joined}
+                    onClick =  {}
                 )
           /*      ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)*/
                 Spacer(modifier = Modifier.height(1.dp).width(24.dp).background(SocialTheme.colors.uiBorder))

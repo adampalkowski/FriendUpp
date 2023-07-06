@@ -1,6 +1,7 @@
 package com.example.friendupp.ActivityUi
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -149,11 +150,11 @@ fun activityItem(
     onClick:()->Unit,
     onEvent:(ActivityEvents)->Unit
 ) {
-
+        val context = LocalContext.current
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 0.dp)
+                .padding(top = 0.dp).clickable(onClick = {Toast.makeText(context,activity.id,Toast.LENGTH_SHORT).show()})
         ) {
             Column() {
                 TimeIndicator(time = activity.start_time,tags=activity.tags)
@@ -191,7 +192,8 @@ fun activityItem(
                 var joined=activity.participants_ids.contains(UserData.user!!.id)
                 var switch by remember { mutableStateOf(joined) }
 
-                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,joined=switch,joinChanged={it->
+                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,
+                    joined=switch,joinChanged={it->
                     switch=it
                 },activity.participants_profile_pictures)
 

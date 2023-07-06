@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
@@ -30,7 +31,9 @@ sealed class ActivityEvent {
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
-    private val repo: ActivityRepository
+    private val repo: ActivityRepository,
+    private val chatRepo: ChatRepository,
+
 ) : ViewModel() {
     var openDialogState = mutableStateOf(false)
     private val _location = MutableStateFlow<LatLng?>(null)
@@ -94,6 +97,8 @@ class ActivityViewModel @Inject constructor(
 
     private val _isActivityDeletedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isActivityDeletedState: State<Response<Void?>> = _isActivityDeletedState
+    private val _isChatDeleted = mutableStateOf<Response<Void?>>(Response.Success(null))
+    val isChatDeleted: State<Response<Void?>> = _isChatDeleted
 
     private val _isInviteAddedToActivity = mutableStateOf<Response<Void?>?>(Response.Success(null))
     val isInviteAddedToActivity: State<Response<Void?>?> = _isInviteAddedToActivity
@@ -140,18 +145,16 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                           /*val time_left: String = calculateTimeLeft(
-                                it.date,
-                                it.start_time,
-                                deleteActivity = { event ->
-                                    Log.d("getClosestActivities", "delete activity")
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
                                     deleteActivity(it.id)
-                                    it.participants_ids.forEach{user_id->
-                                        deleteActivityFromUser(user_id,it.id)
-                                    }
+                                    deleteChat(it.id)
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left*/
+
+
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -181,18 +184,16 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                           /* val time_left: String = calculateTimeLeft(
-                                it.date,
-                                it.start_time,
-                                deleteActivity = { event ->
-                                    Log.d("getClosestActivities", "delete activity")
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
                                     deleteActivity(it.id)
-                                    it.participants_ids.forEach{user_id->
-                                        deleteActivityFromUser(user_id,it.id)
-                                    }
+                                    deleteChat(it.id)
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left*/
+
+
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -220,18 +221,15 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                           /* val time_left: String = calculateTimeLeft(
-                                it.date,
-                                it.start_time,
-                                deleteActivity = { event ->
-                                    Log.d("getClosestActivities", "delete activity")
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
                                     deleteActivity(it.id)
-                                    it.participants_ids.forEach{user_id->
-                                        deleteActivityFromUser(user_id,it.id)
-                                    }
+                                    deleteChat(it.id)
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left*/
+
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -267,18 +265,15 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActivities",it.toString())
                             list_without_removed_activites.add(it)
-                           /* val time_left: String = calculateTimeLeft(
-                                it.date,
-                                it.start_time,
-                                deleteActivity = { event ->
-                                    Log.d("getClosestActivities", "delete activity")
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
                                     deleteActivity(it.id)
-                                    it.participants_ids.forEach{user_id->
-                                        deleteActivityFromUser(user_id,it.id)
-                                    }
+                                    deleteChat(it.id)
                                     list_without_removed_activites.remove(it)
                                 })
-                            it.time_left = time_left*/
+
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _moreclosestActivitiesListState.value =
@@ -302,14 +297,18 @@ class ActivityViewModel @Inject constructor(
             repo.getActivity(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                           /* val time_left: String = calculateTimeLeft(
-                                response.data.date,
-                                response.data.start_time,
-                                deleteActivity = { event ->
-                                    deleteActivity(response.data.id)
-                                })
-                            response.data.time_left = time_left*/
-                            _activityState.value = response
+                        checkIfDelete(
+                            response.data
+                                .end_time,
+                            deleteActivity = {
+                                Log.d("getActivitiesForUser", "delete activity")
+                                deleteActivity(   response.data.id)
+                                deleteChat(   response.data.id)
+
+                            })
+
+
+                        _activityState.value = response
                         }   else->{}
 
                 }
@@ -336,19 +335,15 @@ class ActivityViewModel @Inject constructor(
                     when (response) {
                         is Response.Success -> {
                             response.data.forEach {
-                                list_without_removed_activites.add(it)/*
-                                val time_left: String = calculateTimeLeft(
-                                    it.date,
-                                    it.start_time,
-                                    deleteActivity = { event ->
-                                        Log.d("activityViewModel", "delete activity")
+                                list_without_removed_activites.add(it)
+                                checkIfDelete(
+                                    it.end_time,
+                                    deleteActivity = {
+                                        Log.d("getActivitiesForUser", "delete activity")
                                         deleteActivity(it.id)
-                                        it.participants_ids.forEach{user_id->
-                                            deleteActivityFromUser(user_id,it.id)
-                                        }
+                                        deleteChat(it.id)
                                         list_without_removed_activites.remove(it)
                                     })
-                                it.time_left = time_left*/
 
 
                                 _moreActivitiesListState.value =
@@ -389,20 +384,15 @@ class ActivityViewModel @Inject constructor(
                                 list_without_removed_activites.add(it)
                                 /*todo if it.date is not a date there is error what then*/
 
-                            /*    val time_left: String = calculateTimeLeft(
-                                    LocalTime.now().toString(),
-                                    it.start_time,
-                                    deleteActivity = { event ->
+                                 checkIfDelete(
+                                    it.end_time,
+                                    deleteActivity = {
                                         Log.d("getActivitiesForUser", "delete activity")
                                         deleteActivity(it.id)
-                                        it.participants_ids.forEach{user_id->
-                                            deleteActivityFromUser(user_id,it.id)
-                                        }
+                                        deleteChat(it.id)
                                         list_without_removed_activites.remove(it)
                                     })
-                                it.time_left = time_left*/
 
-                                Log.d("getActivitiesForUser","list"+list_without_removed_activites.toString())
                                 _activitiesListState.value =
                                     Response.Success(list_without_removed_activites as List<Activity>)
                             }
@@ -568,6 +558,14 @@ class ActivityViewModel @Inject constructor(
 
         }
     }
+    fun deleteChat(id: String) {
+        viewModelScope.launch {
+            chatRepo.deleteChatCollection(id).collect { response ->
+                _isChatDeleted.value = response
+            }
+
+        }
+    }
     fun getUserActivities(id: String) {
         viewModelScope.launch {
             repo.getUserActivities(id).collect { response ->
@@ -669,18 +667,15 @@ class ActivityViewModel @Inject constructor(
                     is Response.Success -> {
                         response.data.forEach {
                             list_without_removed_activites.add(it)
-                            /* val time_left: String = calculateTimeLeft(
-                                 it.date,
-                                 it.start_time,
-                                 deleteActivity = { event ->
-                                     Log.d("getClosestActivities", "delete activity")
-                                     deleteActivity(it.id)
-                                     it.participants_ids.forEach{user_id->
-                                         deleteActivityFromUser(user_id,it.id)
-                                     }
-                                     list_without_removed_activites.remove(it)
-                                 })
-                             it.time_left = time_left*/
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it.id)
+                                    deleteChat(it.id)
+                                    list_without_removed_activites.remove(it)
+                                })
+
 
                             Log.d("getClosestActivities","getClosestActivities"+"list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -708,18 +703,15 @@ class ActivityViewModel @Inject constructor(
                         response.data.forEach {
                             Log.d("getClosestActimivities",it.toString())
                             list_without_removed_activites.add(it)
-                            /* val time_left: String = calculateTimeLeft(
-                                 it.date,
-                                 it.start_time,
-                                 deleteActivity = { event ->
-                                     Log.d("getClosestActivities", "delete activity")
-                                     deleteActivity(it.id)
-                                     it.participants_ids.forEach{user_id->
-                                         deleteActivityFromUser(user_id,it.id)
-                                     }
-                                     list_without_removed_activites.remove(it)
-                                 })
-                             it.time_left = time_left*/
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it.id)
+                                    deleteChat(it.id)
+                                    list_without_removed_activites.remove(it)
+                                })
+
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
                             _closestActivitiesListState.value =
@@ -737,5 +729,23 @@ class ActivityViewModel @Inject constructor(
 
             }
         }
+    }
+}
+fun checkIfDelete(endTime: String, deleteActivity: () -> Unit) {
+    val currentUtcTime = getCurrentUTCTime()
+    val inputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    inputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+    try {
+        val endDate = inputDateFormat.parse(endTime)
+        val currentDate = inputDateFormat.parse(currentUtcTime)
+
+        if (currentDate != null && endDate != null && currentDate.after(endDate)) {
+            // Delete activity if the current UTC time is after the end time
+            deleteActivity()
+        }
+    } catch (e: Exception) {
+        // Handle parsing or comparison errors
+        e.printStackTrace()
     }
 }

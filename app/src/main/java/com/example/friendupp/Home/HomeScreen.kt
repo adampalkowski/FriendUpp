@@ -167,10 +167,20 @@ fun HomeScreen(
     var itemCount by remember { mutableStateOf(15) }
     fun refresh() = refreshScope.launch {
         refreshing = true
+
+        if (selectedOption.option == Option.FRIENDS) {
+                activityViewModel.getActivitiesForUser(UserData.user!!.id)
+        }else{
+            if(currentLocation!=null){
+
+                activityViewModel.getClosestActivities(
+                    currentLocation?.latitude!!,
+                    currentLocation?.longitude!!,
+                    50.0 * 10000.0f
+                )
+            }
+        }
         delay(1000)
-        /*
-        todo call for acitivites
-        */
         itemCount += 5
         refreshing = false
     }

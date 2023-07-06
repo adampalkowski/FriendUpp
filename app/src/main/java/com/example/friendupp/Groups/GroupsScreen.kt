@@ -190,7 +190,7 @@ fun GroupItem(groupname:String,description:String,numberOfUsers:String,groupPict
                         .data(groupPicture)
                         .crossfade(true)
                         .build(),
-                    placeholder = painterResource(R.drawable.ic_launcher_background),
+                    placeholder = painterResource(R.drawable.ic_group),
                     contentDescription = "stringResource(R.string.description)",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

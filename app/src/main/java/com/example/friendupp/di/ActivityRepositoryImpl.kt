@@ -977,7 +977,6 @@ class ActivityRepositoryImpl @Inject constructor(
                                     newActivities.add(activity)
                                 }
                             }
-                            Log.d("HOMESCREENTEST", documents.size.toString())
 
                             lastVisibleData = documents[documents.size - 1]
                             trySend(Response.Success(newActivities))

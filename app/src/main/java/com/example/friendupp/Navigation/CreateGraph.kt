@@ -270,9 +270,9 @@ fun NavGraphBuilder.createGraph(
                         )
 
                         currentActivity.value = currentActivity.value.copy(
-                            start_time = startTime,
+                            start_time = convertToUTC(startTime) ,
                             image = activityState.imageUrl,
-                            end_time = endTime,
+                            end_time = convertToUTC(endTime) ,
                             title = activityState.titleState.text,
                             description = activityState.descriptionState.text
                         )

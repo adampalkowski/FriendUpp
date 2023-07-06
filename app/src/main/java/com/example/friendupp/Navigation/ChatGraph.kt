@@ -765,3 +765,12 @@ fun getCurrentUTCTime(): String {
     val currentDateTime = Calendar.getInstance().time
     return dateFormat.format(currentDateTime)
 }
+fun convertToUTC(startTime: String): String {
+    val inputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    inputDateFormat.timeZone = TimeZone.getDefault() // Assuming the provided start time is in the local time zone
+    val startDate = inputDateFormat.parse(startTime)
+
+    val outputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    outputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    return outputDateFormat.format(startDate)
+}

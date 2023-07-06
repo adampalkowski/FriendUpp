@@ -383,6 +383,23 @@ fun NavGraphBuilder.mainGraph(
                             Toast.LENGTH_LONG
                         ).show()
                     }
+                    is ActivityPreviewEvents.Join -> {
+                        activityViewModel.likeActivity(
+                            event.id,
+                            UserData.user!!
+                        )
+
+                    }
+                    is ActivityPreviewEvents.OpenChat -> {
+                        navController.navigate("ChatItem/" + event.id)
+
+                    }
+                    is ActivityPreviewEvents.Leave -> {
+                        activityViewModel?.unlikeActivity(
+                            event.id,
+                            UserData.user!!.id
+                        )
+                    }
                 }
             }, homeViewModel = homeViewModel)
         }
