@@ -13,6 +13,7 @@ interface ActivityRepository {
     suspend fun getActivity(id:String) : Flow<Response<Activity>>
     suspend fun getUserActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>>
+    suspend fun updateActivityCustomization(activityId: String,activitySharing:Boolean,disableChat:Boolean,participantConfirmation:Boolean):Flow<Response<Boolean>>
     suspend fun getJoinedActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun getClosestActivities(lat: Double,lng:Double,radius:Double): Flow<Response<List<Activity>>>
     suspend fun getClosestFilteredActivities(lat: Double,lng:Double,tags:ArrayList<String>,radius:Double): Flow<Response<List<Activity>>>
@@ -25,6 +26,7 @@ interface ActivityRepository {
     suspend fun getBookmarkedActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun getMoreJoinedActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun addImageFromGalleryToStorage(id: String,uri: Uri): Flow<Response<String>>
+    suspend fun removeActivityImage(url: String): Flow<Response<Boolean>>
     suspend fun deleteImageFromHighResStorage(id: String): Flow<Response<String>>
     suspend fun deleteActivityImageFromFirestoreActivity(activity_id: String,user_id:String): Flow<Response<String>>
     suspend fun likeActivity(id:String,user: User) : Flow<Response<Void?>>

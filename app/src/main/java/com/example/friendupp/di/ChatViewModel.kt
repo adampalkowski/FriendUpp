@@ -232,11 +232,12 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             val uuid: UUID = UUID.randomUUID()
             val id:String = uuid.toString()
+            Log.d("Createdebug",id)
             if (chatCollection.id!!.isEmpty()||chatCollection.id==null){
                 chatCollection.id=id
             }
             if(url!=null && url.isNotEmpty()){
-                repo.addLoweResImageFromGalleryToStorage(id, url.toUri()).collect{ response ->
+                repo.addImageFromGalleryToStorage(id, url.toUri()).collect{ response ->
                     when(response){
                         is Response.Success ->{
                             chatCollection.create_date= getTime()

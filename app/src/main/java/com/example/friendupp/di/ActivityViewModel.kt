@@ -16,6 +16,7 @@ import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -166,8 +167,7 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
 
@@ -205,8 +205,7 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
 
@@ -242,8 +241,7 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
 
@@ -272,6 +270,12 @@ class ActivityViewModel @Inject constructor(
             }
         }
     }
+     fun updateActivityCustomization(activityId:String,activitySharing:Boolean,disableChat:Boolean,participantConfirmation:Boolean) {
+        viewModelScope.launch {
+            repo.updateActivityCustomization(activityId,activitySharing,disableChat,participantConfirmation).collect { response ->
+            }
+        }
+    }
 
     fun getMoreClosestActivities(lat:Double,lng:Double,radius:Double){
         viewModelScope.launch {
@@ -286,8 +290,7 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
 
@@ -319,8 +322,7 @@ class ActivityViewModel @Inject constructor(
                                 .end_time,
                             deleteActivity = {
                                 Log.d("getActivitiesForUser", "delete activity")
-                                deleteActivity(   response.data.id)
-                                deleteChat(   response.data.id)
+                                deleteActivity(response.data)
 
                             })
 
@@ -357,8 +359,7 @@ class ActivityViewModel @Inject constructor(
                                     it.end_time,
                                     deleteActivity = {
                                         Log.d("getActivitiesForUser", "delete activity")
-                                        deleteActivity(it.id)
-                                        deleteChat(it.id)
+                                        deleteActivity(it)
                                         list_without_removed_activites.remove(it)
                                     })
 
@@ -405,8 +406,7 @@ class ActivityViewModel @Inject constructor(
                                     it.end_time,
                                     deleteActivity = {
                                         Log.d("getActivitiesForUser", "delete activity")
-                                        deleteActivity(it.id)
-                                        deleteChat(it.id)
+                                        deleteActivity(it)
                                         list_without_removed_activites.remove(it)
                                     })
 
@@ -450,8 +450,7 @@ class ActivityViewModel @Inject constructor(
                                     it.end_time,
                                     deleteActivity = {
                                         Log.d("getActivitiesForUser", "delete activity")
-                                        deleteActivity(it.id)
-                                        deleteChat(it.id)
+                                        deleteActivity(it)
                                         list_without_removed_activites.remove(it)
                                     })
 
@@ -498,8 +497,7 @@ class ActivityViewModel @Inject constructor(
                                     it.end_time,
                                     deleteActivity = {
                                         Log.d("getActivitiesForUser", "delete activity")
-                                        deleteActivity(it.id)
-                                        deleteChat(it.id)
+                                        deleteActivity(it)
                                         list_without_removed_activites.remove(it)
                                     })
 
@@ -690,20 +688,50 @@ class ActivityViewModel @Inject constructor(
 
         }
     }
-    fun deleteActivity(id: String) {
+    fun deleteActivity(activity: Activity) {
+        val TAG="DELETEACTIVITYDEBUG"
         viewModelScope.launch {
-            repo.deleteActivity(id).collect { response ->
+            repo.deleteActivity(activity.id).collect { response ->
+                when(response){
+                    is Response.Success->{
+                        Log.d(TAG,"DB ACTIVITY DELETE")
+                    }
+                    else->{}
+                }
                 _isActivityDeletedState.value = response
+
+            }
+            chatRepo.deleteChatCollection(activity.id).collect { response ->
+                when(response){
+                    is Response.Success->{
+                        Log.d(TAG,"Chat  DELETE")
+                    }
+                    else->{}
+                }
+                _isChatDeleted.value = response
+            }
+            if(activity.image!=null){
+                repo.removeActivityImage(activity.image!!).collect(){response->
+                    when(response){
+                        is Response.Success->{
+                            Log.d(TAG,"removed image")
+                        }
+                        else->{}
+                    }
+                }
+
             }
 
         }
     }
-    fun deleteChat(id: String) {
+    fun deleteActivityWithImage(id: String) {
         viewModelScope.launch {
+            repo.deleteActivity(id).collect { response ->
+                _isActivityDeletedState.value = response
+            }
             chatRepo.deleteChatCollection(id).collect { response ->
                 _isChatDeleted.value = response
             }
-
         }
     }
     fun getUserActivities(id: String) {
@@ -811,8 +839,7 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
 
@@ -847,8 +874,8 @@ class ActivityViewModel @Inject constructor(
                                 it.end_time,
                                 deleteActivity = {
                                     Log.d("getActivitiesForUser", "delete activity")
-                                    deleteActivity(it.id)
-                                    deleteChat(it.id)
+                                    deleteActivity(it)
+
                                     list_without_removed_activites.remove(it)
                                 })
 

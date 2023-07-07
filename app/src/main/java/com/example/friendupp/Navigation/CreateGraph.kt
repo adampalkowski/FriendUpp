@@ -314,7 +314,7 @@ fun NavGraphBuilder.createGraph(
                             creation_time = getCurrentUTCTime(),
                             date = date,
                         )
-                        if (currentActivity.value.location != null) {
+                        if (activityState.location.latitude != null && activityState.location.latitude!=0.0) {
 
                             val lat = activityState.location.latitude
                             val lng = activityState.location.longitude
@@ -841,7 +841,6 @@ fun createGroup(
         if (picture.isEmpty()) {
             createActivity(currentActivity, activityViewModel, context)
         } else {
-
             currentActivity.image = picture
             createActivity(currentActivity, activityViewModel, context)
 

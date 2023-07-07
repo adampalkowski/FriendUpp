@@ -1018,6 +1018,29 @@ class ActivityRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun removeActivityImage(
+        url: String,
+    ): Flow<Response<Boolean>> = flow {
+        try {
+            Log.d("ActivityRepositoryImpl",url)
+                    val reference=resStorage.storage.getReferenceFromUrl(url)
+            Log.d("ActivityRepositoryImpl",reference.toString())
+
+            reference.delete().await()
+                    emit(Response.Success(true))
+
+        } catch (e: Exception) {
+            Log.d("ActivityRepositoryImpl", "try addProfilePictureToStorage EXCEPTION"+e.toString())
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "addProfilePictureToStorage exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
 
     override suspend fun deleteImageFromHighResStorage(
         id: String,
@@ -1043,6 +1066,19 @@ class ActivityRepositoryImpl @Inject constructor(
                     )
                 )
             )
+        }
+    }
+    override suspend fun updateActivityCustomization(activityId:String,activitySharing:Boolean,disableChat:Boolean,participantConfirmation:Boolean):Flow<Response<Boolean>> = flow {
+        try {
+            emit(Response.Loading)
+            val update = activeUsersRef.document(activityId).update(
+                "disableChat",disableChat,
+                "enableActivitySharing",activitySharing,
+                "participantConfirmation",participantConfirmation,
+            ).await()
+            emit(Response.Success(true))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("updateActivityCustomization exception", Exception())))
         }
     }
 

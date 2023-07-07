@@ -128,6 +128,8 @@ class ChatRepositoryImpl @Inject constructor(
     ): Flow<Response<String>> = flow {
         try {
             if (imageUri != null) {
+                Log.d("Createdebug",id)
+
                 val fileName = id
                 val imageRef = resStorage.child("images/$fileName")
                 imageRef.putFile(imageUri).await1()

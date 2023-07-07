@@ -26,6 +26,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.ActivityPreview.CreatorSettingsEvent
+import com.example.friendupp.ActivityPreview.CreatorSettingsScreen
 import com.example.friendupp.ActivityUi.ActivityPreview
 import com.example.friendupp.ActivityUi.ActivityPreviewEvents
 import com.example.friendupp.Camera.getActivity
@@ -519,6 +521,10 @@ fun NavGraphBuilder.mainGraph(
                         )
 
                     }
+                    is ActivityPreviewEvents.CreatorSettings -> {
+                            navController.navigate("CreatorSettings/"+event.id)
+
+                    }
                     is ActivityPreviewEvents.UnBookmark -> {
                         activityViewModel.unBookMarkActivity(
                             event.id,
@@ -554,7 +560,124 @@ fun NavGraphBuilder.mainGraph(
                         openReportDialog=null}, confirmLabel = "Report")
             }
         }
+        composable(
+            "CreatorSettings/{activityId}",
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
 
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+
+                    else -> null
+                }
+            }
+        ) {backStackEntry->
+            val localClipboardManager = LocalClipboardManager.current
+            var openDeleteActivityDialog by  remember {
+                mutableStateOf<com.example.friendupp.model.Activity?>(null)
+            }
+            val context = LocalContext.current
+            val activityId = backStackEntry.arguments?.getString("activityId")
+            val activityData=homeViewModel.expandedActivity.collectAsState()
+            activityData.value.let {activity->
+                CreatorSettingsScreen(onEvent={event->
+                    when(event){
+                        is CreatorSettingsEvent.GoBack->{navController.popBackStack()}
+                        is CreatorSettingsEvent.Share->{
+                            //CREATE A DYNAMINC LINK TO DOMAIN
+                            val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                link =
+                                    Uri.parse("https://link.friendup.app/" + "Activity" + "/" + activityId)
+                                domainUriPrefix = "https://link.friendup.app/"
+                                // Open links with this app on Android
+                                androidParameters { }
+                            }
+                            val dynamicLinkUri = dynamicLink.uri
+                            //COPY LINK AND MAKE A TOAST
+                            localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                            Toast.makeText(
+                                context,
+                                "Copied activity link to clipboard",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is CreatorSettingsEvent.DeleteActivity->{
+                            openDeleteActivityDialog=activity
+
+                        }
+                        else->{}
+                    }},activity=activity!!,
+                updateCutomization = {activitySharing,disableChat,participantConifrmation->
+                    activityViewModel.updateActivityCustomization(activityId=activity.id,activitySharing=activitySharing,disableChat=disableChat,participantConfirmation=participantConifrmation)
+                })
+            }
+            if (openDeleteActivityDialog!=null){
+                FriendUppDialog(
+                    label = "Confirm deletion of activity, this action is not reversible.",
+                    icon = R.drawable.ic_delete,
+                    onCancel = { openDeleteActivityDialog=null },
+                    onConfirm = {
+
+                        activityViewModel.deleteActivity(openDeleteActivityDialog!!)
+                        Toast.makeText(
+                            context,
+                            "Activity deleted",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        navController.navigate("Home")})
+            }
+
+        }
         composable(
             "FriendPickerAddActivityUsers/{activityId}",
             arguments = listOf(navArgument("activityId") { type = NavType.StringType }),

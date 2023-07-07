@@ -136,7 +136,7 @@ class AppModule {
     @Provides
     fun provideActivityRepository(
         db: FirebaseFirestore,
-        @FirebaseStorageHighRes highResStorage: FirebaseStorage,
+        @FirebaseStorageRes resStorage: FirebaseStorage,
         @FirebaseStorageDefault lowResStorage: FirebaseStorage
     ):ActivityRepository= ActivityRepositoryImpl(
         activitiesRef =db.collection("Activities"),
@@ -144,7 +144,7 @@ class AppModule {
         usersRef =db.collection("Users"),
         chatCollectionsRef =db.collection("groups") ,
         messagessRef =db.collection("Chats"),
-        resStorage=highResStorage.reference,
+        resStorage=resStorage.reference,
         lowResStorage = lowResStorage.reference
     )
     @Provides

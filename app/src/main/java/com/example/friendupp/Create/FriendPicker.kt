@@ -33,10 +33,8 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @Composable
 fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit, onUserSelected: (String) -> Unit,
-                     onUserDeselected: (String) -> Unit,addUserName:(String)->Unit,removeUsername:(String)->Unit){
-    var selected by rememberSaveable{
-        mutableStateOf(false)
-    }
+                     onUserDeselected: (String) -> Unit,addUserName:(String)->Unit,removeUsername:(String)->Unit,selected:Boolean){
+
     var textColor = if (selected){
         SocialTheme.colors.textLink
     }else{
@@ -50,12 +48,9 @@ fun FriendPickerItem(id:String,username:String,imageUrl:String,onClick:()->Unit,
 
             .clickable(onClick = {
                 if(selected){
-                    selected = !selected
                     onUserDeselected(id)
                     removeUsername(username)
                 }else{
-                    selected = !selected
-
                     onUserSelected(id)
                     addUserName(username)
 

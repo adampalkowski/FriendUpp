@@ -58,6 +58,7 @@ sealed class ActivityPreviewEvents{
     class GoToActivityParticipants(val id:String):ActivityPreviewEvents()
     class Bookmark(val id:String):ActivityPreviewEvents()
     class AddUsers(val id:String):ActivityPreviewEvents()
+    class CreatorSettings(val id:String):ActivityPreviewEvents()
 }
 val TAG="ActivityPrewviewDebug"
 /*
@@ -100,23 +101,32 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                                 .fillMaxSize()
 
                         )
+                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
+                        },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
+                        {
+                            displayMap=true
+                        }, closeMap = {
+                            displayMap=false
+
+                        },mapIsDisplay=displayMap,imageAvaiable=activity.image!=null)
                     }else if (activity.lat!=null){
                         Log.d(TAG,"map")
+                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
+                        },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
+                        {
+                            displayMap=true
+                        }, closeMap = {
+                            displayMap=false
 
+                        },mapIsDisplay=displayMap,imageAvaiable=!activity.image.isNullOrEmpty())
                         displayMap=true
+                    }else{
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                     if(displayMap){
                         ActivityPreviewLocation(Modifier.fillMaxSize(),LatLng(activity.lat!!,activity.lng!!))
                     }
 
-                    TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
-                    },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
-                    {
-                        displayMap=true
-                    }, closeMap = {
-                        displayMap=false
-
-                    },mapIsDisplay=displayMap,imageAvaiable=activity.image!=null)
                 }
 
                     Column( modifier = Modifier
@@ -160,7 +170,9 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
             ActivityPreviewButtonRow(onEvent = onEvent,modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
                 joined=switch,joinChanged={it->
                     switch=it
-                }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark)
+                }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark,openSettings={displaySettings=true},creator=activity.creator_id==UserData.user!!.id,CreatorSettings={onEvent(
+                    ActivityPreviewEvents.CreatorSettings(activity.id)
+                )})
         }
     }
     val context = LocalContext.current
@@ -215,10 +227,18 @@ fun DatePreview(startTime: String, endTime: String) {
         Icon(painter = painterResource(id = R.drawable.ic_date), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
         Spacer(modifier = Modifier.width(24.dp))
         Column() {
-            Text(text ="From: "+ getFormattedDateNoSeconds(startTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text ="From:", style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary)
+                Text(text = getFormattedDateNoSeconds(startTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),color=SocialTheme.colors.textPrimary)
+            }
             Spacer(modifier = Modifier.height(6.dp))
-            Text(text ="To: "+ getFormattedDateNoSeconds(endTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
-            
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text ="To: ", style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+
+                Text(text = getFormattedDateNoSeconds(endTime) , style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+
+            }
+
         }
         
     }
@@ -375,7 +395,6 @@ fun TopButtons(modifier:Modifier=Modifier,onClose: () -> Unit, onSettings: () ->
         .fillMaxWidth()
         .padding(vertical = 24.dp, horizontal = 24.dp)
         .background(Color.Transparent) ){
-        TransButton(onClick=onClose,icon=R.drawable.ic_x)
         Spacer(modifier = Modifier.weight(1f))
         if(mapAvailable){
             if(mapIsDisplay){
@@ -390,7 +409,6 @@ fun TopButtons(modifier:Modifier=Modifier,onClose: () -> Unit, onSettings: () ->
 
         }
         Spacer(modifier = Modifier.width(16.dp))
-        TransButton(onClick=onSettings,icon=R.drawable.ic_more)
     }
 }
 
@@ -412,6 +430,9 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                              joinChanged: (Boolean) -> Unit,
                              bookmarked: Boolean = false,
                              bookmarkChanged: (Boolean) -> Unit,
+                             openSettings: () -> Unit,
+                             creator: Boolean = false,
+                             CreatorSettings: () -> Unit,
 ){
 
 
@@ -419,7 +440,19 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
     Column(modifier.background(Color.Transparent)) {
             Row( modifier = Modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(vertical = 8.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center){
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .width(24.dp)
+                    .background(SocialTheme.colors.uiBorder))
+                ActionButtonDefault(
+                    icon = R.drawable.ic_back,
+                    isSelected = false,
+                    onClick =  {
+                        onEvent(ActivityPreviewEvents.GoBack)
+                    }
+                )
                 Spacer(modifier = Modifier
                     .height(1.dp)
                     .weight(1f)
@@ -441,7 +474,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                /* ActivityPreviewButtonRowItem(icon=R.drawable.ic_check_300, onClick = {joined=!joined}, selected = joined )*/
                 Spacer(modifier = Modifier
                     .height(1.dp)
-                    .width(16.dp)
+                    .width(12.dp)
                     .background(SocialTheme.colors.uiBorder))
                 ActionButtonDefault(
                     icon = R.drawable.ic_chat_300,
@@ -451,7 +484,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
               /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
                 Spacer(modifier = Modifier
                     .height(1.dp)
-                    .width(16.dp)
+                    .width(12.dp)
                     .background(SocialTheme.colors.uiBorder))
 
                 ActionButtonDefault(
@@ -468,10 +501,32 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                         }
                     }
                 )
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .width(12.dp)
+                    .background(SocialTheme.colors.uiBorder))
+                if(creator){
+                    ActionButtonDefault(
+                        icon = R.drawable.ic_settings,
+                        isSelected = false,
+                        onClick =  {
+                            CreatorSettings()
+                        }
+                    )
+                }else{
+                    ActionButtonDefault(
+                        icon = R.drawable.ic_more,
+                        isSelected = false,
+                        onClick =  {
+                            openSettings()
+                        }
+                    )
+                }
+
           /*      ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)*/
                 Spacer(modifier = Modifier
                     .height(1.dp)
-                    .width(24.dp)
+                    .width(16.dp)
                     .background(SocialTheme.colors.uiBorder))
 
             }

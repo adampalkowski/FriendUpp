@@ -69,7 +69,15 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
             }
 
         }
-        LazyRow(verticalAlignment = Alignment.CenterVertically){
+        LazyRow(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)){
+            item{
+                Spacer(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(dividerColor)
+                )
+            }
             item{
                 if (currentUserActiveUser.isNotEmpty()){
                 }else{

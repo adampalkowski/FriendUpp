@@ -3,7 +3,10 @@ package com.example.friendupp.FriendPicker
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -167,58 +170,110 @@ fun FriendPickerScreen(
                 }
 
             }
+
             items(friendsList) { user ->
-                FriendPickerItem(
-                    id = user.id, username = user.username ?: "", onClick = {
-                    },
-                    imageUrl = user.pictureUrl ?: "",
-                    onUserSelected = onUserSelected, onUserDeselected = onUserDeselected,
-                    addUserName = {
-                        selectedList.list.add(it)
-                    }, removeUsername = { selectedList.list.remove(it) }
-                )
+
+                if(allFriends){
+                    var selected by remember { mutableStateOf(true) }
+
+                    FriendPickerItem(
+                        id = user.id,
+                        username = user.username ?: "",
+                        onClick = {
+                        },
+                        imageUrl = user.pictureUrl ?: "",
+                        onUserSelected = {
+                        }, onUserDeselected = {
+                        },
+                        addUserName = { selectedList.list.add(it) },
+                        removeUsername = { selectedList.list.remove(it) },
+                        selected =selected
+                    )
+                }else{
+                    var selected by remember { mutableStateOf(selectedList.list.contains(user.username)) }
+
+                    FriendPickerItem(
+                        id = user.id, username = user.username ?: "", onClick = {
+                        },
+                        imageUrl = user.pictureUrl ?: "",
+                        onUserSelected = {onUserSelected(it)
+                            selected=true
+
+                        }, onUserDeselected = {
+                            onUserDeselected(it)
+                            selected=false },
+                        addUserName = {
+                            selectedList.list.add(it)
+                        }, removeUsername = { selectedList.list.remove(it) },selected=selected
+                    )
+                }
             }
             items(moreFriendsList) { user ->
-                FriendPickerItem(
-                    id = user.id,
-                    username = user.username ?: "",
-                    onClick = {
-                    },
-                    imageUrl = user.pictureUrl ?: "",
-                    onUserSelected = onUserSelected,
-                    onUserDeselected = onUserDeselected,
-                    addUserName = { selectedList.list.add(it) },
-                    removeUsername = { selectedList.list.remove(it) }
-                )
+
+                if(allFriends){
+                    var selected by remember { mutableStateOf(true) }
+                    FriendPickerItem(
+                        id = user.id,
+                        username = user.username ?: "",
+                        onClick = {
+                        },
+                        imageUrl = user.pictureUrl ?: "",
+                        onUserSelected = {
+                        }, onUserDeselected = {
+                           },
+                        addUserName = { selectedList.list.add(it) },
+                        removeUsername = { selectedList.list.remove(it) },
+                        selected =selected
+                    )
+                }else{
+                    var selected by remember { mutableStateOf(selectedList.list.contains(user.username)) }
+
+
+                    FriendPickerItem(
+                        id = user.id, username = user.username ?: "", onClick = {
+                        },
+                        imageUrl = user.pictureUrl ?: "",
+                        onUserSelected = {onUserSelected(it)
+                            selected=true
+
+                        }, onUserDeselected = {
+                            onUserDeselected(it)
+                            selected=false },
+                        addUserName = {
+                            selectedList.list.add(it)
+                        }, removeUsername = { selectedList.list.remove(it) },selected=selected
+                    )
+                }
+
 
             }
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
             item {
-                LaunchedEffect(true) {
-                    if (usersExist.value) {
-                        userViewModel.getMoreFriends(UserData.user!!.id)
+                if(allFriends){
+
+                }else{
+                    LaunchedEffect(true) {
+                        if (usersExist.value) {
+                            userViewModel.getMoreFriends(UserData.user!!.id)
+                        }
                     }
                 }
+
             }
         }
 
 
-
-        SelectedUsers(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            selectedUsers = selectedList
-        )
-        Box(
-            modifier = Modifier
-                .padding(bottom = 48.dp, end = 24.dp)
-                .align(Alignment.BottomEnd), contentAlignment = Alignment.Center
-        ) {
-            CreateButton("Create", createClicked = {
-                createActivity()
-            }, disabled = false)
+        AnimatedVisibility(                modifier = Modifier.align(Alignment.BottomCenter)
+            ,visible = selectedList.list.isNotEmpty(), enter = slideInVertically(initialOffsetY = {it}), exit = slideOutVertically(targetOffsetY = {it})) {
+            SelectedUsers(modifier=Modifier.fillMaxWidth(),
+                selectedUsers = selectedList,
+                Create={       createActivity()}
+            )
         }
+
+
     }
 
 
@@ -226,7 +281,7 @@ fun FriendPickerScreen(
 
 
 @Composable
-fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
+fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState,Create:()->Unit) {
     val list = remember { selectedUsers.list } // Make the list mutable using remember
 
     Box(
@@ -239,7 +294,7 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
     ) {
         Row (verticalAlignment = Alignment.CenterVertically){
 
-        LazyRow {
+        LazyRow (modifier = Modifier.weight(1f)){
             items(list) { user ->
                 val truncatedUsername = if (user.length > 15) {
                     user.take(15) + "..."
@@ -249,9 +304,17 @@ fun SelectedUsers(modifier: Modifier, selectedUsers: SelectedUsersState) {
 
                 Text(text = "$truncatedUsername, ", style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 12.sp), color = Color.White)
             }
+
+
         }
-            Spacer(modifier = Modifier.weight(1f))
-            ButtonAdd(onClick = { /*TODO*/ }, icon =R.drawable.ic_checkl)
+            Box(modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .clickable(onClick = { Create() })
+                .background(Color.White), contentAlignment = Alignment.Center){
+                Icon(painter = painterResource(id = R.drawable.ic_checkl), contentDescription =null, tint = SocialTheme.colors.textInteractive )
+            }
+            Spacer(modifier = Modifier.width(24.dp))
         }
 
 
