@@ -38,8 +38,8 @@ import com.example.friendupp.model.UserData
 
 sealed class ActivityEvents{
     class Expand(val activity:Activity):ActivityEvents()
-    class Join(val id :String):ActivityEvents()
-    class Leave(val id :String):ActivityEvents()
+    class Join(val activity: Activity ):ActivityEvents()
+    class Leave(val activity: Activity ):ActivityEvents()
     class Bookmark(val id :String):ActivityEvents()
     class UnBookmark(val id :String):ActivityEvents()
     class OpenChat(val id :String):ActivityEvents()
@@ -200,7 +200,7 @@ fun activityItem(
                 buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,
                     joined=switch,joinChanged={it->
                     switch=it
-                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it})
+                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it},activity=activity)
 
             }
         }

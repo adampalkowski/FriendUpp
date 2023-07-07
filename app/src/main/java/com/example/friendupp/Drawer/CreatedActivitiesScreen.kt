@@ -25,11 +25,11 @@ import com.example.friendupp.model.UserData
 sealed class CreatedActivitiesEvents{
     object GoBack:CreatedActivitiesEvents()
     class ExpandActivity(val activityData: Activity) : CreatedActivitiesEvents()
-    class JoinActivity(val id: String) : CreatedActivitiesEvents()
+    class JoinActivity(val activity: Activity) : CreatedActivitiesEvents()
     class UnBookmark(val id: String) : CreatedActivitiesEvents()
     class Bookmark(val id: String) : CreatedActivitiesEvents()
     class GoToProfile(val id: String) : CreatedActivitiesEvents()
-    class LeaveActivity(val id: String) : CreatedActivitiesEvents()
+    class LeaveActivity(val activity: Activity) : CreatedActivitiesEvents()
     class OpenChat(val id: String) : CreatedActivitiesEvents()
 }
 
@@ -94,10 +94,10 @@ fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActivitiesEve
             onEvent(CreatedActivitiesEvents.ExpandActivity(event.activity))
         }
         is ActivityEvents.Join -> {
-            onEvent(CreatedActivitiesEvents.JoinActivity(event.id))
+            onEvent(CreatedActivitiesEvents.JoinActivity(event.activity))
         }
         is ActivityEvents.Leave -> {
-            onEvent(CreatedActivitiesEvents.LeaveActivity(event.id))
+            onEvent(CreatedActivitiesEvents.LeaveActivity(event.activity))
         }
         is ActivityEvents.OpenChat -> {
             onEvent(CreatedActivitiesEvents.OpenChat(event.id))

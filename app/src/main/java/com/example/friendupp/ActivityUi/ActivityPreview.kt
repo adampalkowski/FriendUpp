@@ -53,6 +53,7 @@ sealed class ActivityPreviewEvents{
     class Leave(val id:String):ActivityPreviewEvents()
     class Join(val id:String):ActivityPreviewEvents()
     class UnBookmark(val id:String):ActivityPreviewEvents()
+    class GoToActivityParticipants(val id:String):ActivityPreviewEvents()
     class Bookmark(val id:String):ActivityPreviewEvents()
 }
 val TAG="ActivityPrewviewDebug"
@@ -139,7 +140,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                             .fillMaxWidth()
                             .background(SocialTheme.colors.uiBorder.copy(0.5f)))
                         Spacer(modifier = Modifier.height(12.dp))
-                        ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures)
+                        ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures,GoToActivityParticipants={onEvent(ActivityPreviewEvents.GoToActivityParticipants(activity.id))})
                        /* ActivityPreviewOption()*/
 
                     }
@@ -175,10 +176,10 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 }
 
 @Composable
-fun ParticipantsPreview(participantsIds: ArrayList<String>, participantsUsernames: HashMap<String, String>, participantsProfilePictures: HashMap<String, String>) {
+fun ParticipantsPreview(participantsIds: ArrayList<String>, participantsUsernames: HashMap<String, String>, participantsProfilePictures: HashMap<String, String>,GoToActivityParticipants:()->Unit) {
     Row(
         Modifier
-            .fillMaxWidth()
+            .fillMaxWidth().clickable(onClick = GoToActivityParticipants)
             .padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(painter = painterResource(id = R.drawable.ic_group), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
         Spacer(modifier = Modifier.width(24.dp))

@@ -73,7 +73,10 @@ class UserViewModel @Inject constructor(
     val isUserTagsAdded: State<Response<Void?>?> = _isUserTagsAdded
     private val _isUserUpdated = mutableStateOf<Response<Void?>?>(null)
     val isUserUpdated: State<Response<Void?>?> = _isUserUpdated
-
+    private val _isActivityAddedToUser = mutableStateOf<Response<Void?>?>(null)
+    val isActivityAddedToUser: State<Response<Void?>?> = _isActivityAddedToUser
+    private val _isActivityRemovedFromUser = mutableStateOf<Response<Void?>?>(null)
+    val isActivityRemovedFromUser: State<Response<Void?>?> = _isActivityRemovedFromUser
 
     private val _isInviteAddedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isInviteAddedState: State<Response<Void?>> = _isInviteAddedState
@@ -138,11 +141,11 @@ class UserViewModel @Inject constructor(
     private val _isRequestRemovedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isRequestRemovedState: State<Response<Void?>> = _isRequestRemovedState
 
-    private val _activityUsersState = mutableStateOf<Response<List<User>>>(Response.Loading)
-    val activityUsersState: State<Response<List<User>>> = _activityUsersState
+    private val _activityUsersState = mutableStateOf<Response<List<User>>?>(null)
+    val activityUsersState: State<Response<List<User>>?> = _activityUsersState
 
-    private val _moreActivityUsersState = mutableStateOf<Response<List<User>>>(Response.Loading)
-    val oreActivityUsersState: State<Response<List<User>>> = _moreActivityUsersState
+    private val _moreActivityUsersState = mutableStateOf<Response<List<User>>?>(null)
+    val moreActivityUsersState: State<Response<List<User>>?> = _moreActivityUsersState
 
     private val _uri = MutableStateFlow<Uri?>(null)
     val uri: MutableStateFlow<Uri?> = _uri
@@ -170,6 +173,12 @@ class UserViewModel @Inject constructor(
                 _activityUsersState.value = response
             }
         }
+    }
+    fun clearUsers() {
+        _activityUsersState.value=null
+    }
+    fun clearMoreUsers() {
+        _moreActivityUsersState.value=null
     }
 
     fun getMoreActivityUsers(id: String) {
@@ -561,11 +570,18 @@ class UserViewModel @Inject constructor(
     fun addActivityToUser(id: String, user: User) {
         viewModelScope.launch {
             repo.addActivityToUser(id, user).collect { response ->
+                _isActivityAddedToUser.value=response
+            }
+        }
+    }
+    fun removeActivityFromUser(id: String, user_id: String) {
+        viewModelScope.launch {
+            repo.removeActivityFromUser(id, user_id).collect { response ->
+                _isActivityRemovedFromUser.value=response
 
             }
         }
     }
-
     fun resetIsUsernameAdded() {
         _isUsernameAddedFlow.value = Response.Loading
     }

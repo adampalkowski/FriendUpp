@@ -23,7 +23,6 @@ import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ChatEvents
-import com.example.friendupp.Drawer.JoinedActivitiesEvents
 import com.example.friendupp.Groups.GroupItemEvent
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeViewModel
@@ -347,22 +346,45 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileEvents.GoToProfile -> {
                                 navController.navigate("ProfileDisplay/" + event.id)
                             }
-                            is ProfileEvents.JoinActivity -> {
-                                activityViewModel.likeActivity(
-                                    event.id,
-                                    UserData.user!!
-                                )
 
-                            }
                             is ProfileEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
 
                             }
+                            is ProfileEvents.JoinActivity -> {
+
+                                if(event.activity.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+                                }else{
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+
+                                }
+                            }
                             is ProfileEvents.LeaveActivity -> {
-                                activityViewModel?.unlikeActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
+                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivity(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }else{
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }
+
                             }
                             is ProfileEvents.ExpandActivity -> {
                                 Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
@@ -967,22 +989,45 @@ fun NavGraphBuilder.profileGraph(
                                 navController.navigate("ChatItem/" + event.chat_id)
                             }
                             is ProfileDisplayEvents.JoinActivity -> {
-                                activityViewModel.likeActivity(
-                                    event.id,
-                                    UserData.user!!
-                                )
+
+                                if(event.activity.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+                                }else{
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+
+                                }
+                            }
+                            is ProfileDisplayEvents.LeaveActivity -> {
+                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivity(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }else{
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }
 
                             }
                             is ProfileDisplayEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
 
                             }
-                            is ProfileDisplayEvents.LeaveActivity -> {
-                                activityViewModel?.unlikeActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
+
                             is ProfileDisplayEvents.ExpandActivity -> {
                                 Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
                                 homeViewModel.setExpandedActivity(event.activityData)

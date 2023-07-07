@@ -246,11 +246,22 @@ class UserRepositoryImpl @Inject constructor(
                 emit(Response.Failure(e = SocialException("deleteUser exception", Exception())))
             }
         }
+    override suspend fun removeActivityFromUser(activity_id: String, user_id: String): Flow<Response<Void?>> =
+        flow {
+            try {
+                emit(Response.Loading)
+                val update = usersRef.document(user_id)
+                    .update("activities", FieldValue.arrayRemove(activity_id)).await1()
+                emit(Response.Success(update))
+            } catch (e: Exception) {
+                emit(Response.Failure(e = SocialException("deleteUser exception", Exception())))
+            }
+        }
 
     override suspend fun getActivityUsers(activity_id: String): Flow<Response<List<User>>> =
         callbackFlow {
-            lastVisibleUserActivityData = null
-            val snapshotListener = usersRef.whereArrayContains("activities", activity_id)
+
+            usersRef.whereArrayContains("activities", activity_id)
                 .orderBy("name", Query.Direction.DESCENDING).limit(10).get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -260,6 +271,7 @@ class UserRepositoryImpl @Inject constructor(
                             for (document in documents) {
                                 val user = document.toObject<User>()
 
+                                Log.d("PARTICINAPTSDEBUG","GOT USER"+user.toString())
 
                                 if (user != null) {
                                     newUsers.add(user)
@@ -288,8 +300,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getMoreActivityUsers(activity_id: String): Flow<Response<List<User>>> =
         callbackFlow {
-            val snapshotListener = usersRef.whereArrayContains("activities", activity_id)
-                .orderBy("name", Query.Direction.DESCENDING).limit(10).get()
+           usersRef.whereArrayContains("activities", activity_id)
+                .orderBy("name", Query.Direction.DESCENDING)  .startAfter(lastVisibleUserActivityData?.data?.get("name")) .limit(10).get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -297,6 +309,8 @@ class UserRepositoryImpl @Inject constructor(
                             val newUsers = ArrayList<User>()
                             for (document in documents) {
                                 val activity = document.toObject<User>()
+                                Log.d("PARTICINAPTSDEBUG","GOT USER2"+activity.toString())
+
                                 if (activity != null) {
                                     newUsers.add(activity)
                                 }

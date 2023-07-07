@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.example.friendupp.ActivityUi.ActivityPreview
 import com.example.friendupp.ActivityUi.ActivityPreviewEvents
 import com.example.friendupp.Camera.getActivity
@@ -35,6 +37,9 @@ import com.example.friendupp.Home.LiveUserSettingsDialog
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.MapEvent
 import com.example.friendupp.MapScreen
+import com.example.friendupp.Participants.ParticipantsEvents
+import com.example.friendupp.Participants.ParticipantsScreen
+import com.example.friendupp.Profile.ProfileDisplayEvents
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
 import com.example.friendupp.di.ActiveUsersViewModel
@@ -72,7 +77,81 @@ fun NavGraphBuilder.mainGraph(
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
+        composable(
+            "Participants/{activityId}",
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            }
+        ) { backStackEntry ->
 
+
+            val activityId = backStackEntry.arguments?.getString("activityId")
+            var called by remember{ mutableStateOf(true) }
+
+
+            if(activityId.isNullOrEmpty()){
+                navController.popBackStack()
+            }else{
+                LaunchedEffect(called){
+                    if(called){
+                        userViewModel.getActivityUsers(activityId)
+                        called=false
+                    }
+                }
+                ParticipantsScreen(userViewModel=userViewModel, onEvent = {event->
+                    when(event){
+                        is ParticipantsEvents.GoBack->{
+                            navController.popBackStack()
+                        }
+                        is ParticipantsEvents.GoToUserProfile->{
+                            navController.navigate("ProfileDisplay/" + event.id)
+                        }
+                    }
+                },activityId=activityId)
+
+            }
+
+
+
+        }
         composable(
             "Home",
             enterTransition = {
@@ -224,22 +303,45 @@ fun NavGraphBuilder.mainGraph(
                     is HomeEvents.CreateLive -> {
                         navController.navigate("CreateLive")
                     }
-                    is HomeEvents.JoinActivity -> {
-                        activityViewModel.likeActivity(
-                            event.id,
-                            UserData.user!!
-                        )
 
-                    }
                     is HomeEvents.OpenChat -> {
                         navController.navigate("ChatItem/" + event.id)
 
                     }
+                    is HomeEvents.JoinActivity -> {
+
+                        if(event.activity.participants_ids.size<6){
+                            userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                            activityViewModel.likeActivity(
+                                event.activity.id,
+                                UserData.user!!
+                            )
+                        }else{
+                            userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                            activityViewModel.likeActivityOnlyId(
+                                event.activity.id,
+                                UserData.user!!
+                            )
+
+                        }
+                    }
                     is HomeEvents.LeaveActivity -> {
-                        activityViewModel?.unlikeActivity(
-                            event.id,
-                            UserData.user!!.id
-                        )
+                        if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
+                            userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                            activityViewModel?.unlikeActivity(
+                                event.activity.id,
+                                UserData.user!!.id
+                            )
+                        }else{
+                            userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                            activityViewModel?.unlikeActivityOnlyId(
+                                event.activity.id,
+                                UserData.user!!.id
+                            )
+                        }
+
                     }
                     is HomeEvents.UnBookmark -> {
                         activityViewModel.unBookMarkActivity(
@@ -376,6 +478,9 @@ fun NavGraphBuilder.mainGraph(
                 when (event) {
                     is ActivityPreviewEvents.GoBack -> {
                         navController.popBackStack()
+                    }
+                    is ActivityPreviewEvents.GoToActivityParticipants -> {
+                        navController.navigate("Participants/"+event.id)
                     }
                     is ActivityPreviewEvents.ShareActivityLink -> {
                         //CREATE A DYNAMINC LINK TO DOMAIN

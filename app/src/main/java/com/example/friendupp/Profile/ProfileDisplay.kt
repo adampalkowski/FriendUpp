@@ -62,11 +62,11 @@ sealed class ProfileDisplayEvents {
     object GetProfileLink : ProfileDisplayEvents()
 
     class ExpandActivity(val activityData: Activity) : ProfileDisplayEvents()
-    class JoinActivity(val id: String) : ProfileDisplayEvents()
+    class JoinActivity(val activity: Activity) : ProfileDisplayEvents()
     class Bookmark(val id: String) : ProfileDisplayEvents()
     class UnBookmark(val id: String) : ProfileDisplayEvents()
     class GoToProfile(val id: String) : ProfileDisplayEvents()
-    class LeaveActivity(val id: String) : ProfileDisplayEvents()
+    class LeaveActivity(val activity: Activity) : ProfileDisplayEvents()
     class OpenChat(val id: String) : ProfileDisplayEvents()
 }
 
@@ -465,10 +465,10 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileDispl
             onEvent(ProfileDisplayEvents.ExpandActivity(event.activity))
         }
         is ActivityEvents.Join -> {
-            onEvent(ProfileDisplayEvents.JoinActivity(event.id))
+            onEvent(ProfileDisplayEvents.JoinActivity(event.activity))
         }
         is ActivityEvents.Leave -> {
-            onEvent(ProfileDisplayEvents.LeaveActivity(event.id))
+            onEvent(ProfileDisplayEvents.LeaveActivity(event.activity))
         }
         is ActivityEvents.OpenChat -> {
             onEvent(ProfileDisplayEvents.OpenChat(event.id))

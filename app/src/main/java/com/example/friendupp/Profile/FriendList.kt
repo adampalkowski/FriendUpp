@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
@@ -72,7 +73,7 @@ fun FriendListScreen(
                     username = user.username.toString(),
                     name = user.name.toString(),
                     pictureUrl = user.pictureUrl.toString(),
-                    onEvent = onEvent,
+                    onEvent = {onEvent(FriendListEvents.ProfileDisplay(it))},
                     user = user
                 )
             }
@@ -81,7 +82,7 @@ fun FriendListScreen(
                     username = user.username.toString(),
                     name = user.name.toString(),
                     pictureUrl = user.pictureUrl.toString(),
-                    onEvent = onEvent,
+                    onEvent = { onEvent(FriendListEvents.ProfileDisplay(it)) },
                     user = user
                 )
             }
@@ -222,17 +223,14 @@ fun FriendItem(
     name: String,
     pictureUrl: String,
     user: User,
-    onEvent: (FriendListEvents) -> Unit,
+    onEvent: (String) -> Unit,
 ) {
-    var expand by remember { mutableStateOf(false) }
-    BackHandler(true) {
-        onEvent(FriendListEvents.GoBack)
-    }
+
     Column() {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .clickable(onClick = { onEvent(FriendListEvents.ProfileDisplay(user.id)) }
-                    ,interactionSource = remember { MutableInteractionSource() },
+                .clickable(onClick = { onEvent(user.id) },
+                    interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(color = Color.Black)
                 )
                 .padding(horizontal = 24.dp, vertical = 8.dp)

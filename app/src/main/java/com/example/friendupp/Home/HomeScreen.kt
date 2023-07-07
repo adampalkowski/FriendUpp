@@ -68,10 +68,10 @@ sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
     object CreateLive : HomeEvents()
     class ExpandActivity(val activityData: Activity) : HomeEvents()
-    class JoinActivity(val id: String) : HomeEvents()
+    class JoinActivity(val activity: Activity) : HomeEvents()
     class Bookmark(val id: String) : HomeEvents()
     class UnBookmark(val id: String) : HomeEvents()
-    class LeaveActivity(val id: String) : HomeEvents()
+    class LeaveActivity(val activity: Activity) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
     class GoToProfile(val id: String) : HomeEvents()
     class OpenLiveUser(val id: String) : HomeEvents()
@@ -662,7 +662,7 @@ fun buttonsRow(
     joinChanged: (Boolean) -> Unit,
     profilePictures: HashMap<String, String>,
     bookmarked:Boolean=false,
-    bookmarkedChanged:(Boolean)->Unit
+    bookmarkedChanged:(Boolean)->Unit,activity: Activity
 ) {
 
     val bookmarkColor: Color by animateColorAsState(
@@ -701,11 +701,11 @@ fun buttonsRow(
             )
             eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
                 if (joined) {
-                    onEvent(ActivityEvents.Leave(id))
+                    onEvent(ActivityEvents.Leave(activity))
                     joinChanged(false)
 
                 } else {
-                    onEvent(ActivityEvents.Join(id))
+                    onEvent(ActivityEvents.Join(activity))
                     joinChanged(true)
 
                 }
@@ -920,10 +920,10 @@ private fun handleActivityEvent(event: ActivityEvents,    onEvent: (HomeEvents) 
             onEvent(HomeEvents.ExpandActivity(event.activity))
         }
         is ActivityEvents.Join -> {
-            onEvent(HomeEvents.JoinActivity(event.id))
+            onEvent(HomeEvents.JoinActivity(event.activity))
         }
         is ActivityEvents.Leave -> {
-            onEvent(HomeEvents.LeaveActivity(event.id))
+            onEvent(HomeEvents.LeaveActivity(event.activity))
         }
         is ActivityEvents.OpenChat -> {
             onEvent(HomeEvents.OpenChat(event.id))

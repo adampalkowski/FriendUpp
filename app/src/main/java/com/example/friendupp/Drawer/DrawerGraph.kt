@@ -17,12 +17,13 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.Settings.*
 import com.example.friendupp.di.ActivityViewModel
+import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.UserData
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel,homeViewModel:HomeViewModel) {
+fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel,homeViewModel:HomeViewModel,userViewModel:UserViewModel) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 
         composable(
@@ -93,39 +94,63 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                 "Joined"->{
                     JoinedActivitiesScreen(onEvent={event->
                         when(event){
-                            is JoinedActivitiesEvents.GoBack->{navController.popBackStack()}
-                            is JoinedActivitiesEvents.GoToProfile->{
+                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
+                            is CreatedActivitiesEvents.GoToProfile->{
                                 navController.navigate("ProfileDisplay/"+event.id)
                             }
-                            is JoinedActivitiesEvents.JoinActivity -> {
-                                activityViewModel.likeActivity(
-                                    event.id,
-                                    UserData.user!!
-                                )
+                            is CreatedActivitiesEvents.JoinActivity -> {
+
+                                if(event.activity.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+                                }else{
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+
+                                }
                             }
-                            is JoinedActivitiesEvents.Bookmark -> {
+                            is CreatedActivitiesEvents.LeaveActivity -> {
+                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivity(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }else{
+                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
+
+                                    activityViewModel?.unlikeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!.id
+                                    )
+                                }
+
+                            }
+                            is CreatedActivitiesEvents.Bookmark -> {
                                 activityViewModel.bookMarkActivity(
                                     event.id,
                                     UserData.user!!.id
                                 )
                             }
-                            is JoinedActivitiesEvents.UnBookmark -> {
+                            is CreatedActivitiesEvents.UnBookmark -> {
                                 activityViewModel.unBookMarkActivity(
                                     event.id,
                                     UserData.user!!.id
                                 )
                             }
-                            is JoinedActivitiesEvents.OpenChat -> {
+                            is CreatedActivitiesEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
 
                             }
-                            is JoinedActivitiesEvents.LeaveActivity -> {
-                                activityViewModel?.unlikeActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
-                            is JoinedActivitiesEvents.ExpandActivity -> {
+
+                            is CreatedActivitiesEvents.ExpandActivity -> {
                                 Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
                                 homeViewModel.setExpandedActivity(event.activityData)
                                 navController.navigate("ActivityPreview")
@@ -159,7 +184,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             }
                             is CreatedActivitiesEvents.JoinActivity -> {
                                 activityViewModel.likeActivity(
-                                    event.id,
+                                    event.activity.id,
                                     UserData.user!!
                                 )
 
@@ -170,7 +195,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             }
                             is CreatedActivitiesEvents.LeaveActivity -> {
                                 activityViewModel?.unlikeActivity(
-                                    event.id,
+                                    event.activity.id,
                                     UserData.user!!.id
                                 )
                             }
@@ -217,7 +242,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             }
                             is CreatedActivitiesEvents.JoinActivity -> {
                                 activityViewModel.likeActivity(
-                                    event.id,
+                                    event.activity.id,
                                     UserData.user!!
                                 )
 
@@ -228,7 +253,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             }
                             is CreatedActivitiesEvents.LeaveActivity -> {
                                 activityViewModel?.unlikeActivity(
-                                    event.id,
+                                    event.activity.id,
                                     UserData.user!!.id
                                 )
                             }

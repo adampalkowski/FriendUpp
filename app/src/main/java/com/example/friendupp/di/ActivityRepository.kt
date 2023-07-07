@@ -28,12 +28,14 @@ interface ActivityRepository {
     suspend fun deleteImageFromHighResStorage(id: String): Flow<Response<String>>
     suspend fun deleteActivityImageFromFirestoreActivity(activity_id: String,user_id:String): Flow<Response<String>>
     suspend fun likeActivity(id:String,user: User) : Flow<Response<Void?>>
+    suspend fun likeActivityOnlyId(id:String,user: User) : Flow<Response<Void?>>
     suspend fun bookMarkActivity(activity_id:String,user_id: String) : Flow<Response<Void?>>
     suspend fun unBookMarkActivity(activity_id:String,user_id: String) : Flow<Response<Void?>>
     suspend fun addActivityParticipant(id:String,user: User) : Flow<Response<Void?>>
     suspend fun addParticipantImageToActivity(activity_id:String,user_id:String,picture_url: String) : Flow<Response<Void?>>
     suspend fun setParticipantPicture(id:String,user: User) : Flow<Response<Void?>>
     suspend fun unlikeActivity(id:String,user_id:String) : Flow<Response<Void?>>
+    suspend fun unlikeActivityOnlyId(id:String,user_id:String) : Flow<Response<Void?>>
     suspend fun addRequestToActivity(activity_id:String,user_id:String) : Flow<Response<Void?>>
     suspend fun removeRequestFromActivity(activity_id:String,user_id:String) : Flow<Response<Void?>>
     suspend fun reportActivity(activity_id:String) : Flow<Response<Void?>>

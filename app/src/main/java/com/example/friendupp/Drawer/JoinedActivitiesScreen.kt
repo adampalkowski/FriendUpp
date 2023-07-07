@@ -19,19 +19,10 @@ import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
 
-sealed class JoinedActivitiesEvents{
-    object GoBack:JoinedActivitiesEvents()
-    class ExpandActivity(val activityData: Activity) : JoinedActivitiesEvents()
-    class JoinActivity(val id: String) : JoinedActivitiesEvents()
-    class Bookmark(val id: String) : JoinedActivitiesEvents()
-    class UnBookmark(val id: String) : JoinedActivitiesEvents()
-    class GoToProfile(val id: String) : JoinedActivitiesEvents()
-    class LeaveActivity(val id: String) : JoinedActivitiesEvents()
-    class OpenChat(val id: String) : JoinedActivitiesEvents()
-}
+
 
 @Composable
-fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun JoinedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
     val joinedActivities = remember { mutableStateListOf<Activity>() }
 
     var joinedActivitiesExist= remember { mutableStateOf(false) }
@@ -39,7 +30,7 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
     loadJoinedActivities(activityViewModel = activityViewModel, joinedActivities =joinedActivities,UserData.user!!.id )
     loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
     Column() {
-        ScreenHeading(title = "Joined activities", backButton = true, onBack = {onEvent(JoinedActivitiesEvents.GoBack)}) {}
+        ScreenHeading(title = "Joined activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
         LazyColumn{
             items(joinedActivities) { activity ->
                 activityItem(
@@ -79,29 +70,4 @@ fun JoinedActivitiesScreen(onEvent:(JoinedActivitiesEvents)->Unit,activityViewMo
 
     }
 
-}
-private fun handleActivityEvent(event: ActivityEvents,    onEvent: (JoinedActivitiesEvents) -> Unit) {
-    when (event) {
-        is ActivityEvents.Expand -> {
-            onEvent(JoinedActivitiesEvents.ExpandActivity(event.activity))
-        }
-        is ActivityEvents.Join -> {
-            onEvent(JoinedActivitiesEvents.JoinActivity(event.id))
-        }
-        is ActivityEvents.Leave -> {
-            onEvent(JoinedActivitiesEvents.LeaveActivity(event.id))
-        }
-        is ActivityEvents.OpenChat -> {
-            onEvent(JoinedActivitiesEvents.OpenChat(event.id))
-        }
-        is ActivityEvents.GoToProfile->{
-            onEvent(JoinedActivitiesEvents.GoToProfile(event.id))
-        }
-        is ActivityEvents.Bookmark->{
-            onEvent(JoinedActivitiesEvents.Bookmark(event.id))
-        }
-        is ActivityEvents.UnBookmark->{
-            onEvent(JoinedActivitiesEvents.UnBookmark(event.id))
-        }
-    }
 }

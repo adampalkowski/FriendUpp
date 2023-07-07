@@ -140,7 +140,8 @@ class ActivityRepositoryImpl @Inject constructor(
                 .orderBy("geoHash")
                 .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)
-                .limit(2)
+                .limit(10)
+
             tasks.add(q.get())
         }
         // Collect all the query results together into a single list
@@ -288,7 +289,8 @@ class ActivityRepositoryImpl @Inject constructor(
                 .orderBy("geoHash")
                 .startAfter(lastVisibleClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)
-                .limit(2)
+                .limit(10)
+
             tasks.add(q.get())
         }
         // Collect all the query results together into a single list
@@ -402,6 +404,18 @@ class ActivityRepositoryImpl @Inject constructor(
             emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
         }
     }
+    override suspend fun likeActivityOnlyId(id: String, user: User): Flow<Response<Void?>> = flow {
+        try {
+            emit(Response.Loading)
+            val update = activitiesRef.document(id).update(
+                "participants_ids",
+                FieldValue.arrayUnion(user.id)
+            ).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
+        }
+    }
     override suspend fun bookMarkActivity(activity_id: String, user_id: String): Flow<Response<Void?>> = flow {
         try {
             emit(Response.Loading)
@@ -468,6 +482,18 @@ class ActivityRepositoryImpl @Inject constructor(
                 FieldValue.delete(),
                 "participants_usernames" + "." + user_id,
                 FieldValue.delete(),
+                "participants_ids",
+                FieldValue.arrayRemove(user_id)
+            ).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("unlikeActivity exception", Exception())))
+        }
+    }
+    override suspend fun unlikeActivityOnlyId(id: String, user_id: String): Flow<Response<Void?>> = flow {
+        try {
+            emit(Response.Loading)
+            val update = activitiesRef.document(id).update(
                 "participants_ids",
                 FieldValue.arrayRemove(user_id)
             ).await()
@@ -801,7 +827,8 @@ class ActivityRepositoryImpl @Inject constructor(
 
             val snapshotListener = activitiesRef.whereEqualTo("creator_id", id)
                 .orderBy("creation_time", Query.Direction.DESCENDING)
-                .startAfter(lastVisibleUserData?.data?.get("creation_time")).get()
+                .startAfter(lastVisibleUserData?.data?.get("creation_time"))                .limit(10)
+                .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -880,7 +907,8 @@ class ActivityRepositoryImpl @Inject constructor(
 
             activitiesRef.whereArrayContains("bookmarked", id)
                 .orderBy("start_time", Query.Direction.DESCENDING)
-                .startAfter(lastVisibleBookmarkedData?.data?.get("start_time")).get()
+                .startAfter(lastVisibleBookmarkedData?.data?.get("start_time"))                .limit(10)
+                .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -921,7 +949,9 @@ class ActivityRepositoryImpl @Inject constructor(
 
             activitiesRef.whereArrayContains("participants_ids", id)
                 .orderBy("creation_time", Query.Direction.DESCENDING)
-                .startAfter(lastVisibleJoinedData?.data?.get("creation_time")).get()
+                .startAfter(lastVisibleJoinedData?.data?.get("creation_time"))
+                .limit(10)
+                .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -1106,7 +1136,8 @@ class ActivityRepositoryImpl @Inject constructor(
         callbackFlow {
             val snapshotListener = activitiesRef.whereArrayContains("invited_users", id)
                 .orderBy("creation_time", Query.Direction.DESCENDING)
-                .startAfter(lastVisibleData?.data?.get("creation_time")).limit(3).get()
+                .startAfter(lastVisibleData?.data?.get("creation_time"))      .limit(10)
+                .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
@@ -1352,7 +1383,7 @@ class ActivityRepositoryImpl @Inject constructor(
                 .orderBy("geoHash")
                 .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)
-                .limit(2)
+                .limit(10)
             tasks.add(q.get())
         }
         // Collect all the query results together into a single list

@@ -321,7 +321,7 @@ fun NavigationComponent(
                     authViewModel = authViewModel
                 )
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel)
+                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel,userViewModel=userViewModel)
                 groupGraph(
                     navController, chatViewModel, groupState, outputDirectory = outputDirectory,
                     executor = executor, userViewModel = userViewModel

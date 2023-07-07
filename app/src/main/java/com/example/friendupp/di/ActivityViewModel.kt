@@ -102,6 +102,13 @@ class ActivityViewModel @Inject constructor(
 
     private val _isActivityDeletedState = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isActivityDeletedState: State<Response<Void?>> = _isActivityDeletedState
+
+
+    private val _isActivityUnliked = mutableStateOf<Response<Void?>>(Response.Success(null))
+    val isActivityUnliked: State<Response<Void?>> = _isActivityUnliked
+
+    private val _isActivityLiked = mutableStateOf<Response<Void?>>(Response.Success(null))
+    val isActivityLiked: State<Response<Void?>> = _isActivityLiked
     private val _isActivityBookmarked = mutableStateOf<Response<Void?>>(Response.Success(null))
     val isActivityBookmarked: State<Response<Void?>> = _isActivityBookmarked
 
@@ -620,6 +627,13 @@ class ActivityViewModel @Inject constructor(
             }
         }
     }
+    fun likeActivityOnlyId(id: String, user: User) {
+        viewModelScope.launch {
+            repo.likeActivityOnlyId(id, user).collect { response ->
+                _isActivityLiked.value = response
+            }
+        }
+    }
 
     fun bookMarkActivity(activity_id: String, user_id:String) {
         viewModelScope.launch {
@@ -647,6 +661,14 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             repo.unlikeActivity(id, user_id).collect { response ->
                 _isActivityDeletedState.value = response
+            }
+        }
+
+    }
+    fun unlikeActivityOnlyId(id: String, user_id: String) {
+        viewModelScope.launch {
+            repo.unlikeActivityOnlyId(id, user_id).collect { response ->
+                _isActivityUnliked.value = response
             }
         }
 
