@@ -164,6 +164,22 @@ fun NavGraphBuilder.groupGraph(
                     }
 
                     navController.navigate("Home")
+                },
+
+                onAllFriends = {
+                    if(it){
+                        UserData.user!!.friends_ids_list.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.add(id)
+                            }
+                        }
+                    } else{
+                        UserData.user!!.friends_ids_list.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.remove(id)
+                            }
+                        }
+                    }
                 })
         }
 
@@ -440,56 +456,43 @@ fun NavGraphBuilder.groupGraph(
         }
     ) {backStackEntry->
         val groupId = backStackEntry.arguments?.getString("groupId")
-        /*todo this may be unncesasy call for chat group*/
-        if (groupId != null) {
-            LaunchedEffect(key1 = groupId) {
-                Log.d("SEARCHSCREENDEBUG","get user")
-                chatViewModel.getChatCollection(groupId)
-            }
-        }
-        val chatFlow = chatViewModel.chatCollectionState.collectAsState()
-        val chat = remember{ mutableStateOf<Chat?>(null) }
-        chatFlow.value.let { response ->
-            when (response) {
-                is Response.Success -> {
-                    Log.d("SEARCHSCREENDEBUG","saearch sucess")
-                    chat.value=response.data
-                    chatViewModel.resetChat()
-                }
-                is Response.Failure -> {
 
-                }
-                is Response.Loading -> {
-                    CircularProgressIndicator()
-                }
-                null->{
-                }
-            }
-
-        }
         val context =LocalContext.current
         val selectedUsers = remember { mutableStateListOf<String>() }
-
-        FriendPickerScreen(
-            modifier = Modifier,
-            userViewModel = userViewModel,
-            goBack = { navController.popBackStack() },
-            chatViewModel=chatViewModel,
-            selectedUsers = selectedUsers,
-            onUserSelected = { selectedUsers.add(it) },
-            onUserDeselected = { selectedUsers.remove(it) },
-            createActivity = {
-                if(chat.value!=null){
-                    selectedUsers.addAll(chat.value!!.members)
-                    chatViewModel.updateChatCollectionMembers(selectedUsers.distinct(),id=chat.value!!.id!!)
-                    navController.popBackStack()
-                }else{
-                    Toast.makeText(context,"Failed to load current members, please try again later.",Toast.LENGTH_SHORT).show()
+        if(groupId!=null){
+            FriendPickerScreen(
+                modifier = Modifier,
+                userViewModel = userViewModel,
+                goBack = { navController.popBackStack() },
+                chatViewModel=chatViewModel,
+                selectedUsers = selectedUsers,
+                onUserSelected = { selectedUsers.add(it) },
+                onUserDeselected = { selectedUsers.remove(it) },
+                createActivity = {
+                    chatViewModel.updateChatCollectionMembers(selectedUsers.distinct(),id=groupId)
                     navController.popBackStack()
 
-                }
+                },
 
-            })
+                onAllFriends = {
+                    if(it){
+                        UserData.user!!.friends_ids_list.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.add(id)
+                            }
+                        }
+                    } else{
+                        UserData.user!!.friends_ids_list.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.remove(id)
+                            }
+                        }
+                    }
+                })
+        }else{
+            navController.popBackStack()
+        }
+
     }
 }
 

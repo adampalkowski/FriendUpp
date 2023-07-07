@@ -114,7 +114,11 @@ fun friendsLoading(
         when (response) {
             is com.example.friendupp.model.Response.Success -> {
                 friendsList.clear()
-                friendsList.addAll(response.data)
+                response.data.forEach {
+                    if (!UserData.user!!.blocked_ids.contains(it.id)){
+                        friendsList.add(it)
+                    }
+                }
                 userViewModel.resetFriendState()
             }
             is com.example.friendupp.model.Response.Loading -> {
@@ -133,7 +137,11 @@ fun friendsLoading(
         when (response) {
             is com.example.friendupp.model.Response.Success -> {
                 moreFriendsList.clear()
-                moreFriendsList.addAll(response.data)
+                response.data.forEach {
+                    if (!UserData.user!!.blocked_ids.contains(it.id)){
+                        moreFriendsList.add(it)
+                    }
+                }
                 userViewModel.resetMoreFriends()
 
             }

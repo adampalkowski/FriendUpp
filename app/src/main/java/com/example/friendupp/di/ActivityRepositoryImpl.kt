@@ -601,9 +601,10 @@ class ActivityRepositoryImpl @Inject constructor(
     ): Flow<Response<Void?>> = flow {
         try {
             emit(Response.Loading)
-            val addition =
-                activitiesRef.document(activity_id).update("invited_users", invites).await()
-            emit(Response.Success(addition))
+            val invitesArray = invites.toTypedArray() // Convert list to array
+            val update = activitiesRef.document(activity_id).update("invited_users", FieldValue.arrayUnion(*invitesArray)).await()
+
+            emit(Response.Success(update))
 
         } catch (e: Exception) {
             emit(Response.Failure(e = SocialException("AddActivity exception", Exception())))

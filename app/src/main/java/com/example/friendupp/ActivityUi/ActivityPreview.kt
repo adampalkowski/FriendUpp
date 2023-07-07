@@ -1,6 +1,7 @@
 package com.example.friendupp.ActivityUi
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -50,11 +51,13 @@ sealed class ActivityPreviewEvents{
     object GoBack:ActivityPreviewEvents()
     class ShareActivityLink(val link:String):ActivityPreviewEvents()
     class OpenChat(val id:String):ActivityPreviewEvents()
+    class ReportActivity(val id:String):ActivityPreviewEvents()
     class Leave(val id:String):ActivityPreviewEvents()
     class Join(val id:String):ActivityPreviewEvents()
     class UnBookmark(val id:String):ActivityPreviewEvents()
     class GoToActivityParticipants(val id:String):ActivityPreviewEvents()
     class Bookmark(val id:String):ActivityPreviewEvents()
+    class AddUsers(val id:String):ActivityPreviewEvents()
 }
 val TAG="ActivityPrewviewDebug"
 /*
@@ -84,7 +87,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                 Box(modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(0.dp, 300.dp)){
-                    if(activity!!.image!=null){
+                    if(!activity!!.image.isNullOrEmpty()){
                         Log.d(TAG,"image ")
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -160,17 +163,25 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                 }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark)
         }
     }
-
+    val context = LocalContext.current
     AnimatedVisibility(visible = displaySettings) {
         Dialog(onDismissRequest = { displaySettings=false }) {
             ActivityPreviewSettings(onCancel={displaySettings=false},shareActivityLink= {
-
-
                 if(activityData.value!=null){
                     onEvent(ActivityPreviewEvents.ShareActivityLink(activityData.value!!.id))
                     displaySettings=false
                 }
-                })
+                },enableActivitySharing=activityData.value!!.enableActivitySharing, addUsers = {
+                displaySettings=false
+                onEvent(ActivityPreviewEvents.AddUsers(activityData.value!!.id))},joined=activityData.value!!.participants_ids.contains(UserData.user!!.id), leaveActivity = {
+                onEvent(ActivityPreviewEvents.Leave(activityData.value!!.id))
+                Toast.makeText(context,"Activity left",Toast.LENGTH_SHORT).show()
+
+                displaySettings=false
+            }, reportActivity = {
+                onEvent(ActivityPreviewEvents.ReportActivity(activityData.value!!.id))
+                displaySettings=false
+            })
         }
     }
 }
@@ -179,7 +190,8 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 fun ParticipantsPreview(participantsIds: ArrayList<String>, participantsUsernames: HashMap<String, String>, participantsProfilePictures: HashMap<String, String>,GoToActivityParticipants:()->Unit) {
     Row(
         Modifier
-            .fillMaxWidth().clickable(onClick = GoToActivityParticipants)
+            .fillMaxWidth()
+            .clickable(onClick = GoToActivityParticipants)
             .padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(painter = painterResource(id = R.drawable.ic_group), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
         Spacer(modifier = Modifier.width(24.dp))
@@ -274,12 +286,17 @@ fun ActivityPreviewOption() {
 }
 
 @Composable
-fun ActivityPreviewSettings(onCancel: () -> Unit={},shareActivityLink: () -> Unit={}) {
+fun ActivityPreviewSettings(onCancel: () -> Unit={},shareActivityLink: () -> Unit={},leaveActivity: () -> Unit={},reportActivity: () -> Unit={},addUsers: () -> Unit={},enableActivitySharing:Boolean,joined:Boolean) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
         ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary, onClick = shareActivityLink)
-        ProfileDisplaySettingsItem(label="Report",icon=R.drawable.ic_flag, textColor = SocialTheme.colors.error)
-        ProfileDisplaySettingsItem(label="Leave",icon=R.drawable.ic_logout , textColor = SocialTheme.colors.error)
-        ProfileDisplaySettingsItem(label="Add users",icon=R.drawable.ic_person_add , textColor = SocialTheme.colors.textPrimary)
+        ProfileDisplaySettingsItem(label="Report",icon=R.drawable.ic_flag, textColor = SocialTheme.colors.error, onClick = reportActivity)
+        if(joined){
+            ProfileDisplaySettingsItem(label="Leave",icon=R.drawable.ic_logout , textColor = SocialTheme.colors.error, onClick = leaveActivity)
+
+        }
+        if(enableActivitySharing ){
+                ProfileDisplaySettingsItem(label="Add users",icon=R.drawable.ic_person_add , textColor = SocialTheme.colors.textPrimary,onClick=addUsers)
+        }
         ProfileDisplaySettingsItem(label="Cancel" , turnOffIcon = true, textColor = SocialTheme.colors.textPrimary.copy(0.5f), onClick = onCancel)
     }
 }
@@ -403,7 +420,10 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
             Row( modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center){
-                Spacer(modifier = Modifier.height(1.dp).weight(1f).background(SocialTheme.colors.uiBorder))
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .weight(1f)
+                    .background(SocialTheme.colors.uiBorder))
                 ActionButtonDefault(
                     icon = R.drawable.ic_check_300,
                     isSelected = joined,
@@ -419,14 +439,20 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                     }
                 )
                /* ActivityPreviewButtonRowItem(icon=R.drawable.ic_check_300, onClick = {joined=!joined}, selected = joined )*/
-                Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .width(16.dp)
+                    .background(SocialTheme.colors.uiBorder))
                 ActionButtonDefault(
                     icon = R.drawable.ic_chat_300,
                     isSelected = false,
                     onClick =  {onEvent(ActivityPreviewEvents.OpenChat(id)) }
                 )
               /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
-                Spacer(modifier = Modifier.height(1.dp).width(16.dp).background(SocialTheme.colors.uiBorder))
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .width(16.dp)
+                    .background(SocialTheme.colors.uiBorder))
 
                 ActionButtonDefault(
                     icon = R.drawable.ic_bookmark_300,
@@ -443,7 +469,10 @@ fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->
                     }
                 )
           /*      ActivityPreviewButtonRowItem(icon=R.drawable.ic_bookmark_300, onClick = {bookmarked=!bookmarked}, selected =bookmarked)*/
-                Spacer(modifier = Modifier.height(1.dp).width(24.dp).background(SocialTheme.colors.uiBorder))
+                Spacer(modifier = Modifier
+                    .height(1.dp)
+                    .width(24.dp)
+                    .background(SocialTheme.colors.uiBorder))
 
             }
         Spacer(modifier = Modifier.height(24.dp))

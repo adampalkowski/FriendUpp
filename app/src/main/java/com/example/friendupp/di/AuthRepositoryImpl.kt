@@ -104,6 +104,7 @@ class AuthRepositoryImpl @Inject constructor(
                 tags = ArrayList(),
                 accountCreateTime = getCurrentDateTime(),
                 geoHash = ""
+            , friends_ids_list = ArrayList()
             )
             db.collection("Users").document(uid).set(user).await()
         }

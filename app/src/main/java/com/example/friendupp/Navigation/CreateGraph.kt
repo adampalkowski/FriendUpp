@@ -233,6 +233,23 @@ fun NavGraphBuilder.createGraph(
                 selectedUsers = selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
                 onUserDeselected = { selectedUsers.remove(it) },
+
+                onAllFriends = {
+
+                    if(it){
+                        UserData.user!!.friends_ids.keys.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.add(id)
+                            }
+                        }
+                    } else{
+                        UserData.user!!.friends_ids.keys.forEach{id->
+                            if(!UserData.user!!.blocked_ids.contains(id)){
+                                selectedUsers.remove(id)
+                            }
+                        }
+                    }
+                },
                 createActivity = {
                     val user = UserData.user
                     if (user != null) {

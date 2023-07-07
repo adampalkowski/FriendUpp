@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +41,7 @@ import com.example.friendupp.MapScreen
 import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.Participants.ParticipantsScreen
 import com.example.friendupp.Profile.ProfileDisplayEvents
+import com.example.friendupp.R
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
 import com.example.friendupp.di.ActiveUsersViewModel
@@ -472,7 +474,7 @@ fun NavGraphBuilder.mainGraph(
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
 
-
+            var openReportDialog by remember{ mutableStateOf<String?>(null) }
 
             ActivityPreview(onEvent = { event ->
                 when (event) {
@@ -507,6 +509,9 @@ fun NavGraphBuilder.mainGraph(
                         )
 
                     }
+                    is ActivityPreviewEvents.AddUsers -> {
+                        navController.navigate("FriendPickerAddActivityUsers/"+event.id)
+                    }
                     is ActivityPreviewEvents.Bookmark -> {
                         activityViewModel.bookMarkActivity(
                             event.id,
@@ -525,6 +530,11 @@ fun NavGraphBuilder.mainGraph(
                         navController.navigate("ChatItem/" + event.id)
 
                     }
+                    is ActivityPreviewEvents.ReportActivity -> {
+
+                        openReportDialog=event.id
+
+                    }
                     is ActivityPreviewEvents.Leave -> {
                         activityViewModel?.unlikeActivity(
                             event.id,
@@ -533,10 +543,123 @@ fun NavGraphBuilder.mainGraph(
                     }
                 }
             }, homeViewModel = homeViewModel)
+
+            if(openReportDialog!=null){
+                FriendUppDialog(
+                    label = "If the activity contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
+                    icon = R.drawable.ic_flag,
+                    onCancel = { openReportDialog=null },
+                    onConfirm = {       chatViewModel.reportChat(openReportDialog.toString())
+                        Toast.makeText(context,"Activity reported",Toast.LENGTH_SHORT).show()
+                        openReportDialog=null}, confirmLabel = "Report")
+            }
         }
 
+        composable(
+            "FriendPickerAddActivityUsers/{activityId}",
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
 
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Home" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Home" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Create" -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
 
+                    else -> null
+                }
+            }
+        ) {backStackEntry->
+            val activityId = backStackEntry.arguments?.getString("activityId")
+
+            val selectedUsers = remember { mutableStateListOf<String>() }
+            val context = LocalContext.current
+            if(activityId!=null){
+
+                FriendPickerScreen(
+                    modifier = Modifier,
+                    userViewModel = userViewModel,
+                    goBack = { navController.popBackStack() },
+                    chatViewModel=chatViewModel,
+                    selectedUsers = selectedUsers,
+                    onUserSelected = { selectedUsers.add(it) },
+                    onUserDeselected = { selectedUsers.remove(it) },
+                    createActivity = {
+                        val invites = arrayListOf<String>()
+                        invites.addAll(selectedUsers)
+                        activityViewModel.updateActivityInvites(activity_id = activityId, invites = invites)
+                        Toast.makeText(context,"Invited users",Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+
+                    },
+
+                    onAllFriends = {
+                        if(it){
+                            UserData.user!!.friends_ids_list.forEach{id->
+                                if(!UserData.user!!.blocked_ids.contains(id)){
+                                    selectedUsers.add(id)
+                                }
+                            }
+                        } else{
+                            UserData.user!!.friends_ids_list.forEach{id->
+                                if(!UserData.user!!.blocked_ids.contains(id)){
+                                    selectedUsers.remove(id)
+                                }
+                            }
+                        }
+                    })
+            }else{
+                navController.popBackStack()
+            }
+
+        }
         composable(
             "Map",
             enterTransition = {

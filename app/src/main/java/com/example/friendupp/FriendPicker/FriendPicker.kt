@@ -56,6 +56,7 @@ fun FriendPickerScreen(
     onUserSelected: (String) -> Unit,
     onUserDeselected: (String) -> Unit,
     createActivity: () -> Unit,
+    onAllFriends:(Boolean)->Unit
 ) {
     val friendsList = remember { mutableStateListOf<User>() }
     val moreFriendsList = remember { mutableStateListOf<User>() }
@@ -130,7 +131,17 @@ fun FriendPickerScreen(
                     )
                     Switch(
                         checked = allFriends,
-                        onCheckedChange = { allFriends = !allFriends },
+                        onCheckedChange = {
+                        if(it){
+                            selectedList.list.add("All friends")
+                            onAllFriends(it)
+                        }else{
+                            selectedList.list.remove("All friends")
+                            onAllFriends(it)
+
+                        }
+                            allFriends=it
+                             },
                         modifier = Modifier.padding(start = 16.dp),
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = SocialTheme.colors.textInteractive,

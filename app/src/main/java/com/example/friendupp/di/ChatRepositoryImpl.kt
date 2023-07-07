@@ -284,9 +284,11 @@ class ChatRepositoryImpl @Inject constructor(
         members_list: List<String>,
         id: String
     ): Flow<Response<Void?>> = flow {
+        Log.d("updateChatCollectionMembers",members_list.toString())
         try {
             emit(Response.Loading)
-            val update = chatCollectionsRef.document(id).update("members", members_list).await()
+            val membersArray = members_list.toTypedArray() // Convert list to array
+            val update = chatCollectionsRef.document(id).update("members", FieldValue.arrayUnion(*membersArray)).await()
             emit(Response.Success(update))
         } catch (e: Exception) {
             emit(
