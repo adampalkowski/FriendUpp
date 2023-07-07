@@ -22,6 +22,7 @@ sealed class CreatorSettingsEvent {
     object GoBack : CreatorSettingsEvent()
     object AddUsers : CreatorSettingsEvent()
     object DeleteActivity : CreatorSettingsEvent()
+    object DeleteImage : CreatorSettingsEvent()
     object Share : CreatorSettingsEvent()
     object RemoveParticipant : CreatorSettingsEvent()
     object ChangeLocation : CreatorSettingsEvent()
@@ -70,9 +71,7 @@ fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Act
             onEvent(CreatorSettingsEvent.RemoveParticipant)
 
         }
-        SettingsItem(label = "Delete image", icon = R.drawable.ic_add_image) {
-            onEvent(CreatorSettingsEvent.DeleteActivity)
-        }
+
         SettingsItem(label = "Delete activity", icon = R.drawable.ic_delete) {
             onEvent(CreatorSettingsEvent.DeleteActivity)
         }

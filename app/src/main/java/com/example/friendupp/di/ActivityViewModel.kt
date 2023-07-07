@@ -688,6 +688,7 @@ class ActivityViewModel @Inject constructor(
 
         }
     }
+
     fun deleteActivity(activity: Activity) {
         val TAG="DELETEACTIVITYDEBUG"
         viewModelScope.launch {

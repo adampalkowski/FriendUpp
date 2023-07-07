@@ -626,6 +626,9 @@ fun NavGraphBuilder.mainGraph(
             var openDeleteActivityDialog by  remember {
                 mutableStateOf<com.example.friendupp.model.Activity?>(null)
             }
+            var openDeleteImageDialog by  remember {
+                mutableStateOf<com.example.friendupp.model.Activity?>(null)
+            }
             val context = LocalContext.current
             val activityId = backStackEntry.arguments?.getString("activityId")
             val activityData=homeViewModel.expandedActivity.collectAsState()
