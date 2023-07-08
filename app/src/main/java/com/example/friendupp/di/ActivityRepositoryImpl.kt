@@ -217,7 +217,7 @@ class ActivityRepositoryImpl @Inject constructor(
                 .orderBy("geoHash")
                 .startAt(b.startHash)
                 .endAt(b.endHash)
-                .limit(2)
+                .limit(5)
             tasks.add(q.get())
         }
 
@@ -286,6 +286,8 @@ class ActivityRepositoryImpl @Inject constructor(
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
             val q = activitiesRef.whereEqualTo("public", true)
+                .orderBy("start_time")
+
                 .orderBy("geoHash")
                 .startAfter(lastVisibleClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)
@@ -1339,10 +1341,11 @@ class ActivityRepositoryImpl @Inject constructor(
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public", true).whereEqualTo("date", date)
+            val q = activitiesRef
                 .orderBy("geoHash")
                 .startAt(b.startHash)
                 .endAt(b.endHash)
+                .whereEqualTo("date", date)
                 .limit(2)
             tasks.add(q.get())
         }
@@ -1368,38 +1371,44 @@ class ActivityRepositoryImpl @Inject constructor(
                     }
                 }
 
-                if (matchingDocs != null && matchingDocs.isNotEmpty()) {
+                if (matchingDocs.isNotEmpty()) {
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
+
                         Log.d(TAG, activity.toString())
 
                         if (activity != null) {
                             newActivities.add(activity)
                         }
+                        Log.d(com.example.friendupp.Home.TAG,newActivities.size.toString())
                     }
                     lastVisibleFilteredClosestData = matchingDocs[matchingDocs.size - 1]
-
                     trySend(Response.Success(newActivities))
-
+                } else {
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = "No nearby activities found",
+                                e = Exception()
+                            )
+                        )
+                    )
                 }
-            }.addOnFailureListener() {
+            }.addOnFailureListener { exception ->
                 trySend(
                     Response.Failure(
                         e = SocialException(
                             message = "Nearby activity download failure",
-                            e = Exception()
+                            e = exception
                         )
                     )
                 )
-
             }
-
 
         awaitClose {
         }
     }
-
     override suspend fun getMoreFilteredDateClosestActivities(
         lat: Double,
         lng: Double,
@@ -1410,26 +1419,24 @@ class ActivityRepositoryImpl @Inject constructor(
         val radiusInM = radius
         Log.d("HOMESCREENTEST", "DB getMoreFilteredClosestActivities")
 
-
         val bounds = GeoFireUtils.getGeoHashQueryBounds(center, radiusInM)
         val tasks: MutableList<Task<QuerySnapshot>> = ArrayList()
         for (b in bounds) {
-            val q = activitiesRef.whereEqualTo("public", true)
-                .whereGreaterThan("start_time", date)
-                .orderBy("start_time", Query.Direction.ASCENDING)
+            val q = activitiesRef
                 .orderBy("geoHash")
                 .startAfter(lastVisibleFilteredClosestData?.data?.get("geoHash"))
                 .endAt(b.endHash)
+                .whereEqualTo("date", date)
                 .limit(10)
             tasks.add(q.get())
         }
+
         // Collect all the query results together into a single list
         Tasks.whenAllComplete(tasks)
             .addOnCompleteListener {
                 val matchingDocs: MutableList<DocumentSnapshot> = ArrayList()
                 for (task in tasks) {
                     val snap = task.result
-
 
                     for (doc in snap!!.documents) {
                         val lat = doc.getDouble("lat")!!
@@ -1445,7 +1452,7 @@ class ActivityRepositoryImpl @Inject constructor(
                     }
                 }
 
-                if (matchingDocs != null && matchingDocs.isNotEmpty()) {
+                if (matchingDocs.isNotEmpty()) {
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
@@ -1457,28 +1464,33 @@ class ActivityRepositoryImpl @Inject constructor(
                     }
                     lastVisibleFilteredClosestData = matchingDocs[matchingDocs.size - 1]
                     loaded_public_activities.addAll(newActivities)
-                    val new_instance = ArrayList<Activity>()
+                    val new_instance = ArrayList(loaded_public_activities)
                     Log.d("ActivityRepositoryImpl", loaded_public_activities.toString())
-                    new_instance.addAll(loaded_public_activities)
                     trySend(Response.Success(new_instance))
-
+                } else {
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = "No nearby activities found",
+                                e = Exception()
+                            )
+                        )
+                    )
                 }
-            }.addOnFailureListener() {
+            }
+            .addOnFailureListener { exception ->
                 trySend(
                     Response.Failure(
                         e = SocialException(
                             message = "Nearby activity download failure",
-                            e = Exception()
+                            e = exception
                         )
                     )
                 )
-
             }
 
-        awaitClose {
-        }
+        awaitClose {}
     }
-
     override suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>> = callbackFlow {
 
         val activeUsersQuery = activeUsersRef

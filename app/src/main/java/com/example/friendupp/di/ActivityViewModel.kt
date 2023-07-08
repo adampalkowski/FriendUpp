@@ -52,8 +52,10 @@ class ActivityViewModel @Inject constructor(
     private val _trendingActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val trendingActivitiesListState: State<Response<List<Activity>>> = _trendingActivitiesListState
 
-    private val _closestActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
-    val closestActivitiesListState: State<Response<List<Activity>>> = _closestActivitiesListState
+    private val _closestActivitiesListState = mutableStateOf<Response<List<Activity>>?>(null)
+    val closestActivitiesListState: State<Response<List<Activity>>?> = _closestActivitiesListState
+    private val _closestActivitiesDateListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
+    val closestActivitiesDateListState: State<Response<List<Activity>>> = _closestActivitiesDateListState
 
     private val _closestFilteredActivitiesListState = mutableStateOf<Response<List<Activity>>>(Response.Loading)
     val closestFilteredActivitiesListState: State<Response<List<Activity>>> = _closestFilteredActivitiesListState
@@ -138,7 +140,9 @@ class ActivityViewModel @Inject constructor(
     val friendsActivitiesByTagsState: State<Response<List<Activity>>?> = _friendsActivitiesByTagsState
 
 
-
+    fun resetClosestActivites(){
+        _closestActivitiesListState.value=null
+    }
     init {
         // getActivities()
     }
@@ -834,6 +838,8 @@ class ActivityViewModel @Inject constructor(
             repo.getClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        Log.d(com.example.friendupp.Home.TAG,response.data.size.toString())
+
                         response.data.forEach {
                             list_without_removed_activites.add(it)
                             checkIfDelete(
@@ -882,15 +888,15 @@ class ActivityViewModel @Inject constructor(
 
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
-                            _closestActivitiesListState.value =
+                            _moreclosestActivitiesListState.value =
                                 Response.Success(list_without_removed_activites as List<Activity>)
                         }
                     }
                     is Response.Failure -> {
-                        _closestActivitiesListState.value = response
+                        _moreclosestActivitiesListState.value = response
                     }
                     is Response.Loading -> {
-                        _closestActivitiesListState.value = response
+                        _moreclosestActivitiesListState.value = response
                     }
                 }
 

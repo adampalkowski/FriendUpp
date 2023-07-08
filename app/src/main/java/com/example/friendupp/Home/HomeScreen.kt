@@ -77,7 +77,8 @@ sealed class HomeEvents {
     class OpenLiveUser(val id: String) : HomeEvents()
 }
 
-val TAG = "HOMESCREENDEBUG"
+var TAG ="LOADACTIVITIESDEBUG"
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -158,9 +159,9 @@ fun HomeScreen(
             activitiesExist = publicActivitiesExist,
             currentLocation,
             selectedTags,
-            date = datePicked.value
+            date = datePicked.value,
+            morePublicActivities
         )
-        loadMorePublicActivities(activityViewModel, morePublicActivities)
     }
     val lazyListState = rememberLazyListState()
 
@@ -174,12 +175,25 @@ fun HomeScreen(
                 activityViewModel.getActivitiesForUser(UserData.user!!.id)
         }else{
             if(currentLocation!=null){
+                if(datePicked.value!=null)
+                {
+                    Log.d("HOMESCREENDEBUG","getClosestFilteredDateActivities")
+                    activityViewModel.getClosestFilteredDateActivities(
+                        currentLocation?.latitude!!,
+                        currentLocation?.longitude!!,
+                        date=datePicked.value.toString(),
+                        50.0 * 10000.0f
+                    )
+                }else{
+                    Log.d("HOMESCREENDEBUG","getClosestActivities")
 
-                activityViewModel.getClosestActivities(
-                    currentLocation?.latitude!!,
-                    currentLocation?.longitude!!,
-                    50.0 * 10000.0f
-                )
+                    activityViewModel.getClosestActivities(
+                        currentLocation?.latitude!!,
+                        currentLocation?.longitude!!,
+                        50.0 * 10000.0f
+                    )
+                }
+
             }
         }
         delay(1000)
@@ -318,14 +332,25 @@ fun HomeScreen(
                         }
                         item {
                             LaunchedEffect(true) {
-                                if (activitiesExist.value) {
+                                if (publicActivitiesExist.value) {
                                     activityViewModel.location.value.let { location ->
                                         if (location != null) {
-                                            activityViewModel.getMoreClosestActivities(
-                                                location.latitude,
-                                                location.longitude,
-                                                50.0 * 1000.0
-                                            )
+                                            if(datePicked.value!=null){
+                                                activityViewModel.getMoreClosestFilteredDateActivities(
+                                                    location.latitude,
+                                                    location.longitude,
+                                                    date=datePicked.value.toString(),
+                                                    50.0 * 1000.0
+                                                )
+
+                                            }else {
+                                                activityViewModel.getMoreClosestActivities(
+                                                    location.latitude,
+                                                    location.longitude,
+                                                    50.0 * 1000.0
+                                                )
+                                            }
+
                                         }
 
                                     }

@@ -291,6 +291,8 @@ fun NavGraphBuilder.createGraph(
                             image = activityState.imageUrl,
                             end_time = convertToUTC(endTime) ,
                             title = activityState.titleState.text,
+                            tags=activityState.tags,
+                            public=activityState.selectedOptionState.option==Option.PUBLIC,
                             description = activityState.descriptionState.text
                         )
 
@@ -310,9 +312,10 @@ fun NavGraphBuilder.createGraph(
                         currentActivity.value = currentActivity.value.copy(id = id)
                         val formatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                         val date = LocalDateTime.now().format(formatterDate)
+
                         currentActivity.value = currentActivity.value.copy(
                             creation_time = getCurrentUTCTime(),
-                            date = date,
+                            date = if(activityState.selectedOptionState.option==Option.PUBLIC)date else "",
                         )
                         if (activityState.location.latitude != null && activityState.location.latitude!=0.0) {
 

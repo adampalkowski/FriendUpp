@@ -41,7 +41,6 @@ import com.example.friendupp.Components.BlueButton
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.RedButton
 import com.example.friendupp.Components.ScreenHeading
-import com.example.friendupp.Home.loadMorePublicActivities
 import com.example.friendupp.Home.loadPublicActivities
 import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.Map.MapViewModel

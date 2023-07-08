@@ -30,7 +30,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.friendupp.Home.SocialButtonNormal
-import com.example.friendupp.Home.loadMorePublicActivities
 import com.example.friendupp.Home.loadPublicActivities
 import com.example.friendupp.Map.MapActivityItem
 import com.example.friendupp.Map.MapViewModel
@@ -74,9 +73,9 @@ fun MapScreen(
         activitiesExist = publicActivitiesExist,
         currentLocation,
         selectedTags = SnapshotStateList(),
-        date = datePicked.value
+        date = datePicked.value,
+        morePublicActivities
     )
-    loadMorePublicActivities(activityViewModel, morePublicActivities)
 
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 11f)
