@@ -25,13 +25,15 @@ FriendUpp is an Android app designed to bring friends closer together by simplif
 |![Screenshot_2023-06-19-14-31-39-808_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2d355d8e-527b-4cce-8c13-3d3e1c2f20e5)| ![Screenshot_2023-06-19-15-30-37-989_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/5b1387e1-dd14-4216-9a50-e2d87d15ea4e)|![Screenshot_2023-06-21-13-21-04-848_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/7053a6a6-8486-4c0c-9a9b-6acf0480a357)
 |
 
+
+
 | Create | Profile | Settings |
 | :---------: | :-------------: | :-------------: |
-| ![Screenshot_2023-06-19-15-23-15-838_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/3e762f00-e099-4d8c-9fd6-2f9e05ee48c8)| ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)| ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)|
+|![Screenshot_2023-07-08-11-52-09-866_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/170e6880-79df-47d9-a158-a36762522fa0)| ![Screenshot_2023-06-19-15-22-05-825_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/05b82973-12ab-464b-8a4f-1ee81c80b9c7)| ![Screenshot_2023-06-19-15-22-09-260_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/c8536a0a-9123-4aed-80d7-7afe0a99d318)|
 
 | Camerax | Custom settings | Login |
 | :---------: | :-------------: | :-------------: |
-| ![Screenshot_2023-06-19-15-24-38-047_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2341f2b4-1ebb-4a83-a625-771dca1a4445)| ![Screenshot_2023-06-19-15-23-41-862_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/3e145f74-6e48-43a4-882f-9e3ab9cc5402)|![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f8f815d-da27-4a1a-ae5c-12a8f3a77eb4)|
+| ![Screenshot_2023-06-19-15-24-38-047_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/2341f2b4-1ebb-4a83-a625-771dca1a4445)| ![Screenshot_2023-07-08-11-52-38-296_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/9a788ef8-dffd-420e-8a9a-b2da6d000c57)|![Screenshot_2023-06-19-16-21-18-495_com example friendupp](https://github.com/adampalkowski/FriendUpp/assets/50372825/8f8f815d-da27-4a1a-ae5c-12a8f3a77eb4)|
 
 | Register | Search |
 | :---------: | :---------: |
