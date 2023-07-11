@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Components.NameEditText
@@ -66,7 +66,7 @@ sealed class CreateSettingsEvents {
 }
 
 @Composable
-fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,activityState:ActivityState) {
+fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,activityState: ActivityState) {
     val focusRequester = remember { FocusRequester() }
     var locationState by remember {
         mutableStateOf<LatLng?>(null)

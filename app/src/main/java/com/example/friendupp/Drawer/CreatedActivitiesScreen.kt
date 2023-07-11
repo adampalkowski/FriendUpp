@@ -9,8 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.friendupp.ActivityUi.ActivityEvents
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Profile.ProfileEvents
@@ -88,7 +88,7 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
 
 }
 
-fun handleActivityEvent(event: ActivityEvents,    onEvent: (CreatedActivitiesEvents) -> Unit) {
+fun handleActivityEvent(event: ActivityEvents, onEvent: (CreatedActivitiesEvents) -> Unit) {
     when (event) {
         is ActivityEvents.Expand -> {
             onEvent(CreatedActivitiesEvents.ExpandActivity(event.activity))

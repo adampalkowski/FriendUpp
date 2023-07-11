@@ -28,8 +28,8 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.ActivityPreview.CreatorSettingsEvent
 import com.example.friendupp.ActivityPreview.CreatorSettingsScreen
-import com.example.friendupp.ActivityUi.ActivityPreview
-import com.example.friendupp.ActivityUi.ActivityPreviewEvents
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreview
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewEvents
 import com.example.friendupp.Camera.getActivity
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.FriendPicker.FriendPickerScreen
@@ -671,7 +671,7 @@ fun NavGraphBuilder.mainGraph(
                     onCancel = { openDeleteActivityDialog=null },
                     onConfirm = {
 
-                        activityViewModel.deleteActivity(openDeleteActivityDialog!!)
+                        activityViewModel.deleteActivity(openDeleteActivityDialog!!,manualyDeleted=true)
                         Toast.makeText(
                             context,
                             "Activity deleted",

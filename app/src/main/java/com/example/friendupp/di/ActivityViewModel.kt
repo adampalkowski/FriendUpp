@@ -693,7 +693,7 @@ class ActivityViewModel @Inject constructor(
         }
     }
 
-    fun deleteActivity(activity: Activity) {
+    fun deleteActivity(activity: Activity,manualyDeleted:Boolean=false) {
         val TAG="DELETEACTIVITYDEBUG"
         viewModelScope.launch {
             repo.deleteActivity(activity.id).collect { response ->
@@ -704,8 +704,8 @@ class ActivityViewModel @Inject constructor(
                     else->{}
                 }
                 _isActivityDeletedState.value = response
-
             }
+
             chatRepo.deleteChatCollection(activity.id).collect { response ->
                 when(response){
                     is Response.Success->{
@@ -726,7 +726,12 @@ class ActivityViewModel @Inject constructor(
                 }
 
             }
-
+            if(!manualyDeleted){
+                Log.d(TAG,"INCERASE STATS")
+                repo.increaseUserStats(activity.creator_id,activity.participants_ids.size).collect(){
+                    response->
+                }
+            }
         }
     }
     fun deleteActivityWithImage(id: String) {

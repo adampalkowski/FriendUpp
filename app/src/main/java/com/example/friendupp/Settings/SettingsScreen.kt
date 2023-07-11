@@ -189,7 +189,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                     }
                 })
 
-
+/*
             SettingsLabel("About")
             SettingsItem(
                 label = "FAQ",
@@ -203,11 +203,11 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 label = "Terms of service and privacy policy",
                 icon = R.drawable.ic_terms,
                 onClick = { settingsEvents(SettingsEvents.TermsAndPrivacy) })
-
+*/
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "Version 1.0",
+                text = "Beta Version 1.0",
                 style = TextStyle(
                     fontFamily = Lexend,
                     fontWeight = FontWeight.ExtraLight,

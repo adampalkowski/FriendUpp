@@ -8,6 +8,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toFile
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -81,16 +82,20 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
             var photoUri by remember {
                 mutableStateOf<Uri?>(null)
             }
+
             val systemUiController = rememberSystemUiController()
             val scope = rememberCoroutineScope()
-
-
+            val context = LocalContext.current
             CameraView(outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
                 photoUri= uri
+
                 /*todo handle the image uri*/
             }, onError = {}, onEvent = {event->
                 when(event){
                     is CameraEvent.GoBack->{
+                        if(photoUri!=null){
+                            photoUri!!.toFile().delete()
+                        }
                             navController.navigate("Home")
                     }
                     is CameraEvent.AcceptPhoto->{
@@ -106,6 +111,19 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
 
                             /*todo dooo sth with the final uri */
                         }
+                    }
+                    is CameraEvent.DeletePhoto -> {
+                        if(photoUri!=null){
+                            photoUri!!.toFile().delete()
+                        }
+                        Log.d("CreateGraphActivity", "dElete photo")
+
+                        photoUri = null
+                    }
+                    is CameraEvent.Download -> {
+                        Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+
+                        photoUri = null
                     }
                     else ->{}
                 }

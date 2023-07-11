@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.ActivityEvents
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Drawer.CreatedActivitiesEvents
@@ -459,7 +459,7 @@ fun ProfileDisplaySettingsItem(turnOffIcon:Boolean=false,icon:Int=R.drawable.ic_
     }
 }
 
-private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileDisplayEvents) -> Unit) {
+private fun handleActivityEvent(event: ActivityEvents, onEvent: (ProfileDisplayEvents) -> Unit) {
     when (event) {
         is ActivityEvents.Expand -> {
             onEvent(ProfileDisplayEvents.ExpandActivity(event.activity))

@@ -139,11 +139,11 @@ fun CreateLive(imageUrl: String, onClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(58.dp)
-                    .background(color = Color.Black.copy(0.8f)), contentAlignment = Alignment.Center
+                    .background(color =SocialTheme.colors.uiBackground.copy(0.6f)), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add),
-                    tint = Color.White,
+                    tint = SocialTheme.colors.textPrimary.copy(0.6f),
                     contentDescription = null
                 )
             }

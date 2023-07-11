@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.TimeIndicator
-import com.example.friendupp.ActivityUi.activityCard
+import com.example.friendupp.bottomBar.ActivityUi.TimeIndicator
+import com.example.friendupp.bottomBar.ActivityUi.activityCard
 import com.example.friendupp.Home.buttonsRow
 import com.example.friendupp.MapEvent
 import com.example.friendupp.Profile.ProfileInfo

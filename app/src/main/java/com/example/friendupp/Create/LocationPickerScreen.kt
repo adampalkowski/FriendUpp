@@ -35,7 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.BlueButton
 import com.example.friendupp.Components.NameEditText
@@ -65,7 +65,7 @@ sealed class LocationPickerEvent {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun LocationPickerScreen(onEvent: (LocationPickerEvent) -> Unit, activityState: ActivityState,mapViewModel: MapViewModel) {
+fun LocationPickerScreen(onEvent: (LocationPickerEvent) -> Unit, activityState: ActivityState, mapViewModel: MapViewModel) {
     val flow = mapViewModel.currentLocation.collectAsState()
     var currentLocation by remember { mutableStateOf(LatLng(50.0, 20.0)) }
 

@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.ActivityEvents
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.ChatUi.ButtonAdd
 
@@ -622,7 +622,7 @@ fun ProfileHistory(modifier:Modifier,activitiesHistory: MutableList<Activity>){
 
 
 
-private fun handleActivityEvent(event: ActivityEvents,    onEvent: (ProfileEvents) -> Unit) {
+private fun handleActivityEvent(event: ActivityEvents, onEvent: (ProfileEvents) -> Unit) {
     when (event) {
         is ActivityEvents.Expand -> {
             onEvent(ProfileEvents.ExpandActivity(event.activity))

@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toFile
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -361,7 +362,7 @@ fun NavGraphBuilder.chatGraph(
             var photoUri by rememberSaveable {
                 mutableStateOf<Uri?>(null)
             }
-
+            val context = LocalContext.current
             CameraView(
                 outputDirectory = outputDirectory,
                 executor = executor,
@@ -373,6 +374,10 @@ fun NavGraphBuilder.chatGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
+
                             navController.popBackStack()
                         }
                         is CameraEvent.AcceptPhoto -> {
@@ -385,9 +390,19 @@ fun NavGraphBuilder.chatGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
+
                             Log.d("CreateGraphActivity", "dElete photo")
                             photoUri = null
                         }
+                        is CameraEvent.Download -> {
+                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            Log.d("CreateGraphActivity", "dElete photo")
+                            photoUri = null
+                        }
+
                         else -> {}
                     }
                 },
@@ -749,6 +764,7 @@ fun NavGraphBuilder.chatGraph(
                         uri!!
                     )
                     chatViewModel.onUriProcessed()
+
                 }
             }
 

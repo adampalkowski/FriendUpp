@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.*

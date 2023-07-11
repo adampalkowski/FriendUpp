@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.friendupp.ActivityUi.ActivityPreviewEvents
-import com.example.friendupp.ActivityUi.ActivityPreviewSettings
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewEvents
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewSettings
 import com.example.friendupp.Profile.ProfileDisplaySettingsItem
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.SocialTheme

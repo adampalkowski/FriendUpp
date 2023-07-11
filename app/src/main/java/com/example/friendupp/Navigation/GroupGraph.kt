@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -260,7 +262,7 @@ fun NavGraphBuilder.groupGraph(
                 )
             }
 
-
+            val context = LocalContext.current
             CameraView(
                 outputDirectory = outputDirectory,
                 executor = executor,
@@ -271,6 +273,10 @@ fun NavGraphBuilder.groupGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
+
                             navController.navigate("GroupsCreate")
                         }
                         is CameraEvent.AcceptPhoto -> {
@@ -288,6 +294,12 @@ fun NavGraphBuilder.groupGraph(
                         is CameraEvent.DeletePhoto -> {
                             Log.d("CreateGraphActivity", "dElete photo")
                             groupState.imageUrl = ""
+                            photoUri = null
+                        }
+                        is CameraEvent.Download -> {
+                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+
+                            Log.d("CreateGraphActivity", "dElete photo")
                             photoUri = null
                         }
                         else -> {}

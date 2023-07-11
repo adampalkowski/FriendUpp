@@ -1491,8 +1491,18 @@ class ActivityRepositoryImpl @Inject constructor(
 
         awaitClose {}
     }
+    override suspend fun increaseUserStats(user_id:String,numberOfParticipants:Int): Flow<Response<Void?>> = flow {
+        try {
+            Log.d("INCREAaseUSErstate","ASASDASDASDASd")
+            Log.d("INCREAaseUSErstate",user_id)
+            emit(Response.Loading)
+            val deletion = usersRef.document(user_id).update("activitiesCreated",FieldValue.increment(1),"usersReached",FieldValue.increment(numberOfParticipants.toDouble())).await()
+            emit(Response.Success(deletion))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("deleteUser exception", Exception())))
+        }
+    }
     override suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>> = callbackFlow {
-
         val activeUsersQuery = activeUsersRef
             .whereEqualTo("creator_id", id)
         val registration = activeUsersQuery.addSnapshotListener { snapshot, exception ->

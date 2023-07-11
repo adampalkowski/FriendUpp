@@ -451,7 +451,6 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
     fun addUsernameToUser(id: String, username: String) {
         viewModelScope.launch {
             repo.getUserByUsername(username).collect { response ->

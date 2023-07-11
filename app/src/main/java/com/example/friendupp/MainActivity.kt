@@ -74,7 +74,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        UserData.user = User()
 
         if (authViewModel.isUserAuthenticated) {
             Log.d("MAINACTIVItyDebug", "auth")

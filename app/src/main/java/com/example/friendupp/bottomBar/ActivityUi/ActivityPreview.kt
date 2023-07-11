@@ -1,4 +1,4 @@
-package com.example.friendupp.ActivityUi
+package com.example.friendupp.bottomBar.ActivityUi
 
 import android.util.Log
 import android.widget.Toast
@@ -48,17 +48,17 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 
 sealed class ActivityPreviewEvents{
-    object GoBack:ActivityPreviewEvents()
-    class ShareActivityLink(val link:String):ActivityPreviewEvents()
-    class OpenChat(val id:String):ActivityPreviewEvents()
-    class ReportActivity(val id:String):ActivityPreviewEvents()
-    class Leave(val id:String):ActivityPreviewEvents()
-    class Join(val id:String):ActivityPreviewEvents()
-    class UnBookmark(val id:String):ActivityPreviewEvents()
-    class GoToActivityParticipants(val id:String):ActivityPreviewEvents()
-    class Bookmark(val id:String):ActivityPreviewEvents()
-    class AddUsers(val id:String):ActivityPreviewEvents()
-    class CreatorSettings(val id:String):ActivityPreviewEvents()
+    object GoBack: ActivityPreviewEvents()
+    class ShareActivityLink(val link:String): ActivityPreviewEvents()
+    class OpenChat(val id:String): ActivityPreviewEvents()
+    class ReportActivity(val id:String): ActivityPreviewEvents()
+    class Leave(val id:String): ActivityPreviewEvents()
+    class Join(val id:String): ActivityPreviewEvents()
+    class UnBookmark(val id:String): ActivityPreviewEvents()
+    class GoToActivityParticipants(val id:String): ActivityPreviewEvents()
+    class Bookmark(val id:String): ActivityPreviewEvents()
+    class AddUsers(val id:String): ActivityPreviewEvents()
+    class CreatorSettings(val id:String): ActivityPreviewEvents()
 }
 val TAG="ActivityPrewviewDebug"
 /*
@@ -101,7 +101,9 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                                 .fillMaxSize()
 
                         )
-                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
+                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(
+                            ActivityPreviewEvents.GoBack
+                        )
                         },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
                         {
                             displayMap=true
@@ -111,7 +113,9 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                         },mapIsDisplay=displayMap,imageAvaiable=activity.image!=null)
                     }else if (activity.lat!=null){
                         Log.d(TAG,"map")
-                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(ActivityPreviewEvents.GoBack)
+                        TopButtons(modifier = Modifier.align(Alignment.TopCenter), onClose={        onEvent(
+                            ActivityPreviewEvents.GoBack
+                        )
                         },onSettings={displaySettings=true},mapAvailable= activity.lat!=null, openMap =
                         {
                             displayMap=true
@@ -153,7 +157,9 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                             .fillMaxWidth()
                             .background(SocialTheme.colors.uiBorder.copy(0.5f)))
                         Spacer(modifier = Modifier.height(12.dp))
-                        ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures,GoToActivityParticipants={onEvent(ActivityPreviewEvents.GoToActivityParticipants(activity.id))})
+                        ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures,GoToActivityParticipants={onEvent(
+                            ActivityPreviewEvents.GoToActivityParticipants(activity.id)
+                        )})
                        /* ActivityPreviewOption()*/
 
                     }
@@ -425,7 +431,7 @@ fun TransButton(onClick: () -> Unit, icon: Int) {
 
 
 @Composable
-fun ActivityPreviewButtonRow(modifier:Modifier,onEvent:(ActivityPreviewEvents)->Unit,id:String,
+fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)->Unit, id:String,
                              joined: Boolean = false,
                              joinChanged: (Boolean) -> Unit,
                              bookmarked: Boolean = false,

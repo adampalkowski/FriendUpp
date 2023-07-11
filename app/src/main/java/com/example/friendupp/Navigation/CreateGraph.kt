@@ -11,11 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
@@ -120,7 +121,7 @@ fun NavGraphBuilder.createGraph(
                 )
             }
 
-
+        val context = LocalContext.current
             CameraView(
                 outputDirectory = outputDirectory,
                 executor = executor,
@@ -131,6 +132,9 @@ fun NavGraphBuilder.createGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
                             navController.navigate("Create")
                         }
                         is CameraEvent.AcceptPhoto -> {
@@ -146,7 +150,15 @@ fun NavGraphBuilder.createGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
                             Log.d("CreateGraphActivity", "dElete photo")
+                            activityState.imageUrl = ""
+                            photoUri = null
+                        }
+                        is CameraEvent.Download -> {
+                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
                             activityState.imageUrl = ""
                             photoUri = null
                         }
@@ -285,7 +297,8 @@ fun NavGraphBuilder.createGraph(
                             endHours,
                             endMinutes
                         )
-
+                        val initParticipants:kotlin.collections.ArrayList<String> = arrayListOf<String>()
+                        initParticipants.add(UserData.user!!.id)
                         currentActivity.value = currentActivity.value.copy(
                             start_time = convertToUTC(startTime) ,
                             image = activityState.imageUrl,
@@ -293,7 +306,9 @@ fun NavGraphBuilder.createGraph(
                             title = activityState.titleState.text,
                             tags=activityState.tags,
                             public=activityState.selectedOptionState.option==Option.PUBLIC,
-                            description = activityState.descriptionState.text
+                            description = activityState.descriptionState.text,
+                            participants_ids = initParticipants
+
                         )
 
 

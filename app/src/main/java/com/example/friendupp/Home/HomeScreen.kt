@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.ActivityEvents
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.Components.ActionButton
 import com.example.friendupp.Components.ActionButtonDefault
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
@@ -276,6 +276,10 @@ fun HomeScreen(
                                 onEvent = { event ->
                                     handleActivityEvent(event,onEvent=onEvent)
 
+                                },
+                                deleteActivity = {
+                                    Log.d(TAG,"DELETE CAVITIVY")
+                                    activityViewModel.deleteActivity(activity)
                                 }
                             )
                         }
@@ -687,7 +691,7 @@ fun buttonsRow(
     joinChanged: (Boolean) -> Unit,
     profilePictures: HashMap<String, String>,
     bookmarked:Boolean=false,
-    bookmarkedChanged:(Boolean)->Unit,activity: Activity
+    bookmarkedChanged:(Boolean)->Unit, activity: Activity
 ) {
 
     val bookmarkColor: Color by animateColorAsState(
@@ -939,7 +943,7 @@ fun eButtonSimpleBlue(onClick: () -> Unit, icon: Int, modifier: Modifier = Modif
     }
 }
 
-private fun handleActivityEvent(event: ActivityEvents,    onEvent: (HomeEvents) -> Unit) {
+private fun handleActivityEvent(event: ActivityEvents, onEvent: (HomeEvents) -> Unit) {
     when (event) {
         is ActivityEvents.Expand -> {
             onEvent(HomeEvents.ExpandActivity(event.activity))

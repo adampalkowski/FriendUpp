@@ -1,4 +1,4 @@
-package com.example.friendupp.ActivityUi
+package com.example.friendupp.bottomBar.ActivityUi
 
 import android.net.Uri
 import androidx.compose.runtime.*

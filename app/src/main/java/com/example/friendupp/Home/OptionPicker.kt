@@ -44,36 +44,39 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                 .background(dividerColor)
         )
 
-        AnimatedVisibility(visible = displayFilters, enter = slideInHorizontally(), exit = slideOutHorizontally()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SocialButtonNormal(
-                    icon = R.drawable.ic_filte_300,
-                    onClick = openFilter,
-                    filterClicked
-                )
-                Spacer(modifier = Modifier
-                    .width(12.dp)
-                    .height(1.dp)
-                    .background(dividerColor))
-                SocialButtonNormal(
-                    icon = R.drawable.ic_calendar_300,
-                    onClick = onClick,
-                    calendarClicked
-                )
-                Spacer(
-                    modifier = Modifier
-                        .width(24.dp)
-                        .height(1.dp)
-                        .background(dividerColor)
-                )
+
+        LazyRow(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
+            item{
+                AnimatedVisibility(visible = displayFilters, enter = slideInHorizontally(), exit = slideOutHorizontally()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SocialButtonNormal(
+                            icon = R.drawable.ic_filte_300,
+                            onClick = openFilter,
+                            filterClicked
+                        )
+                        Spacer(modifier = Modifier
+                            .width(12.dp)
+                            .height(1.dp)
+                            .background(dividerColor))
+                        SocialButtonNormal(
+                            icon = R.drawable.ic_calendar_300,
+                            onClick = onClick,
+                            calendarClicked
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .width(24.dp)
+                                .height(1.dp)
+                                .background(dividerColor)
+                        )
+                    }
+
+                }
             }
 
-        }
-        LazyRow(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)){
             item{
                 Spacer(
                     modifier = Modifier
-                        .weight(1f)
                         .height(1.dp)
                         .background(dividerColor)
                 )
@@ -100,6 +103,12 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                     text = activeUser.note,
                     imageUrl =activeUser.participants_profile_pictures.get(activeUser.creator_id).toString(),
                     onClick = {onEvent(HomeEvents.OpenLiveUser(activeUser.creator_id))}, clickable = true
+                )
+                Spacer(
+                    modifier = Modifier
+                        .width(8.dp)
+                        .height(1.dp)
+                        .background(dividerColor)
                 )
             }
             items(activeUsers){activeUser->

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Profile.*

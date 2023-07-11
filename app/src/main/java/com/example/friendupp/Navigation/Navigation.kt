@@ -28,7 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.friendupp.*
-import com.example.friendupp.ActivityUi.rememberActivityState
+import com.example.friendupp.bottomBar.ActivityUi.rememberActivityState
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.TimePicker.rememberTimeState

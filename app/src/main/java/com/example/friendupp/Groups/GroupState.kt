@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.Components.Calendar.HorizontalDateState2
 import com.example.friendupp.Components.TimePicker.TimeState
 import com.example.friendupp.Components.TimePicker.rememberTimeState

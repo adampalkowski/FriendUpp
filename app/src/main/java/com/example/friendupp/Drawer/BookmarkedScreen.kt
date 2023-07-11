@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.friendupp.ActivityUi.activityItem
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Profile.loadActivitiesHistory
 import com.example.friendupp.Profile.loadMoreActivitiesHistory

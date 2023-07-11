@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.ActivityUi.ActivityState
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.*
 import com.example.friendupp.Components.Calendar.HorizontalDatePicker
@@ -96,7 +96,8 @@ fun parseDateTime(dateTimeString: String): Date {
 @Composable
 fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
                  activity: Activity
-                 ,activityState: ActivityState) {
+                 ,activityState: ActivityState
+) {
     val titleState = activityState.titleState
     val descriptionState = activityState.descriptionState
     val selectedOption = activityState.selectedOptionState
@@ -156,9 +157,6 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
         progressBlocked = true
     } else {
         progressBlocked = false
-    }
-    if (! titleState!!.isValid) {
-        errorMessage = "Title isn't valid"
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

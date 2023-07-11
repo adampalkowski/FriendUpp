@@ -1,4 +1,4 @@
-package com.example.friendupp.ActivityUi
+package com.example.friendupp.bottomBar.ActivityUi
 
 import android.util.Log
 import android.widget.Toast
@@ -37,13 +37,13 @@ import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
 
 sealed class ActivityEvents{
-    class Expand(val activity:Activity):ActivityEvents()
-    class Join(val activity: Activity ):ActivityEvents()
-    class Leave(val activity: Activity ):ActivityEvents()
-    class Bookmark(val id :String):ActivityEvents()
-    class UnBookmark(val id :String):ActivityEvents()
-    class OpenChat(val id :String):ActivityEvents()
-    class GoToProfile(val id :String):ActivityEvents()
+    class Expand(val activity:Activity): ActivityEvents()
+    class Join(val activity: Activity ): ActivityEvents()
+    class Leave(val activity: Activity ): ActivityEvents()
+    class Bookmark(val id :String): ActivityEvents()
+    class UnBookmark(val id :String): ActivityEvents()
+    class OpenChat(val id :String): ActivityEvents()
+    class GoToProfile(val id :String): ActivityEvents()
 }
 
 
@@ -150,13 +150,17 @@ fun activityCard(
 fun activityItem(
     activity: Activity,
     onClick:()->Unit,
-    onEvent:(ActivityEvents)->Unit
+    onEvent:(ActivityEvents)->Unit,
+    deleteActivity:()->Unit={}
 ) {
         val context = LocalContext.current
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 0.dp).clickable(onClick = {Toast.makeText(context,activity.id,Toast.LENGTH_SHORT).show()})
+                .padding(top = 0.dp).clickable(onClick = {
+                    Toast.makeText(context,activity.id,Toast.LENGTH_SHORT).show()
+                    deleteActivity()
+                })
         ) {
             Column() {
                 TimeIndicator(time = activity.start_time,tags=activity.tags)

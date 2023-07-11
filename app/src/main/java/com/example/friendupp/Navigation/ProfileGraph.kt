@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.core.net.toFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -146,6 +147,10 @@ fun NavGraphBuilder.profileGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
+
                             navController.popBackStack()
                         }
                         is CameraEvent.AcceptPhoto -> {
@@ -164,7 +169,15 @@ fun NavGraphBuilder.profileGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
+                            if(photoUri!=null){
+                                photoUri!!.toFile().delete()
+                            }
                             Log.d("CreateGraphActivity", "dElete photo")
+
+                            photoUri = null
+                        }
+                        is CameraEvent.Download -> {
+                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
                             photoUri = null
                         }
                         else -> {}

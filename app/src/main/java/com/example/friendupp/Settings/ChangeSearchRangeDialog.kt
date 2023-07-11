@@ -190,7 +190,7 @@ fun ChangeSearchRangeDialog(
 fun getSavedRangeValue(context: Context): Float {
     val preferences = PreferenceManager.getDefaultSharedPreferences(context)
     val rangeValueKey = "rangeValue"
-    return preferences.getFloat(rangeValueKey, 0.05f)
+    return preferences.getFloat(rangeValueKey, 50f)
 }
 
 // Function to save the range value to SharedPreferences

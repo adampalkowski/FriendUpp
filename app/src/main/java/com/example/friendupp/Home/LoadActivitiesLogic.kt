@@ -4,6 +4,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.util.rangeTo
+import com.example.friendupp.Settings.getSavedRangeValue
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
@@ -23,6 +25,14 @@ fun loadMoreFriendsActivities(
 
                 activities.clear()
                 activities.addAll(it.data)
+            }
+            is Response.Failure -> {
+
+                activities.clear()
+            }
+            is Response.Loading -> {
+
+                activities.clear()
             }
             else -> {}
         }
@@ -55,8 +65,11 @@ fun loadFriendsActivities(
             }
             is Response.Failure -> {
 
+                activities.clear()
             }
             is Response.Loading -> {
+
+                activities.clear()
             }
             null -> {
 
@@ -79,16 +92,19 @@ fun loadPublicActivities(
     moreActivities: MutableList<Activity>,
 ) {
 
+    val context= LocalContext.current
     //call get activities only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
         if (!activitiesFetched.value) {
             if (currentLocation != null) {
+                val range = getSavedRangeValue(context)
+                Toast.makeText(context,"RANGE+"+range.toString(),Toast.LENGTH_SHORT).show()
                 Log.d(TAG,"CALLED FOR CLOSEST")
                 activityViewModel.getClosestActivities(
                     currentLocation.latitude,
                     currentLocation.longitude,
-                    50.0 * 10000.0f
+                    range.toDouble() * 10000.0f
                 )
                 activitiesFetched.value = true
             }
@@ -147,8 +163,10 @@ fun loadPublicActivities(
                 is Response.Failure -> {
                     Log.d(TAG,"Failure"+response.e.message)
 
+                    activities.clear()
                 }
                 is Response.Loading -> {
+                    activities.clear()
                 }
                 null -> {
 
@@ -161,6 +179,13 @@ fun loadPublicActivities(
 
                 moreActivities.clear()
                 moreActivities.addAll(it.data)
+            }
+            is Response.Failure->{
+
+                moreActivities.clear()
+            }
+            is Response.Loading -> {
+                moreActivities.clear()
             }
             else -> {}
         }
