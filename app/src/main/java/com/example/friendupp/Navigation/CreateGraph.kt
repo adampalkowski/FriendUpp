@@ -800,7 +800,9 @@ fun createActivity(
         when (it) {
             is Response<Void?>? -> {
                 Log.d("ActivityTesting", "Added")
-
+                currentActivity.invited_users.forEach { id->
+                    sendNotification(receiver = id,username=currentActivity.creator_username, message = "Created activity")
+                }
                 Toast.makeText(context, "Activity created", Toast.LENGTH_SHORT).show()
             }
             is Response.Failure -> {

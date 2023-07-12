@@ -7,9 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendupp.Notification.Token
 import com.example.friendupp.model.*
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -498,7 +502,17 @@ class UserViewModel @Inject constructor(
 
         }
     }
+     fun updateToken(task: Task<String>,user_id:String) {
+        val reference = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
+         Log.d("TOKEN","UPDATE TOKEN CALLED")
+        task.addOnCompleteListener { task ->
+            val token1 = Token(task.result)
+            reference.child(user_id).setValue(token1).addOnCompleteListener { task->
+                Log.d("TOKEN",task.toString())
+            }
 
+        }
+    }
     fun validateUser(firebaseUser: FirebaseUser) {
         val id: String = firebaseUser.uid
         viewModelScope.launch {
@@ -507,6 +521,7 @@ class UserViewModel @Inject constructor(
                     is Response.Success -> {
                         //get user from database and check if
                         val user: User = response.data
+                        updateToken(task = FirebaseMessaging.getInstance().token,user_id = user.id)
                         _currentUserState.value = response
                         Log.d("LOGINGRAPHDEBUG", user.toString())
                         //emails don't match

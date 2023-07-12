@@ -8,15 +8,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -40,6 +36,7 @@ import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.DisplayLocationDialog
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.Notification.*
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.*
@@ -50,6 +47,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.database.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -789,4 +790,49 @@ fun convertToUTC(startTime: String): String {
     val outputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     outputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     return outputDateFormat.format(startDate)
+}
+fun sendNotification(receiver: String, username: String, message: String) {
+    Log.d(TAG, "notificaiton sented")
+    val tokens = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
+    val query = tokens.orderByKey().equalTo(receiver)
+    query.addValueEventListener(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            for (dataSnapshot in snapshot.children) {
+                val token: Token? = dataSnapshot.getValue(Token::class.java)
+                val data = Data(
+                    UserData.user!!.id, R.drawable.ic_profile,
+                    "$username:$message", "New Message",
+                    receiver
+                )
+                val sender = Sender(data, token?.token.toString())
+                Log.d(TAG, sender.toString() + "X")
+                Log.d(TAG, data.toString() + "xx")
+                val apiService = Client.getClient("https://fcm.googleapis.com/")!!.create(
+                    APIService::class.java
+                )
+                apiService.sendNotification(sender)?.enqueue(object : Callback<MyResponse?> {
+                    override fun onResponse(call: Call<MyResponse?>, response: Response<MyResponse?>) {
+                        Log.d(TAG, response.toString())
+                        if (response.code() == 200) {
+                            if (response.body()?.success != 1) {
+                                Log.d(TAG, "notification failed1")
+                                // FAILED
+                            }
+                            Log.d(TAG, "GOOD")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<MyResponse?>, t: Throwable) {
+                        Log.d(TAG, "failure notification")
+                    }
+                }
+                )
+
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            Log.d(TAG, "notificaiton failed4")
+        }
+    })
 }
