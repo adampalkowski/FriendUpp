@@ -2,6 +2,7 @@ package com.example.friendupp.Navigation
 
 import android.Manifest
 import android.app.Activity
+import android.content.res.Resources
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -320,12 +321,21 @@ fun NavGraphBuilder.mainGraph(
                                 event.activity.id,
                                 UserData.user!!
                             )
+                            if(event.activity.creator_id!=UserData.user!!.id){
+                                sendNotification(receiver = event.activity.creator_id,
+                                    picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                            }
+
                         }else{
                             userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
                             activityViewModel.likeActivityOnlyId(
                                 event.activity.id,
                                 UserData.user!!
                             )
+                            if(event.activity.creator_id!=UserData.user!!.id){
+                                sendNotification(receiver = event.activity.creator_id,
+                                    picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title =Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                            }
 
                         }
                     }
@@ -505,10 +515,35 @@ fun NavGraphBuilder.mainGraph(
                         ).show()
                     }
                     is ActivityPreviewEvents.Join -> {
-                        activityViewModel.likeActivity(
-                            event.id,
-                            UserData.user!!
-                        )
+                        homeViewModel.expandedActivity.value.let {it->
+                            if(it!=null){
+                                if(it.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(it.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        it.id,
+                                        UserData.user!!
+                                    )
+                                    if(it.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = it.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
+
+                                }else{
+                                    userViewModel.addActivityToUser(it.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        it.id,
+                                        UserData.user!!
+                                    )
+
+                                    if(it.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = it.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
+                                }
+                            }
+
+                        }
+
 
                     }
                     is ActivityPreviewEvents.AddUsers -> {

@@ -146,7 +146,6 @@ dependencies {
 
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
-    implementation 'com.google.firebase:firebase-admin:9.2.0'
     //realtime database for notifications
     implementation(platform("com.google.firebase:firebase-bom:32.1.1"))
 

@@ -53,7 +53,7 @@ sealed class ActivityPreviewEvents{
     class OpenChat(val id:String): ActivityPreviewEvents()
     class ReportActivity(val id:String): ActivityPreviewEvents()
     class Leave(val id:String): ActivityPreviewEvents()
-    class Join(val id:String): ActivityPreviewEvents()
+    class Join(val id:String,val creator_id:String): ActivityPreviewEvents()
     class UnBookmark(val id:String): ActivityPreviewEvents()
     class GoToActivityParticipants(val id:String): ActivityPreviewEvents()
     class Bookmark(val id:String): ActivityPreviewEvents()
@@ -178,7 +178,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
                     switch=it
                 }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark,openSettings={displaySettings=true},creator=activity.creator_id==UserData.user!!.id,CreatorSettings={onEvent(
                     ActivityPreviewEvents.CreatorSettings(activity.id)
-                )})
+                )},creator_id=activity.creator_id)
         }
     }
     val context = LocalContext.current
@@ -439,6 +439,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                              openSettings: () -> Unit,
                              creator: Boolean = false,
                              CreatorSettings: () -> Unit,
+                             creator_id:String
 ){
 
 
@@ -471,7 +472,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                             onEvent(ActivityPreviewEvents.Leave(id))
                             joinChanged(false)
                         } else {
-                            onEvent(ActivityPreviewEvents.Join(id))
+                            onEvent(ActivityPreviewEvents.Join(id,creator_id))
                             joinChanged(true)
 
                         }

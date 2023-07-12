@@ -9,12 +9,8 @@ import android.content.Intent
 
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-
-import android.graphics.Bitmap
-
-import android.graphics.BitmapFactory
-
-import android.graphics.Color
+import android.graphics.*
+import android.graphics.Paint.Style
 
 import android.media.RingtoneManager
 
@@ -34,6 +30,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.friendupp.MainActivity
 import com.example.friendupp.R
+import com.example.friendupp.model.UserData
 
 
 import com.google.firebase.auth.FirebaseAuth
@@ -58,39 +55,25 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
     private var notificationManager: NotificationManagerCompat? = null
     override fun onNewToken(s: String) {
         super.onNewToken(s)
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
-        if (firebaseUser != null) {
-            updateToken(s)
-        }
+        updateToken(s)
     }
 
     private fun updateToken(s: String) {
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
         val reference = FirebaseDatabase.getInstance().getReference("Tokens")
         val token = Token(s)
-        assert(firebaseUser != null)
-        reference.child(firebaseUser!!.uid).setValue(token)
+        reference.child(UserData.user!!.id.toString()).setValue(token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d("MESSAGERECEIVER","")
+        Log.d("MESSAGERECEIVER", "asdasdasdasd")
         val sent = remoteMessage.data["sent"]
         val user = remoteMessage.data["user"]
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
-        val preferences = getSharedPreferences("PREFS", MODE_PRIVATE)
-        val currentUser = preferences.getString("currentuser", "none")
-        if (firebaseUser != null) {
-            assert(sent != null)
-            if (sent == firebaseUser.uid) {
-                if (currentUser != user) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        sendOreoNotification(remoteMessage)
-                    } else {
-                        sendNotifcation(remoteMessage)
-                    }
-                }
-            }
+        assert(sent != null)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            sendOreoNotification(remoteMessage)
+        } else {
+            sendNotifcation(remoteMessage)
         }
     }
 
@@ -99,6 +82,7 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         val icon = remoteMessage.data["icon"]
         val title = remoteMessage.data["title"]
         val body = remoteMessage.data["body"]
+        val picture = remoteMessage.data["picture"]
         assert(user != null)
         val j = user!!.replace("[\\D]".toRegex(), "").toInt()
         val intent = Intent(this, MainActivity::class.java)
@@ -111,7 +95,7 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         val oreoNotification = OreoNotification(this)
         val builder = oreoNotification.getOreoNotification(
             title, body, pendingIntent, defaultSound,
-            icon!!
+            icon!!,picture
         )
         var i = 0
         if (j > 0) {
@@ -166,6 +150,7 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
             1, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT
         )
         val largeIcon = BitmapFactory.decodeResource(resources, R.drawable.ic_wave)
+
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_2_ID)
             .setSmallIcon(R.drawable.ic_profile)
             .setContentTitle(tit)

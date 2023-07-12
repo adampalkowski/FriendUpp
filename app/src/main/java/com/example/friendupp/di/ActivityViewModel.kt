@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.Navigation.getCurrentUTCTime
+import com.example.friendupp.Navigation.sendNotification
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
@@ -627,6 +628,7 @@ class ActivityViewModel @Inject constructor(
             repo.likeActivity(id, user).collect { response ->
                 _isActivityDeletedState.value = response
             }
+
         }
     }
     fun likeActivityOnlyId(id: String, user: User) {

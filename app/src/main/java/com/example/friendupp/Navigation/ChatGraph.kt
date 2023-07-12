@@ -618,6 +618,18 @@ fun NavGraphBuilder.chatGraph(
                                         replyTo = null
                                     )
                                 )
+                                /*send notification to all chat users*/
+
+                                chatFinal.members.forEach{id->
+                                    if(id!=UserData.user!!.id){
+                                        sendNotification(receiver=id, username ="" , message =event.message , title = UserData.user?.name!!, picture =UserData.user?.pictureUrl!! )
+
+                                    }
+
+                                }
+
+
+
                             }
                             is ChatEvents.SendReply -> {
                                 chatViewModel.addMessage(
@@ -713,6 +725,7 @@ fun NavGraphBuilder.chatGraph(
                     displayLocationDialog = null
                 })
             }
+            val context = LocalContext.current
             if (sendLocationDialog) {
 
                 FriendUppDialog(
@@ -735,6 +748,8 @@ fun NavGraphBuilder.chatGraph(
                                     replyTo = null
                                 )
                             )
+                        }else{
+                            Toast.makeText(context,"Current location unavailable",Toast.LENGTH_SHORT).show()
                         }
                         sendLocationDialog = false
 
@@ -791,7 +806,7 @@ fun convertToUTC(startTime: String): String {
     outputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     return outputDateFormat.format(startDate)
 }
-fun sendNotification(receiver: String, username: String, message: String) {
+fun sendNotification(receiver: String, username: String, message: String,title:String,picture:String?=null) {
     Log.d(TAG, "notificaiton sented")
     val tokens = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
     val query = tokens.orderByKey().equalTo(receiver)
@@ -800,9 +815,15 @@ fun sendNotification(receiver: String, username: String, message: String) {
             for (dataSnapshot in snapshot.children) {
                 val token: Token? = dataSnapshot.getValue(Token::class.java)
                 val data = Data(
-                    UserData.user!!.id, R.drawable.ic_profile,
-                    "$username:$message", "New Message",
-                    receiver
+                    UserData.user!!.id, R.drawable.ic_wave,
+                    if(!username.isNullOrEmpty()){
+                        "$username:$message"
+                    }else{
+                        "$message"
+                    }
+                    , title,
+                    receiver,
+                    picture = picture
                 )
                 val sender = Sender(data, token?.token.toString())
                 Log.d(TAG, sender.toString() + "X")

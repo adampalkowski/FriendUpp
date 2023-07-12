@@ -801,7 +801,7 @@ fun createActivity(
             is Response<Void?>? -> {
                 Log.d("ActivityTesting", "Added")
                 currentActivity.invited_users.forEach { id->
-                    sendNotification(receiver = id,username=currentActivity.creator_username, message = "Created activity")
+                    sendNotification(receiver = id,username="", message = currentActivity.creator_username+"is up to something, check it out!",title="Invited to activity", picture = currentActivity.image)
                 }
                 Toast.makeText(context, "Activity created", Toast.LENGTH_SHORT).show()
             }

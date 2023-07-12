@@ -1,5 +1,6 @@
 package com.example.friendupp.Drawer
 
+import android.content.res.Resources
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
@@ -14,7 +15,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Navigation.sendNotification
 import com.example.friendupp.Profile.ProfileEvents
+import com.example.friendupp.R
 import com.example.friendupp.Settings.*
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.UserViewModel
@@ -106,12 +109,23 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                         event.activity.id,
                                         UserData.user!!
                                     )
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",title = Resources.getSystem().getString(
+                                                R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "")
+                                    }
+
                                 }else{
                                     userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
                                     activityViewModel.likeActivityOnlyId(
                                         event.activity.id,
                                         UserData.user!!
                                     )
+
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
 
                                 }
                             }
@@ -183,10 +197,30 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                             }
                             is CreatedActivitiesEvents.JoinActivity -> {
-                                activityViewModel.likeActivity(
-                                    event.activity.id,
-                                    UserData.user!!
-                                )
+                                if(event.activity.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
+
+                                }else{
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
+
+                                }
 
                             }
                             is CreatedActivitiesEvents.OpenChat -> {
@@ -241,11 +275,30 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                             }
                             is CreatedActivitiesEvents.JoinActivity -> {
-                                activityViewModel.likeActivity(
-                                    event.activity.id,
-                                    UserData.user!!
-                                )
+                                if(event.activity.participants_ids.size<6){
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivity(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
 
+                                }else{
+                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
+                                    activityViewModel.likeActivityOnlyId(
+                                        event.activity.id,
+                                        UserData.user!!
+                                    )
+
+                                    if(event.activity.creator_id!=UserData.user!!.id){
+                                        sendNotification(receiver = event.activity.creator_id,
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    }
+
+                                }
                             }
                             is CreatedActivitiesEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
