@@ -121,7 +121,7 @@ fun NavGraphBuilder.createGraph(
                 )
             }
 
-        val context = LocalContext.current
+            val context = LocalContext.current
             CameraView(
                 outputDirectory = outputDirectory,
                 executor = executor,
@@ -132,8 +132,11 @@ fun NavGraphBuilder.createGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
-                            if(photoUri!=null){
-                                photoUri!!.toFile().delete()
+                            if (photoUri != null) {
+                                if(photoUri!!.toFile().exists()){
+                                    photoUri!!.toFile().delete()
+
+                                }
                             }
                             navController.navigate("Create")
                         }
@@ -150,7 +153,7 @@ fun NavGraphBuilder.createGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
                             Log.d("CreateGraphActivity", "dElete photo")
@@ -158,7 +161,8 @@ fun NavGraphBuilder.createGraph(
                             photoUri = null
                         }
                         is CameraEvent.Download -> {
-                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Image saved in gallery", Toast.LENGTH_SHORT)
+                                .show()
                             activityState.imageUrl = ""
                             photoUri = null
                         }
@@ -241,22 +245,22 @@ fun NavGraphBuilder.createGraph(
                 modifier = Modifier,
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
-                chatViewModel=chatViewModel,
+                chatViewModel = chatViewModel,
                 selectedUsers = selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
                 onUserDeselected = { selectedUsers.remove(it) },
 
                 onAllFriends = {
 
-                    if(it){
-                        UserData.user!!.friends_ids.keys.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    if (it) {
+                        UserData.user!!.friends_ids.keys.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.add(id)
                             }
                         }
-                    } else{
-                        UserData.user!!.friends_ids.keys.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    } else {
+                        UserData.user!!.friends_ids.keys.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.remove(id)
                             }
                         }
@@ -297,15 +301,16 @@ fun NavGraphBuilder.createGraph(
                             endHours,
                             endMinutes
                         )
-                        val initParticipants:kotlin.collections.ArrayList<String> = arrayListOf<String>()
+                        val initParticipants: kotlin.collections.ArrayList<String> =
+                            arrayListOf<String>()
                         initParticipants.add(UserData.user!!.id)
                         currentActivity.value = currentActivity.value.copy(
-                            start_time = convertToUTC(startTime) ,
+                            start_time = convertToUTC(startTime),
                             image = activityState.imageUrl,
-                            end_time = convertToUTC(endTime) ,
+                            end_time = convertToUTC(endTime),
                             title = activityState.titleState.text,
-                            tags=activityState.tags,
-                            public=activityState.selectedOptionState.option==Option.PUBLIC,
+                            tags = activityState.tags,
+                            public = activityState.selectedOptionState.option == Option.PUBLIC,
                             description = activityState.descriptionState.text,
                             participants_ids = initParticipants
 
@@ -330,9 +335,9 @@ fun NavGraphBuilder.createGraph(
 
                         currentActivity.value = currentActivity.value.copy(
                             creation_time = getCurrentUTCTime(),
-                            date = if(activityState.selectedOptionState.option==Option.PUBLIC)date else "",
+                            date = if (activityState.selectedOptionState.option == Option.PUBLIC) date else "",
                         )
-                        if (activityState.location.latitude != null && activityState.location.latitude!=0.0) {
+                        if (activityState.location.latitude != null && activityState.location.latitude != 0.0) {
 
                             val lat = activityState.location.latitude
                             val lng = activityState.location.longitude
@@ -350,7 +355,8 @@ fun NavGraphBuilder.createGraph(
                             context,
                             chatViewModel = chatViewModel,
                             group_picture = currentActivity.value.image ?: "",
-                            public= activityState.selectedOptionState.option==Option.PUBLIC
+                            public = activityState.selectedOptionState.option == Option.PUBLIC,
+                            disableNotification=currentActivity.value.disableNotification
                         )
                     } else {
                         Toast.makeText(
@@ -769,7 +775,10 @@ fun NavGraphBuilder.createGraph(
                                 },
                                 participants_profile_pictures = participants_profile_pictures,
                                 participants_usernames = participants_usernames,
-                                location =GeoPoint(activityState.location.latitude,activityState.location.longitude),
+                                location = GeoPoint(
+                                    activityState.location.latitude,
+                                    activityState.location.longitude
+                                ),
                                 time_end = endTime,
                                 time_start = startTime,
                                 create_time = current,
@@ -782,7 +791,7 @@ fun NavGraphBuilder.createGraph(
                         navController.navigate("Home")
                     }
                 }
-            }, liveActivityState = activityState,mapViewModel=mapViewModel)
+            }, liveActivityState = activityState, mapViewModel = mapViewModel)
 
         }
 
@@ -792,7 +801,7 @@ fun NavGraphBuilder.createGraph(
 fun createActivity(
     currentActivity: Activity,
     activityViewModel: ActivityViewModel,
-    context: Context,
+    context: Context,disableNotification:Boolean
 ) {
 
     activityViewModel.addActivity(currentActivity)
@@ -800,9 +809,24 @@ fun createActivity(
         when (it) {
             is Response<Void?>? -> {
                 Log.d("ActivityTesting", "Added")
-                currentActivity.invited_users.forEach { id->
-                    sendNotification(receiver = id,username="", message = currentActivity.creator_username+"is up to something, check it out!",title="Invited to activity", picture = currentActivity.image)
+                if(!disableNotification){
+                    currentActivity.invited_users.forEach { id ->
+                        if(id!=UserData.user!!.id){
+                            sendNotification(
+                                receiver = id,
+                                username = "",
+                                message = currentActivity.creator_username + "is up to something, check it out!",
+                                title = "Invited to activity",
+                                picture = currentActivity.image,
+                                type = "createActivity",
+                                id=currentActivity.id
+                            )
+                        }
+                    }
+
                 }
+
+
                 Toast.makeText(context, "Activity created", Toast.LENGTH_SHORT).show()
             }
             is Response.Failure -> {
@@ -828,7 +852,8 @@ fun createGroup(
     context: Context,
     chatViewModel: ChatViewModel,
     group_picture: String,
-    public: Boolean
+    public: Boolean,
+    disableNotification:Boolean
 ) {
     val members = arrayListOf(UserData.user!!.id)
     members.addAll(currentActivity.invited_users)
@@ -859,10 +884,10 @@ fun createGroup(
     )
     chatViewModel.addChatCollection(chat, group_picture, onFinished = { picture ->
         if (picture.isEmpty()) {
-            createActivity(currentActivity, activityViewModel, context)
+            createActivity(currentActivity, activityViewModel, context,disableNotification=disableNotification)
         } else {
             currentActivity.image = picture
-            createActivity(currentActivity, activityViewModel, context)
+            createActivity(currentActivity, activityViewModel, context,disableNotification=disableNotification)
 
         }
 
@@ -875,14 +900,14 @@ fun createGroup(
 fun createGroupAlone(
     create_date: String,
     owner_id: String,
-    public:Boolean,
+    public: Boolean,
     id: String,
     name: String,
     image: String,
     description: String,
     context: Context,
     chatViewModel: ChatViewModel,
-    invited_users: List<String>
+    invited_users: List<String>,
 ) {
     val members = arrayListOf(UserData.user!!.id)
 
@@ -914,7 +939,7 @@ fun createGroupAlone(
 
     )
     chatViewModel.addGroupAlone(chat, image, onFinished = { picture ->
-        Toast.makeText(context,"Crated group",Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Crated group", Toast.LENGTH_SHORT).show()
     })
 
 

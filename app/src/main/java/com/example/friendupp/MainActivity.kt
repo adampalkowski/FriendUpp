@@ -76,6 +76,18 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var notifactionLiskSet = false  // Flag variable to track if deep link has been set
+
+        val extras = intent.extras
+        if (extras != null) {
+            // Extract the values from the bundle
+            val type = extras.getString("type")
+            val id = extras.getString("id")
+            if(!type.isNullOrEmpty()&&!id.isNullOrEmpty()){
+                homeViewModel.setNotificationLink(type,id)
+            }
+
+        }
 
         if (authViewModel.isUserAuthenticated) {
             Log.d("MAINACTIVItyDebug", "auth")

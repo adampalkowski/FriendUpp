@@ -33,14 +33,20 @@ class Data {
     var title: String? = null
     var sent: String? = null
     var picture:String?=null
+    var type:String?=null
+    var id:String?=null
 
-    constructor(user: String?, icon: Int, body: String?, title: String?, sent: String?,picture:String?) {
+    constructor(user: String?, icon: Int, body: String?
+                , title: String?, sent: String?,
+                picture:String?,type:String?,id:String?) {
         this.user = user
         this.icon = icon
         this.body = body
         this.title = title
         this.sent = sent
         this.picture= picture
+        this.type=type
+        this.id=id
     }
 
     override fun toString(): String {
@@ -51,6 +57,8 @@ class Data {
                 ", title='" + title + '\'' +
                 ", sent='" + sent + '\'' +
                 ", picture='" + picture + '\'' +
+                ", type='" + type + '\'' +
+                ", id='" + id + '\'' +
                 '}'
     }
 

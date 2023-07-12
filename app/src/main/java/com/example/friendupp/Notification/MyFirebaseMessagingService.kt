@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Notification
 
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 
 import android.content.Intent
 
@@ -13,6 +14,7 @@ import android.graphics.*
 import android.graphics.Paint.Style
 
 import android.media.RingtoneManager
+import android.net.LocalServerSocket
 
 import android.net.Uri
 
@@ -23,13 +25,16 @@ import android.util.Log
 
 
 import androidx.annotation.NonNull
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 
 import androidx.core.app.NotificationCompat
 
 import androidx.core.app.NotificationManagerCompat
+import androidx.navigation.NavDeepLinkBuilder
 import com.example.friendupp.MainActivity
 import com.example.friendupp.R
+import com.example.friendupp.Settings.getNotificationPrefs
 import com.example.friendupp.model.UserData
 
 
@@ -69,12 +74,65 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         Log.d("MESSAGERECEIVER", "asdasdasdasd")
         val sent = remoteMessage.data["sent"]
         val user = remoteMessage.data["user"]
-        assert(sent != null)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            sendOreoNotification(remoteMessage)
-        } else {
-            sendNotifcation(remoteMessage)
+        val type= remoteMessage.data["type"]
+        val notificationPref= getNotificationPrefs(applicationContext)
+        when(type){
+            "friendRequest"->{
+                if(notificationPref.userInviteNotification){
+
+                }else{
+                    assert(sent != null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        sendOreoNotification(remoteMessage)
+                    } else {
+                        sendNotifcation(remoteMessage)
+                    }
+
+                }
+            }
+            "joinActivity"->{
+                if(notificationPref.participantNotification){
+
+                }else{
+                    assert(sent != null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        sendOreoNotification(remoteMessage)
+                    } else {
+                        sendNotifcation(remoteMessage)
+                    }
+
+                }
+            }
+            "createActivity"->{
+                if(notificationPref.activityNotification){
+
+                }else{
+                    assert(sent != null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        sendOreoNotification(remoteMessage)
+                    } else {
+                        sendNotifcation(remoteMessage)
+                    }
+
+                }
+            }
+            "message"->{
+                if(notificationPref.chatMessageNotification){
+
+                }else{
+
+                    assert(sent != null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        sendOreoNotification(remoteMessage)
+                    } else {
+                        sendNotifcation(remoteMessage)
+                    }
+                }
+            }
         }
+
+
+
     }
 
     private fun sendOreoNotification(remoteMessage: RemoteMessage) {
@@ -82,14 +140,18 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         val icon = remoteMessage.data["icon"]
         val title = remoteMessage.data["title"]
         val body = remoteMessage.data["body"]
+        val type = remoteMessage.data["type"]
         val picture = remoteMessage.data["picture"]
+        val id = remoteMessage.data["id"]
         assert(user != null)
         val j = user!!.replace("[\\D]".toRegex(), "").toInt()
         val intent = Intent(this, MainActivity::class.java)
         val bundle = Bundle()
-        bundle.putString("userid", user)
+        bundle.putString("type", type)
+        bundle.putString("id", id)
         intent.putExtras(bundle)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
         val pendingIntent = PendingIntent.getActivity(this, j, intent, PendingIntent.FLAG_ONE_SHOT)
         val defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val oreoNotification = OreoNotification(this)

@@ -112,7 +112,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
                                             picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",title = Resources.getSystem().getString(
-                                                R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "")
+                                                R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
                                     }
 
                                 }else{
@@ -124,7 +124,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }
@@ -205,7 +205,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     )
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }else{
@@ -217,7 +217,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }
@@ -283,7 +283,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     )
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }else{
@@ -295,7 +295,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }

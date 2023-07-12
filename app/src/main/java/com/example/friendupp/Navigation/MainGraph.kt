@@ -2,8 +2,10 @@ package com.example.friendupp.Navigation
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.res.Resources
 import android.net.Uri
+import android.provider.Settings.Global.getString
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -275,7 +277,61 @@ fun NavGraphBuilder.mainGraph(
                     }
                 }
             }
+            homeViewModel.notificationType.value.let { type ->
+                when (type) {
+                    "message" -> {
+                        homeViewModel.notificationLink.value.let { link->
+                            navController.navigate(
+                                "ChatItem/" + link
+                            )
+                        }
+                        homeViewModel.resetNotificationLink()
+                    }
+                    "joinActivity" -> {
+                        homeViewModel.notificationLink.value.let { link->
+                            activityViewModel.getActivity(link.toString())
+                            activityViewModel.activityState.value.let { response->
+                                when(response){
+                                    is Response.Success->{
+                                        homeViewModel.setExpandedActivity(response.data)
+                                        navController.navigate("ActivityPreview")
+                                    }
+                                    else->{}
+                                }
 
+                            }
+
+                        }
+                        homeViewModel.resetNotificationLink()
+
+                    }
+                    "createActivity" -> {
+                        homeViewModel.notificationLink.value.let { link->
+                            activityViewModel.getActivity(link.toString())
+                            activityViewModel.activityState.value.let { response->
+                                when(response){
+                                    is Response.Success->{
+                                        homeViewModel.setExpandedActivity(response.data)
+                                        navController.navigate("ActivityPreview")
+                                    }
+                                    else->{}
+                                }
+
+                            }
+
+                        }
+                        homeViewModel.resetNotificationLink()
+                    }
+                    "friendRequest" -> {
+                        homeViewModel.notificationLink.value.let { link->
+                            navController.navigate(
+                                "ProfileDisplay/" + link
+                            )
+                        }
+                        homeViewModel.resetNotificationLink()
+                    }
+                }
+            }
             activityViewModel.activityState.value.let {
                 when (it) {
                     is Response.Success -> {
@@ -300,6 +356,7 @@ fun NavGraphBuilder.mainGraph(
                 mutableStateOf<String?>(null)
 
             }
+            val context= LocalContext.current
             HomeScreen(modifier = Modifier, onEvent = { event ->
                 when (event) {
                     is HomeEvents.OpenDrawer -> {
@@ -314,7 +371,6 @@ fun NavGraphBuilder.mainGraph(
 
                     }
                     is HomeEvents.JoinActivity -> {
-
                         if(event.activity.participants_ids.size<6){
                             userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
                             activityViewModel.likeActivity(
@@ -323,7 +379,11 @@ fun NavGraphBuilder.mainGraph(
                             )
                             if(event.activity.creator_id!=UserData.user!!.id){
                                 sendNotification(receiver = event.activity.creator_id,
-                                    picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    picture = UserData.user!!.pictureUrl,
+                                    message = UserData.user?.username+" joined your activity",
+                                    title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
+                                    username = "",
+                                    id=event.activity.id)
                             }
 
                         }else{
@@ -334,7 +394,8 @@ fun NavGraphBuilder.mainGraph(
                             )
                             if(event.activity.creator_id!=UserData.user!!.id){
                                 sendNotification(receiver = event.activity.creator_id,
-                                    picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title =Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                    picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",   title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
+                                    username = "", id=event.activity.id)
                             }
 
                         }
@@ -525,7 +586,8 @@ fun NavGraphBuilder.mainGraph(
                                     )
                                     if(it.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = it.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",
+                                            id=    it.id)
                                     }
 
                                 }else{
@@ -537,7 +599,8 @@ fun NavGraphBuilder.mainGraph(
 
                                     if(it.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = it.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",
+                                            title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",  id=  it.id)
                                     }
                                 }
                             }
@@ -695,7 +758,7 @@ fun NavGraphBuilder.mainGraph(
                         }
                         else->{}
                     }},activity=activity!!,
-                updateCutomization = {activitySharing,disableChat,participantConifrmation->
+                updateCutomization = {activitySharing,disableChat,participantConifrmation,disableNotification->
                     activityViewModel.updateActivityCustomization(activityId=activity.id,activitySharing=activitySharing,disableChat=disableChat,participantConfirmation=participantConifrmation)
                 })
             }

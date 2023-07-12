@@ -622,7 +622,9 @@ fun NavGraphBuilder.chatGraph(
 
                                 chatFinal.members.forEach{id->
                                     if(id!=UserData.user!!.id){
-                                        sendNotification(receiver=id, username ="" , message =event.message , title = UserData.user?.name!!, picture =UserData.user?.pictureUrl!! )
+                                        sendNotification(receiver=id, username ="" ,
+                                            message =event.message , title = UserData.user?.name!!,
+                                            picture =UserData.user?.pictureUrl!!,type="message",id=chatFinal.id)
 
                                     }
 
@@ -806,7 +808,8 @@ fun convertToUTC(startTime: String): String {
     outputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     return outputDateFormat.format(startDate)
 }
-fun sendNotification(receiver: String, username: String, message: String,title:String,picture:String?=null) {
+fun sendNotification(receiver: String, username: String, message: String,title:String,picture:String?=null
+                     ,type:String?="joinActivity",id:String?=null) {
     Log.d(TAG, "notificaiton sented")
     val tokens = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
     val query = tokens.orderByKey().equalTo(receiver)
@@ -823,7 +826,9 @@ fun sendNotification(receiver: String, username: String, message: String,title:S
                     }
                     , title,
                     receiver,
-                    picture = picture
+                    picture = picture,
+                    type=type
+                , id =id
                 )
                 val sender = Sender(data, token?.token.toString())
                 Log.d(TAG, sender.toString() + "X")

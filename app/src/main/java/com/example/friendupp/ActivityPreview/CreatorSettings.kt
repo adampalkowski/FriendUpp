@@ -30,18 +30,19 @@ sealed class CreatorSettingsEvent {
 }
 
 @Composable
-fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Activity,updateCutomization:(Boolean,Boolean,Boolean)->Unit) {
+fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Activity,updateCutomization:(Boolean,Boolean,Boolean,Boolean)->Unit) {
     BackHandler(true) {
         onEvent(CreatorSettingsEvent.GoBack)
     }
     var activitySharing by remember { mutableStateOf(activity.enableActivitySharing) }
+    var disableNotification by remember { mutableStateOf(activity.disableNotification) }
     var disableChat by remember { mutableStateOf(activity.disableChat) }
     var participantConfirmation by remember { mutableStateOf(activity.participantConfirmation) }
     DisposableEffect(true) {
         onDispose {
-            if (activitySharing!=activity.enableActivitySharing||disableChat!=activity.disableChat||participantConfirmation!=activity.participantConfirmation)
+            if (activitySharing!=activity.enableActivitySharing||disableChat!=activity.disableChat||participantConfirmation!=activity.participantConfirmation||disableNotification!=activity.disableNotification)
             {
-                updateCutomization(activitySharing,disableChat,participantConfirmation)
+                updateCutomization(activitySharing,disableChat,participantConfirmation,disableNotification)
             }
         }
     }

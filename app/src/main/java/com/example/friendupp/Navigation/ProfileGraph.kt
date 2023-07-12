@@ -996,7 +996,9 @@ fun NavGraphBuilder.profileGraph(
                                 /*add inivte to both users*/
                                 userViewModel.addInvitedIdToUser(UserData.user!!.id, event.user_id)
                                 /*handle notification*/
-                                sendNotification(receiver = event.user_id, message = " sent you a friend request", title = "New friend request", username = UserData.user?.username!!, picture = UserData.user!!.pictureUrl)
+                                sendNotification(receiver = event.user_id, message = " sent you a friend request",
+                                    title = "New friend request", username = UserData.user?.username!!, picture = UserData.user!!.pictureUrl,
+                                type="friendRequest",id=UserData.user!!.id)
                                 Toast.makeText(
                                     context,
                                     "User " + event.user_id + " invited ", Toast.LENGTH_LONG
@@ -1015,7 +1017,8 @@ fun NavGraphBuilder.profileGraph(
                                     )
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
+                                            , title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
                                     }
 
                                 }else{
@@ -1026,8 +1029,10 @@ fun NavGraphBuilder.profileGraph(
                                     )
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "")
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
+                                            , title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
+
 
                                 }
                             }

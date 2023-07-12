@@ -19,6 +19,10 @@ class HomeViewModel:ViewModel() {
 
     private val _deep_link = mutableStateOf<Uri?>(null)
     val deep_link: State<Uri?> = _deep_link
+    private val _notificationLink = mutableStateOf<String?>(null)
+    val notificationLink: State<String?> = _notificationLink
+    private val _notificationType = mutableStateOf<String?>(null)
+    val notificationType: State<String?> = _notificationType
     fun setExpandedActivity(activityData: Activity){
         _expandedActivity.value=activityData
     }
@@ -37,5 +41,13 @@ class HomeViewModel:ViewModel() {
     }
     fun resetDeepLink() {
         _deep_link.value=null
+    }
+    fun setNotificationLink(type:String,link: String){
+        _notificationType.value=type
+        _notificationLink.value=link
+    }
+    fun resetNotificationLink() {
+        _notificationType.value=null
+        _notificationLink.value=null
     }
 }
