@@ -96,6 +96,7 @@ fun loadPublicActivities(
     //call get activities only once
     val activitiesFetched = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = activitiesFetched.value) {
+
         if (!activitiesFetched.value) {
             if (currentLocation != null) {
                 val range = getSavedRangeValue(context)
@@ -108,6 +109,7 @@ fun loadPublicActivities(
             }
         }
     }
+    val radius = getSavedRangeValue(context)
     LaunchedEffect(selectedTags.toList()) {
         if (selectedTags.isNotEmpty()) {
             val tags: ArrayList<String> = arrayListOf()
@@ -116,10 +118,9 @@ fun loadPublicActivities(
             Log.d("HOMESCREEN", tags.toString())
             if (currentLocation != null) {
                 Log.d(TAG,"CALLED FOR CLOSEST WITH TAGS")
-
                 activityViewModel.getClosestFilteredActivities(
                     currentLocation.latitude, currentLocation.longitude, tags,
-                    50.0 * 10000.0f
+                    radius * 1000.0
                 )
             }
         } else {
@@ -127,21 +128,22 @@ fun loadPublicActivities(
                 activityViewModel.getClosestActivities(
                     currentLocation.latitude,
                     currentLocation.longitude,
-                    50.0 * 10000.0f
+                    radius * 1000.0
                 )
                 activitiesFetched.value = true
             }
         }
     }
-
+    Log.d("LOADPUBLIC",date.toString())
     LaunchedEffect(date) {
             if(date!=null){
                 if(currentLocation!=null){
+                    val radius= getSavedRangeValue(context)
                     Log.d(TAG,"CALLED FOR CLOSEST WITH DATE"+date.toString())
                     activities.clear()
                     activityViewModel.getClosestFilteredDateActivities(  currentLocation.latitude
                         , currentLocation.longitude,date,
-                        50.0 * 10000.0f)
+                        radius * 1000.0)
                 }
 
             }
@@ -160,7 +162,6 @@ fun loadPublicActivities(
                 }
                 is Response.Failure -> {
                     Log.d(TAG,"Failure"+response.e.message)
-
                     activities.clear()
                 }
                 is Response.Loading -> {

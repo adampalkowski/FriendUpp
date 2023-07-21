@@ -3,10 +3,7 @@ package com.example.friendupp.ChatUi
 import android.widget.Space
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -60,6 +58,7 @@ sealed class ChatSettingsEvents {
 
 @Composable
 fun ChatSettings(
+    modifier: Modifier,
     type: TYPE,
     chatSettingsEvents: (ChatSettingsEvents) -> Unit,
     chatViewModel: ChatViewModel,
@@ -68,6 +67,8 @@ fun ChatSettings(
     BackHandler(true) {
         chatSettingsEvents(ChatSettingsEvents.GoBack)
     }
+        Box(modifier =  modifier.fillMaxSize()){
+
 
         val (chat_name, chat_image) = getChatNameAndImage(chat)
 
@@ -92,6 +93,7 @@ fun ChatSettings(
                     chatSettingsEvents = chatSettingsEvents, chatViewModel = chatViewModel,
                 )
             }
+        }
         }
 }
 

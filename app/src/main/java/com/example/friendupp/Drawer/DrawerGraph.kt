@@ -6,16 +6,19 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Navigation.modifier
 import com.example.friendupp.Navigation.sendNotification
 import com.example.friendupp.Profile.LocationStateSaver
 import com.example.friendupp.Profile.ProfileEvents
@@ -98,7 +101,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                 }
                 "Joined"->{
                     val context = LocalContext.current
-                    JoinedActivitiesScreen(onEvent={event->
+                    JoinedActivitiesScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
                         when(event){
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
                             is CreatedActivitiesEvents.GoToProfile->{
@@ -179,7 +182,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     },activityViewModel)
                 }
                 "Created"->{
-                    CreatedActivitiesScreen(onEvent={event->
+                    CreatedActivitiesScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
                         when(event){
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
                             is CreatedActivitiesEvents.GoToProfile->{
@@ -257,7 +260,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                             call.value=false
                         }else{}
                     }
-                    BookmarkedScreen(onEvent={event->
+                    BookmarkedScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
                         when(event){
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
                             is CreatedActivitiesEvents.GoToProfile->{
@@ -324,7 +327,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     },activityViewModel)
                 }
                 "ForYou"->{
-                    NotificationScreen(onEvent = {event->
+                    NotificationScreen(modifier=modifier,onEvent = {event->
                         when(event){
                             is NotificationEvents.GoBack->{navController.navigate("Settings")}
                         }

@@ -43,6 +43,7 @@ import com.example.friendupp.R
 import com.example.friendupp.model.Activity
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
+import com.google.android.gms.maps.model.LatLng
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -113,7 +114,12 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     }
     var hasAssignedTitle by remember { mutableStateOf(false) }
     var hasAssignedDescription by remember { mutableStateOf(false) }
-
+    LaunchedEffect(activityState.location ){
+        if (activityState.location== LatLng(0.0, 0.0)) {
+            errorMessage= "Please select location to create the public activity."
+            progressBlocked=true
+        }
+    }
 
     BackHandler(true) {
         onEvent(CreateEvents.GoBack)
@@ -161,7 +167,8 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
 
     Box(modifier = modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState())
 
             ) {
@@ -186,6 +193,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
                 if (progressBlocked) {
                     TextFieldError(textError = errorMessage)
                 }
+
             Spacer(modifier = Modifier.weight(1f))
 
             BottomBarCreate(

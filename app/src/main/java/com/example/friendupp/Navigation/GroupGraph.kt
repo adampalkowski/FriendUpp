@@ -187,7 +187,7 @@ fun NavGraphBuilder.groupGraph(
         }
 
         composable("Groups") {
-            GroupsScreen(onEvent = { event ->
+            GroupsScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is GroupsEvents.CreateGroup -> {
                         navController.navigate("GroupsCreate")
@@ -315,7 +315,7 @@ fun NavGraphBuilder.groupGraph(
 
         composable("GroupsCreate") {
 
-            GroupsCreateScreen(onEvent = { event ->
+            GroupsCreateScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is GroupCreateEvents.GoBack -> {
                         navController.popBackStack()

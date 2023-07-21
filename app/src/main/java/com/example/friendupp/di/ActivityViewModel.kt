@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.Navigation.sendNotification
+import com.example.friendupp.Settings.getSavedRangeValue
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
@@ -154,9 +155,7 @@ class ActivityViewModel @Inject constructor(
         _location.value=location
     }
     fun getClosestActivities(lat:Double,lng:Double,radius:Double){
-        Log.d("getClosestActimivities","CALL")
-        Log.d("getClosestActimivities",lat.toString())
-        Log.d("getClosestActimivities", lng.toString())
+        Log.d("getClosestActimivities",radius.toString())
 
         viewModelScope.launch {
             val list_without_removed_activites: ArrayList<Activity> = ArrayList()
@@ -175,7 +174,6 @@ class ActivityViewModel @Inject constructor(
                                     deleteActivity(it)
                                     list_without_removed_activites.remove(it)
                                 })
-
 
 
                             Log.d("getClosestActivities","list"+list_without_removed_activites.toString())
@@ -846,6 +844,8 @@ class ActivityViewModel @Inject constructor(
     fun getClosestFilteredDateActivities(lat:Double,lng:Double,date:String,radius:Double){
         viewModelScope.launch {
             val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            Log.d("getClosestFilteredDateActivities",radius.toString())
+
             repo.getClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
                 when (response) {
                     is Response.Success -> {

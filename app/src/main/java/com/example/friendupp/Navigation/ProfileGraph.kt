@@ -8,7 +8,6 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
@@ -25,12 +24,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
-import com.example.friendupp.Categories.Category
-import com.example.friendupp.ChatUi.ChatEvents
-import com.example.friendupp.Groups.GroupItemEvent
-import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeViewModel
-
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
 import com.example.friendupp.Settings.ChangeEmailDialog
@@ -43,7 +37,6 @@ import com.example.friendupp.model.*
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks

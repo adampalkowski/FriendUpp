@@ -54,7 +54,7 @@ sealed class LiveScreenEvents{
 
 
 @Composable
-fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityState,mapViewModel:MapViewModel){
+fun LiveScreen(modifier:Modifier,onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityState,mapViewModel:MapViewModel){
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
     val flow = mapViewModel.currentLocation.collectAsState()
@@ -66,7 +66,7 @@ fun LiveScreen(onEvent:(LiveScreenEvents)->Unit,liveActivityState: LiveActivityS
     val context = LocalContext.current
     val noteState = liveActivityState.note
     Column() {
-        Column(modifier = Modifier
+        Column(modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
             ScreenHeading(title = "Go live", backButton = true, onBack = {

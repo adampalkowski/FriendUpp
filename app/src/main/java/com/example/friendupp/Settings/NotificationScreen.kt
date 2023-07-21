@@ -76,7 +76,7 @@ data class NotificationPreferences(
     val participantNotification: Boolean
 )
 @Composable
-fun NotificationScreen(onEvent: (NotificationEvents) -> Unit) {
+fun NotificationScreen(modifier: Modifier,onEvent: (NotificationEvents) -> Unit) {
     val context = LocalContext.current
 
     var grayColor = SocialTheme.colors.uiBorder.copy(0.6f)
@@ -100,7 +100,7 @@ fun NotificationScreen(onEvent: (NotificationEvents) -> Unit) {
         chatMessageNotification=true
         participantNotification=true
     }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier=modifier,horizontalAlignment = Alignment.CenterHorizontally) {
         ScreenHeading(
             title = "Notification",
             backButton = true,

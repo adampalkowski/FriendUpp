@@ -34,7 +34,7 @@ sealed class CreatedActivitiesEvents{
 }
 
 @Composable
-fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
     //LOAD IN PROFILE ACTIVITIES
     var historyActivitiesExist= remember { mutableStateOf(false) }
     val activitiesHistory = remember { mutableStateListOf<Activity>() }
@@ -43,7 +43,7 @@ fun CreatedActivitiesScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityView
     loadActivitiesHistory(activityViewModel,activitiesHistory,UserData.user!!.id)
     loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
 
-    Column() {
+    Column(modifier=modifier) {
 
         ScreenHeading(title = "Created activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
             LazyColumn{

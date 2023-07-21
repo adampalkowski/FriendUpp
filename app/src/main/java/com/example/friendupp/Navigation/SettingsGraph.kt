@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -114,7 +115,7 @@ fun NavGraphBuilder.settingsGraph(
             }
             val context = LocalContext.current
 
-            SettingsScreen(modifier = Modifier, settingsEvents = { event ->
+            SettingsScreen(modifier = Modifier.safeDrawingPadding(), settingsEvents = { event ->
                 when (event) {
                     is SettingsEvents.GoBack -> {
                         navController.navigate("Home")
@@ -348,7 +349,7 @@ fun NavGraphBuilder.settingsGraph(
                 })
             }
             "Notification" -> {
-                NotificationScreen(onEvent = { event ->
+                NotificationScreen(modifier=modifier,onEvent = { event ->
                     when (event) {
                         is NotificationEvents.GoBack -> {
                             navController.navigate("Settings")

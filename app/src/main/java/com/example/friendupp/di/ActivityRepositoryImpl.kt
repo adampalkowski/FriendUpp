@@ -65,7 +65,7 @@ class ActivityRepositoryImpl @Inject constructor(
                 .orderBy("geoHash")
                 .startAt(b.startHash)
                 .endAt(b.endHash)
-                .limit(2)
+                .limit(5)
             tasks.add(q.get())
         }
 
@@ -246,7 +246,7 @@ class ActivityRepositoryImpl @Inject constructor(
                     val newActivities = ArrayList<Activity>()
                     for (document in matchingDocs) {
                         val activity = document.toObject<Activity>()
-
+                        Log.d("LOADACTIVITIESDEBUG",activity?.id.toString())
                         if (activity != null) {
                             newActivities.add(activity)
                         }
@@ -1072,8 +1072,9 @@ class ActivityRepositoryImpl @Inject constructor(
     }
     override suspend fun updateActivityCustomization(activityId:String,activitySharing:Boolean,disableChat:Boolean,participantConfirmation:Boolean):Flow<Response<Boolean>> = flow {
         try {
+            Log.d("CreateorSettingsCreen","updateActivityCustomization")
             emit(Response.Loading)
-            val update = activeUsersRef.document(activityId).update(
+            val update = activitiesRef.document(activityId).update(
                 "disableChat",disableChat,
                 "enableActivitySharing",activitySharing,
                 "participantConfirmation",participantConfirmation,

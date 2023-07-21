@@ -41,7 +41,6 @@ class MapViewModel(private val appContext: Context):ViewModel (){
                 Log.d("MAPVIEWMODELTEST",location.latitude.toString())
                 viewModelScope.launch {
                     setLocation(LatLng(location.latitude, location.longitude) )
-
                 }
 
             }

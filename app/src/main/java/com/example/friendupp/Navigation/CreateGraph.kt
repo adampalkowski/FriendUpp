@@ -331,8 +331,12 @@ fun NavGraphBuilder.createGraph(
                         val uuid: UUID = UUID.randomUUID()
                         val id: String = uuid.toString()
                         currentActivity.value = currentActivity.value.copy(id = id)
-                        val formatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                        val date = LocalDateTime.now().format(formatterDate)
+                        val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                        val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+                        val startTimeS = LocalDateTime.parse(startTime, inputFormatter)
+
+                        val date = startTimeS.format(outputFormatter)
 
                         currentActivity.value = currentActivity.value.copy(
                             creation_time = getCurrentUTCTime(),
@@ -725,7 +729,7 @@ fun NavGraphBuilder.createGraph(
             val startDateState = activityState.startDateState
             val endDateState = activityState.endDateState
 
-            LiveScreen(onEvent = { event ->
+            LiveScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is LiveScreenEvents.GoBack -> {
                         navController.navigate("Home")

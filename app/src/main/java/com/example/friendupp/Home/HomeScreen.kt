@@ -1,6 +1,7 @@
 package com.example.friendupp.Home
 
 import android.util.Log
+import android.widget.Space
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -48,12 +50,14 @@ import com.example.friendupp.Create.Option
 import com.example.friendupp.Create.rememberSelectedOptionState
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.R
+import com.example.friendupp.Settings.getSavedRangeValue
 import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.ActiveUser
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.Pacifico
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.LatLng
@@ -140,14 +144,19 @@ fun HomeScreen(
     var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     var formattedDate = startOfDay.format(formatter)
 
-    LaunchedEffect(state.selectedDay, state.selectedMonth, state.selectedYear) {
-        Log.d(TAG, "changed date ")
-        val startDate =
-            LocalDateTime.of(state.selectedYear, state.selectedMonth, state.selectedDay, 0, 0)
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val formattedDate = startOfDay.format(formatter)
-        datePicked.value = formattedDate
+    if(calendarView){
+        LaunchedEffect(state.selectedDay, state.selectedMonth, state.selectedYear) {
+            Log.d(TAG, "changed date ")
+            val startDate =
+                LocalDateTime.of(state.selectedYear, state.selectedMonth, state.selectedDay, 0, 0)
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val formattedDate = startOfDay.format(formatter)
+            datePicked.value = formattedDate
+        }
+    }else{
+        datePicked.value=null
     }
+
     loadActiveUsers(activeUserViewModel,activeUsers,moreActiveUsers,currentUserActiveUser,activeUsersExist)
     if (selectedOption.option == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
@@ -168,6 +177,9 @@ fun HomeScreen(
     val refreshScope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     var itemCount by remember { mutableStateOf(15) }
+    val context = LocalContext.current
+    val radius = getSavedRangeValue(context)
+
     fun refresh() = refreshScope.launch {
         refreshing = true
 
@@ -182,7 +194,7 @@ fun HomeScreen(
                         currentLocation?.latitude!!,
                         currentLocation?.longitude!!,
                         date=datePicked.value.toString(),
-                        50.0 * 10000.0f
+                        radius*1000.0
                     )
                 }else{
                     Log.d("HOMESCREENDEBUG","getClosestActivities")
@@ -190,7 +202,7 @@ fun HomeScreen(
                     activityViewModel.getClosestActivities(
                         currentLocation?.latitude!!,
                         currentLocation?.longitude!!,
-                        50.0 * 10000.0f
+                        radius*1000.0
                     )
                 }
 
@@ -305,6 +317,17 @@ fun HomeScreen(
                             }
                         }
                     } else {
+                        item{
+
+                            if(publicActivities.isEmpty()){
+                                Spacer(Modifier.height(24.dp))
+                                Text(modifier=Modifier.padding(horizontal = 24.dp), textAlign = TextAlign.Center,text = "No nearby activites, try increasing range or create one yourself.", style = TextStyle(
+                                    fontFamily = Lexend, fontWeight = FontWeight.Normal,
+                                ),color=SocialTheme.colors.iconPrimary
+                                )
+                            }
+                        }
+
                         items(publicActivities) { activity ->
                             activityItem(
                                 activity,
@@ -689,7 +712,8 @@ fun buttonsRow(
     joinChanged: (Boolean) -> Unit,
     profilePictures: HashMap<String, String>,
     bookmarked:Boolean=false,
-    bookmarkedChanged:(Boolean)->Unit, activity: Activity
+    bookmarkedChanged:(Boolean)->Unit, activity: Activity,
+    chatDisabled:Boolean
 ) {
 
     val bookmarkColor: Color by animateColorAsState(
@@ -747,18 +771,21 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            eButtonSimple(
-                icon = R.drawable.ic_chat_300,
-                onClick = { onEvent(ActivityEvents.OpenChat(id)) })
-            Spacer(
-                modifier = Modifier
-                    .width(12.dp)
-                    .height(
+            if(!chatDisabled){
+                eButtonSimple(
+                    icon = R.drawable.ic_chat_300,
+                    onClick = { onEvent(ActivityEvents.OpenChat(id)) })
+                Spacer(
+                    modifier = Modifier
+                        .width(12.dp)
+                        .height(
 
-                        0.5.dp
-                    )
-                    .background(color = bgColor)
-            )
+                            0.5.dp
+                        )
+                        .background(color = bgColor)
+                )
+            }
+
             eButtonSimple(
                 icon = R.drawable.ic_bookmark_300,
                 onClick = {

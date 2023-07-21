@@ -244,7 +244,7 @@ fun NavGraphBuilder.chatGraph(
                 if(type==null){
                     navController.popBackStack()
                 }else{
-                    ChatSettings(
+                    ChatSettings(modifier=Modifier.safeDrawingPadding(),
                         type!!, chatSettingsEvents = { event ->
                             when (event) {
                                 is ChatSettingsEvents.GoBack -> {

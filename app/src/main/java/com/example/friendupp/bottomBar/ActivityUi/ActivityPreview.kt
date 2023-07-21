@@ -177,7 +177,7 @@ fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, 
                     switch=it
                 }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark,openSettings={displaySettings=true},creator=activity.creator_id==UserData.user!!.id,CreatorSettings={onEvent(
                     ActivityPreviewEvents.CreatorSettings(activity.id)
-                )},creator_id=activity.creator_id)
+                )},creator_id=activity.creator_id,chatDisabled=activity.disableChat)
         }
     }
     val context = LocalContext.current
@@ -438,7 +438,8 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                              openSettings: () -> Unit,
                              creator: Boolean = false,
                              CreatorSettings: () -> Unit,
-                             creator_id:String
+                             creator_id:String,
+                             chatDisabled:Boolean
 ){
 
 
@@ -482,16 +483,19 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                     .height(1.dp)
                     .width(12.dp)
                     .background(SocialTheme.colors.uiBorder))
-                ActionButtonDefault(
-                    icon = R.drawable.ic_chat_300,
-                    isSelected = false,
-                    onClick =  {onEvent(ActivityPreviewEvents.OpenChat(id)) }
-                )
-              /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
-                Spacer(modifier = Modifier
-                    .height(1.dp)
-                    .width(12.dp)
-                    .background(SocialTheme.colors.uiBorder))
+                if(!chatDisabled){
+                    ActionButtonDefault(
+                        icon = R.drawable.ic_chat_300,
+                        isSelected = false,
+                        onClick =  {onEvent(ActivityPreviewEvents.OpenChat(id)) }
+                    )
+                    /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
+                    Spacer(modifier = Modifier
+                        .height(1.dp)
+                        .width(12.dp)
+                        .background(SocialTheme.colors.uiBorder))
+
+                }
 
                 ActionButtonDefault(
                     icon = R.drawable.ic_bookmark_300,

@@ -65,18 +65,17 @@ fun activityCard(
     goToProfile:(String)->Unit,
 
 ) {
-
         Column(Modifier.background(SocialTheme.colors.uiBackground)) {
             Box(modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp, top = 6.dp)) {
                 Column(modifier = Modifier, horizontalAlignment = Alignment.Start) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier =  Modifier.weight(1f).clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(color = Color.White),
-                            onClick ={goToProfile(creatorId.toString()) })){
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier =  Modifier.weight(1f)){
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple(color = Color.White),
+                                onClick ={goToProfile(creatorId.toString()) })) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(profilePictureUrl)
@@ -161,10 +160,7 @@ fun activityItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 0.dp).clickable(onClick = {
-                    Toast.makeText(context,activity.id,Toast.LENGTH_SHORT).show()
-                    deleteActivity()
-                })
+                .padding(top = 0.dp)
         ) {
             Column() {
                 TimeIndicator(time = activity.start_time,tags=activity.tags)
@@ -208,7 +204,7 @@ fun activityItem(
                 buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,
                     joined=switch,joinChanged={it->
                     switch=it
-                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it},activity=activity)
+                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it},activity=activity,chatDisabled=activity.disableChat)
 
             }
         }
@@ -302,7 +298,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialThem
             style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 color = SocialTheme.colors.uiBorder
             )
         )

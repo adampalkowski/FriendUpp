@@ -219,7 +219,7 @@ fun MapScreen(
                     )
                 }
             }
-
+/*
             Spacer(modifier = Modifier.weight(1f))
             Card(elevation = 5.dp) {
                 SocialButtonNormal(
@@ -239,7 +239,7 @@ fun MapScreen(
 
 
             }
-
+*/
         }
 
 

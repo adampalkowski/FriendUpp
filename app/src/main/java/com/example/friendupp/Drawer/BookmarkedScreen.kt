@@ -18,7 +18,7 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 
 @Composable
-fun BookmarkedScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun BookmarkedScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
     //LOAD IN PROFILE ACTIVITIES
     var bookmarkedActivitiesExist= remember { mutableStateOf(false) }
     val bookmarked = remember { mutableStateListOf<Activity>() }
@@ -27,7 +27,7 @@ fun BookmarkedScreen(onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: 
     loadBookmarkedActivites(activityViewModel,bookmarked,moreBookmarked, UserData.user!!.id)
     loadMoreActivitiesHistory(activityViewModel,moreBookmarked)
 
-    Column() {
+    Column(modifier=modifier) {
 
         ScreenHeading(title = "Bookmarked activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
         LazyColumn{

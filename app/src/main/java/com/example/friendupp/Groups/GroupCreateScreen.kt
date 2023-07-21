@@ -23,7 +23,7 @@ sealed class GroupCreateEvents {
 
 @Composable
 fun GroupsCreateScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier ,
     onEvent: (GroupCreateEvents) -> Unit,
     groupState: GroupState,
 ) {

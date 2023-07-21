@@ -128,7 +128,7 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
     ) {
 
 
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        Column(modifier.verticalScroll(rememberScrollState())) {
             ScreenHeading(
                 title = "Settings",
                 backButton = true,
