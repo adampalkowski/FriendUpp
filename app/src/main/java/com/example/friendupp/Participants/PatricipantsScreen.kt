@@ -25,7 +25,7 @@ sealed class ParticipantsEvents{
 
 
 @Composable
-fun ParticipantsScreen(userViewModel: UserViewModel,onEvent:(ParticipantsEvents)->Unit,activityId:String){
+fun ParticipantsScreen(modifier:Modifier,userViewModel: UserViewModel,onEvent:(ParticipantsEvents)->Unit,activityId:String){
     BackHandler(true) {
         onEvent(ParticipantsEvents.GoBack)
     }
@@ -37,7 +37,7 @@ fun ParticipantsScreen(userViewModel: UserViewModel,onEvent:(ParticipantsEvents)
 
     loadUsers(userViewModel=userViewModel,users=users,moreUsers=moreUsers,gotUsers=gotUsers)
 
-    Column() {
+    Column(modifier=modifier) {
         ScreenHeading(title = "Participants", onBack = {onEvent(ParticipantsEvents.GoBack)}, backButton = true) {}
         LazyColumn{
             items(users){

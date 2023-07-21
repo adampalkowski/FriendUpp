@@ -63,8 +63,8 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         updateToken(s)
     }
 
-    private fun updateToken(s: String) {
-        val reference = FirebaseDatabase.getInstance().getReference("Tokens")
+    fun updateToken(s: String) {
+        val reference: DatabaseReference =FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app").getReference("Tokens")
         val token = Token(s)
         reference.child(UserData.user!!.id.toString()).setValue(token)
     }
@@ -134,7 +134,17 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
 
 
     }
+    companion object {
+        // Create a companion object to get an instance of MyFirebaseMessaging
+        private var instance: MyFirebaseMessaging? = null
 
+        fun getInstance(): MyFirebaseMessaging {
+            if (instance == null) {
+                instance = MyFirebaseMessaging()
+            }
+            return instance!!
+        }
+    }
     private fun sendOreoNotification(remoteMessage: RemoteMessage) {
         val user = remoteMessage.data["user"]
         val icon = remoteMessage.data["icon"]

@@ -14,10 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -59,8 +56,6 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
     navigation(startDestination = "Login", route = "Welcome") {
 
         composable("Login") {
-
-
             /*
             check if user is already signed in
              */
@@ -145,7 +140,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                     }
                 }
             )
-            Box(modifier = Modifier.fillMaxSize()){
+            Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()){
                 LoginScreen(
                     modifier = Modifier,
                     onEvent = {event->
@@ -492,7 +487,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
             val userFlow = userViewModel.userValidation.collectAsState()
 
             RegisterScreen(
-                modifier=Modifier,
+                modifier=Modifier.safeDrawingPadding(),
                 onEvent={event->
                     when(event){
                         is RegisterEvents.GoBack->{

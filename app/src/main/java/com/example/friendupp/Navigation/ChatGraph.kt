@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
@@ -158,7 +159,7 @@ fun NavGraphBuilder.chatGraph(
             if (user != null) {
                 chatViewModel.getChatCollections(user.id)
             }
-            ChatCollection(modifier = Modifier.fillMaxSize(),
+            ChatCollection(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                 chatEvent = { event ->
                     when (event) {
                         is ChatCollectionEvents.GoToChat -> {
@@ -364,7 +365,7 @@ fun NavGraphBuilder.chatGraph(
                 mutableStateOf<Uri?>(null)
             }
             val context = LocalContext.current
-            CameraView(
+            CameraView(modifier=modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -551,7 +552,7 @@ fun NavGraphBuilder.chatGraph(
                 )
 
                 ChatContent(
-                    modifier = Modifier,
+                    modifier = Modifier.safeDrawingPadding(),
                     onEvent = { event ->
                         when (event) {
                             is ChatEvents.GoBack -> {

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.friendupp.Categories.Category
@@ -58,7 +60,7 @@ class MainActivity : ComponentActivity() {
     private val activityViewModel by viewModels<ActivityViewModel>()
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
-
+    private var notifactionLiskSet : MutableState<Boolean> = mutableStateOf(false)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -72,21 +74,30 @@ class MainActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
     }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("notificationLinkSet", true)
+    }
+
+
+
+
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var notifactionLiskSet = false  // Flag variable to track if deep link has been set
-
         val extras = intent.extras
         if (extras != null) {
             // Extract the values from the bundle
             val type = extras.getString("type")
             val id = extras.getString("id")
-            if(!type.isNullOrEmpty()&&!id.isNullOrEmpty()){
-                homeViewModel.setNotificationLink(type,id)
-            }
 
+            val notificationLinkSet = savedInstanceState?.getBoolean("notificationLinkSet") ?: false
+
+            if (!notificationLinkSet && !type.isNullOrEmpty() && !id.isNullOrEmpty()) {
+                Log.d("Notificationdebug", "SETTINGSDATA")
+                homeViewModel.setNotificationLink(type, id)
+            }
         }
 
         if (authViewModel.isUserAuthenticated) {
@@ -125,6 +136,7 @@ class MainActivity : ComponentActivity() {
             .addOnFailureListener(this) { e ->
                 Log.w(ContentValues.TAG, "getDynamicLink:onFailure", e)
             }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             FriendUppTheme {

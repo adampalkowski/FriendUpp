@@ -80,7 +80,8 @@ fun FriendUppTheme(
     val sysUiController = rememberSystemUiController()
     SideEffect {
         sysUiController.setSystemBarsColor(
-            color = if(darkTheme) Black else White
+            color = if(darkTheme) Transparent else Transparent,
+            darkIcons = !darkTheme
         )
     }
     ProvideSocialColors(colors) {

@@ -35,6 +35,10 @@ import com.example.friendupp.TimeFormat.getFormattedDate
 import com.example.friendupp.TimeFormat.getFormattedDateNoSeconds
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 sealed class ActivityEvents{
     class Expand(val activity:Activity): ActivityEvents()
@@ -212,7 +216,70 @@ fun activityItem(
 
 
 
+fun convertUTCtoLocal2(utcDate: String, outputFormat: String): String {
+    val utcDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    val utcDateWithoutSecondsFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    utcDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    utcDateWithoutSecondsFormat.timeZone = TimeZone.getTimeZone("UTC")
 
+    val localDateFormat = SimpleDateFormat(outputFormat, Locale.getDefault())
+    localDateFormat.timeZone = TimeZone.getDefault()
+
+    val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+
+    try {
+        utcCalendar.time = utcDateFormat.parse(utcDate)!!
+    } catch (e: ParseException) {
+        try {
+            utcCalendar.time = utcDateWithoutSecondsFormat.parse(utcDate)!!
+        } catch (e: ParseException) {
+            return "Invalid date format"
+        }
+    }
+
+    val currentCalendar = Calendar.getInstance()
+
+    // Check if the date is today
+    if (isSameDay(utcCalendar, currentCalendar)) {
+        return localDateFormat.format(utcCalendar.time) // Display only time for today
+    }
+
+    // Check if the date is tomorrow
+    val tomorrowCalendar = Calendar.getInstance()
+    tomorrowCalendar.add(Calendar.DAY_OF_MONTH, 1)
+    if (isSameDay(utcCalendar, tomorrowCalendar)) {
+        return "Tomorrow, " + localDateFormat.format(utcCalendar.time) // Display "Tomorrow" and time
+    }
+
+    // Check if the date is within the same month and year
+    if (isSameMonthAndYear(utcCalendar, currentCalendar)) {
+        return SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(utcCalendar.time) // Display day, month, and time
+    }
+
+    // Check if the date is within the same year
+    if (isSameYear(utcCalendar, currentCalendar)) {
+        return SimpleDateFormat("d MMM", Locale.getDefault()).format(utcCalendar.time) // Display day and month
+    }
+
+    return localDateFormat.format(utcCalendar.time) // Default case: display full date and time
+}
+
+// Helper function to check if two calendars represent the same day
+private fun isSameDay(calendar1: Calendar, calendar2: Calendar): Boolean {
+    return calendar1.get(Calendar.DAY_OF_YEAR) == calendar2.get(Calendar.DAY_OF_YEAR) &&
+            calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR)
+}
+
+// Helper function to check if two calendars represent the same month and year
+private fun isSameMonthAndYear(calendar1: Calendar, calendar2: Calendar): Boolean {
+    return calendar1.get(Calendar.MONTH) == calendar2.get(Calendar.MONTH) &&
+            calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR)
+}
+
+// Helper function to check if two calendars represent the same year
+private fun isSameYear(calendar1: Calendar, calendar2: Calendar): Boolean {
+    return calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR)
+}
 
 @Composable
 fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialTheme.colors.uiBorder,Divider:Boolean=true) {
@@ -231,7 +298,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialThem
 
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = convertUTCtoLocal(time, outputFormat = "yyyy-MM-dd HH:mm"),
+            text = convertUTCtoLocal2(time, outputFormat = "yyyy-MM-dd HH:mm"),
             style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,

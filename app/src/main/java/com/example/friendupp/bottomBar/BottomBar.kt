@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -24,6 +25,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -48,7 +51,7 @@ fun BottomBar(modifier: Modifier,onClick: (BottomBarOption) -> Unit,selectedOpti
             modifier
                 .fillMaxWidth()
                 .background(color = SocialTheme.colors.uiBackground)
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(horizontal = 24.dp, vertical = 8.dp).padding(bottom =WindowInsets.systemBars.asPaddingValues().calculateBottomPadding())
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 BottomBarButton(modifier.semantics { contentDescription = "Home" }

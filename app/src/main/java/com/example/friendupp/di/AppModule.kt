@@ -114,13 +114,15 @@ class AppModule {
         signInRequest: BeginSignInRequest,
         @Named(SIGN_UP_REQUEST)
         signUpRequest: BeginSignInRequest,
-        db: FirebaseFirestore
+        db: FirebaseFirestore,  @FirebaseStorageDefault storage: FirebaseStorage,
+
     ): AuthRepository = AuthRepositoryImpl(
         auth = auth,
         oneTapClient = oneTapClient,
         signInRequest = signInRequest,
         signUpRequest = signUpRequest,
-        db = db
+        db = db,
+        storageRef =storage.reference,
     )
     @Provides
     fun provideChatRepository(

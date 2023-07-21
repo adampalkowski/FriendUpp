@@ -64,7 +64,7 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
     }
     val chatCollectionsToBeDisplayed = remember { mutableStateOf(ArrayList<Chat>()) }
 
-    LazyColumn(modifier=Modifier.background(SocialTheme.colors.uiBackground)){
+    LazyColumn(modifier=modifier.background(SocialTheme.colors.uiBackground)){
         item {
             ScreenHeading(title = "Chats"){
                 Row(Modifier,verticalAlignment = Alignment.CenterVertically){

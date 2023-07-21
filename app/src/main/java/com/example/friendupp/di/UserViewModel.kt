@@ -7,13 +7,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendupp.Notification.MyFirebaseMessaging
 import com.example.friendupp.Notification.Token
 import com.example.friendupp.model.*
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.FirebaseMessagingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -510,7 +513,6 @@ class UserViewModel @Inject constructor(
             reference.child(user_id).setValue(token1).addOnCompleteListener { task->
                 Log.d("TOKEN",task.toString())
             }
-
         }
     }
     fun validateUser(firebaseUser: FirebaseUser) {
@@ -521,7 +523,22 @@ class UserViewModel @Inject constructor(
                     is Response.Success -> {
                         //get user from database and check if
                         val user: User = response.data
-                        updateToken(task = FirebaseMessaging.getInstance().token,user_id = user.id)
+                        FirebaseMessaging.getInstance().deleteToken()
+                        // Get token
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener(
+                            OnCompleteListener { task ->
+                            //On token fetch fail
+                            if (!task.isSuccessful) {
+                                //msg_token_failed
+                                return@OnCompleteListener
+                            }
+
+                            // Get new Instance ID token
+                            val newDeviceToken = task.result
+                                MyFirebaseMessaging.getInstance().updateToken(task.result)
+                        })
+
+
                         _currentUserState.value = response
                         Log.d("LOGINGRAPHDEBUG", user.toString())
                         //emails don't match

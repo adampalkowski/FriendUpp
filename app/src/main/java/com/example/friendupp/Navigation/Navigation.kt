@@ -97,7 +97,7 @@ fun NavigationComponent(
     var displaySplashScreen = rememberSaveable { mutableStateOf(true) }
 
 
-    Scaffold(
+    Scaffold(modifier=Modifier,
         scaffoldState = scaffoldState,
         drawerScrimColor = Color.Black.copy(alpha = 0.3f),
         drawerShape = customShape(),
@@ -187,7 +187,6 @@ fun NavigationComponent(
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
         bottomBar = {
-
             if (currentBackStackEntry != null && bottomDestinations.contains(navController.currentDestination?.route) && displaySplashScreen.value == false) {
                 BottomBar(
                     modifier = Modifier,
@@ -217,11 +216,13 @@ fun NavigationComponent(
             }
         }
     ) { paddingValues ->
+        val applyWindowInsets = rememberSaveable { mutableStateOf(true) }
+
         Box(
             modifier = Modifier
                 .padding(paddingValues)
                 .background(SocialTheme.colors.uiBackground)
-                .fillMaxSize()
+                .fillMaxSize(),
         ) {
             BackHandler(onBack = {
                 if (scaffoldState.drawerState.isOpen) {
@@ -292,7 +293,7 @@ fun NavigationComponent(
                     chatViewModel,
                     homeViewModel = homeViewModel,
                     mapViewModel = mapViewModel,
-                    activeUserViewModel = activeUserViewModel
+                    activeUserViewModel = activeUserViewModel,
                 )
                 chatGraph(
                     navController, chatViewModel, currentChat, outputDirectory = outputDirectory,

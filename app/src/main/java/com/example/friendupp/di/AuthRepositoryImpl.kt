@@ -13,11 +13,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.Flow
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -34,7 +37,8 @@ class AuthRepositoryImpl @Inject constructor(
     private var signInRequest: BeginSignInRequest,
     @Named(SIGN_UP_REQUEST)
     private var signUpRequest: BeginSignInRequest,
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val storageRef:StorageReference
 ) : AuthRepository {
     override val isUserAuthenticatedInFirebase = auth.currentUser != null
     override val currentUser: FirebaseUser?
@@ -174,7 +178,30 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun removeUserImage(
+        url: String,
+    ): kotlinx.coroutines.flow.Flow<Response<Boolean>> = flow {
+        Log.d("ActivityRepositoryImpl",url)
+        try {
+            Log.d("ActivityRepositoryImpl",url)
+            val reference=storageRef.storage.getReferenceFromUrl(url)
+            Log.d("ActivityRepositoryImpl",reference.toString())
+            reference.delete().await()
 
+            emit(Response.Success(true))
+
+        } catch (e: Exception) {
+            Log.d("ActivityRepositoryImpl", "try addProfilePictureToStorage EXCEPTION"+e.toString())
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "addProfilePictureToStorage exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
 
 }
 

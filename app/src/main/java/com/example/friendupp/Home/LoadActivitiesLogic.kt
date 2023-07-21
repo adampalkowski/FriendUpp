@@ -99,8 +99,6 @@ fun loadPublicActivities(
         if (!activitiesFetched.value) {
             if (currentLocation != null) {
                 val range = getSavedRangeValue(context)
-                Toast.makeText(context,"RANGE+"+range.toString(),Toast.LENGTH_SHORT).show()
-                Log.d(TAG,"CALLED FOR CLOSEST")
                 activityViewModel.getClosestActivities(
                     currentLocation.latitude,
                     currentLocation.longitude,

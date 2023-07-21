@@ -10,12 +10,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Navigation.sendNotification
+import com.example.friendupp.Profile.LocationStateSaver
 import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.R
 import com.example.friendupp.Settings.*
@@ -95,6 +97,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     })
                 }
                 "Joined"->{
+                    val context = LocalContext.current
                     JoinedActivitiesScreen(onEvent={event->
                         when(event){
                             is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
@@ -111,8 +114,8 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                                     )
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",title = Resources.getSystem().getString(
-                                                R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
+                                            ,title =context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
                                     }
 
                                 }else{
@@ -124,7 +127,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
                                     if(event.activity.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title =context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
                                     }
 
                                 }

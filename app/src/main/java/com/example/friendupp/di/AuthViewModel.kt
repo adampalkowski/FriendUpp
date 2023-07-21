@@ -91,9 +91,18 @@ class AuthViewModel @Inject constructor(
         _loginFlow.value=null
         _signupFlow.value=null
     }
-     fun deleteAccount(id:String){
+     fun deleteAccount(user:User){
          viewModelScope.launch {
-             repo.deleteAccount(id)
+            repo.deleteAccount(user.id)
+             if(!user.pictureUrl.isNullOrEmpty()){
+                 Log.d("DELETEACCOUNT",user.pictureUrl.toString())
+                 user.pictureUrl.let {
+                     repo.removeUserImage(it!!).collect{
+
+                     }
+
+                 }
+             }
          }
 
     }

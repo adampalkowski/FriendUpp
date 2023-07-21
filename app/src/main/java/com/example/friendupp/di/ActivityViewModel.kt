@@ -675,7 +675,6 @@ class ActivityViewModel @Inject constructor(
                 _isActivityUnliked.value = response
             }
         }
-
     }
     fun removeRequestFromActivity(activity_id: String,user_id: String) {
         viewModelScope.launch {
@@ -726,7 +725,6 @@ class ActivityViewModel @Inject constructor(
                         else->{}
                     }
                 }
-
             }
             if(!manualyDeleted){
                 Log.d(TAG,"INCERASE STATS")
@@ -750,6 +748,12 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getUserActivities(id).collect { response ->
                 _userActivitiesState.value = response
+            }
+        }
+    }
+    fun updateDescription(id: String,description:String) {
+        viewModelScope.launch {
+            repo.updateDescription(id,description).collect { response ->
             }
         }
     }

@@ -8,6 +8,8 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,6 +73,8 @@ fun loadUser(userViewModel: UserViewModel, currentUser: MutableState<User?>) {
     }
 }
 
+
+val modifier=Modifier.fillMaxSize().safeDrawingPadding()
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.profileGraph(
     navController: NavController, outputDirectory: File,
@@ -137,7 +141,7 @@ fun NavGraphBuilder.profileGraph(
             }
             val context= LocalContext.current
 
-            CameraView(
+            CameraView(modifier=modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -302,7 +306,7 @@ fun NavGraphBuilder.profileGraph(
                 activityViewModel.getJoinedActivities(user.id)
                 activityViewModel.getUserActivities(user.id)
 
-                ProfileScreen(modifier = Modifier.fillMaxSize(),
+                ProfileScreen(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     onEvent = { event ->
                         when (event) {
                             is ProfileEvents.GoBack -> {
@@ -504,7 +508,7 @@ fun NavGraphBuilder.profileGraph(
                 val usernameFlow = userViewModel.isUsernameAddedFlow?.collectAsState()
 
                 EditProfile(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     goBack = { navController.navigate("Profile") },
                     userVa = currentUser,
                     onEvent = { event ->
@@ -742,7 +746,7 @@ fun NavGraphBuilder.profileGraph(
         ) {
 
 
-            FriendListScreen(onEvent = { event ->
+            FriendListScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is FriendListEvents.GoBack -> {
                         navController.navigate("Profile")
@@ -883,7 +887,7 @@ fun NavGraphBuilder.profileGraph(
                 if (user.value!!.id == UserData.user!!.id) {
                     navController.navigate("Profile")
                 }
-                ProfileDisplayScreen(modifier = Modifier.fillMaxSize(),
+                ProfileDisplayScreen(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     onEvent = { event ->
                         when (event) {
                             is ProfileDisplayEvents.GoBack -> {

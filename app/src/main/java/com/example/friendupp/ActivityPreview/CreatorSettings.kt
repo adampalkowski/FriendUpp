@@ -30,7 +30,7 @@ sealed class CreatorSettingsEvent {
 }
 
 @Composable
-fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Activity,updateCutomization:(Boolean,Boolean,Boolean,Boolean)->Unit) {
+fun CreatorSettingsScreen(modifier:Modifier,onEvent: (CreatorSettingsEvent) -> Unit, activity: Activity,updateCutomization:(Boolean,Boolean,Boolean,Boolean)->Unit) {
     BackHandler(true) {
         onEvent(CreatorSettingsEvent.GoBack)
     }
@@ -48,7 +48,7 @@ fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Act
     }
 
 
-    Column {
+    Column (modifier=modifier){
         ScreenHeading(
             title = "Activity settings",
             onBack = { onEvent(CreatorSettingsEvent.GoBack) },
@@ -58,10 +58,10 @@ fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Act
             onEvent(CreatorSettingsEvent.AddUsers)
         }
 
-        SettingsItem(label = "Change location", icon = R.drawable.ic_custom_location) {
+        /*SettingsItem(label = "Change location", icon = R.drawable.ic_custom_location) {
             onEvent(CreatorSettingsEvent.ChangeLocation)
 
-        }
+        }*/
         SettingsItem(label = "Edit description", icon = R.drawable.ic_edit) {
             onEvent(CreatorSettingsEvent.EditDescription)
         }
@@ -70,9 +70,7 @@ fun CreatorSettingsScreen(onEvent: (CreatorSettingsEvent) -> Unit, activity: Act
         }
         SettingsItem(label = "Remove participant", icon = R.drawable.ic_person_remove) {
             onEvent(CreatorSettingsEvent.RemoveParticipant)
-
         }
-
         SettingsItem(label = "Delete activity", icon = R.drawable.ic_delete) {
             onEvent(CreatorSettingsEvent.DeleteActivity)
         }

@@ -159,7 +159,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
         progressBlocked = false
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize()
                     .verticalScroll(rememberScrollState())

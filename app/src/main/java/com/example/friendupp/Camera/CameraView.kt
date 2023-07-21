@@ -121,7 +121,7 @@ private fun requestGalleryPermission(
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun CameraView(
+fun CameraView(modifier: Modifier,
     onEvent: (CameraEvent) -> Unit,
     outputDirectory: File,
     executor: Executor,
@@ -235,8 +235,8 @@ fun CameraView(
     }
     // 3
     Column(
-        Modifier
-            .fillMaxSize()
+        modifier
+
             .background(Color.Black)
     ) {
         if (photoUri == null) {

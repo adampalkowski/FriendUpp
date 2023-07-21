@@ -65,7 +65,7 @@ sealed class SearchEvents{
 }
 
 @Composable
-fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
+fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
     val focusRequester = remember { FocusRequester() }
     val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
         mutableStateOf(UsernameState())
@@ -77,7 +77,7 @@ fun SearchScreen(onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
         onEvent(SearchEvents.GoBack)
     }
 
-    Column() {
+    Column(modifier=modifier) {
 
         LazyColumn {
             item {

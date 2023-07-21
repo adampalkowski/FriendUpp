@@ -148,7 +148,7 @@ fun ChatContent(
 
         val (chat_name, chat_image) =  getChatNameAndImage(chat)
 
-        Box(Modifier.fillMaxSize()) {
+        Box(modifier.fillMaxSize()) {
 
             if (highlight_dialog) {
                 HighLightDialog(modifier = Modifier.align(Alignment.TopCenter), onEvent = { it ->

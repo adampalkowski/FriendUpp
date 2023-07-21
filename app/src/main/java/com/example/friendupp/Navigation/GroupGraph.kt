@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
@@ -128,7 +129,7 @@ fun NavGraphBuilder.groupGraph(
             Log.d("CHATDEBUG", "GETFRIENDSCALLED")
 
             FriendPickerScreen(
-                modifier = Modifier,
+                modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
                 chatViewModel=chatViewModel,
@@ -263,7 +264,7 @@ fun NavGraphBuilder.groupGraph(
             }
 
             val context = LocalContext.current
-            CameraView(
+            CameraView(modifier=modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -354,7 +355,7 @@ fun NavGraphBuilder.groupGraph(
             if(chat.value==null){
                 CircularProgressIndicator()
             }else {
-                GroupDisplayScreen(modifier = Modifier, onEvent = { event ->
+                GroupDisplayScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                     when (event) {
                         is GroupDisplayEvents.GoBack -> {
                             navController.popBackStack()
@@ -473,7 +474,7 @@ fun NavGraphBuilder.groupGraph(
         val selectedUsers = remember { mutableStateListOf<String>() }
         if(groupId!=null){
             FriendPickerScreen(
-                modifier = Modifier,
+                modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
                 chatViewModel=chatViewModel,

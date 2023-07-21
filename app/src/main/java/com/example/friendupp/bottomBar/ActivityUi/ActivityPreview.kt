@@ -67,7 +67,7 @@ val TAG="ActivityPrewviewDebug"
 *
 * */
 @Composable
-fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: HomeViewModel){
+fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: HomeViewModel){
     val activityData=homeViewModel.expandedActivity.collectAsState()
     BackHandler(true) {
         onEvent(ActivityPreviewEvents.GoBack)
@@ -81,8 +81,7 @@ fun ActivityPreview(onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: Hom
 
     activityData.value.let {activity->
         Box(
-            Modifier
-                .fillMaxSize()
+            modifier=modifier
                 .background(color = SocialTheme.colors.uiBackground)){
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 Box(modifier = Modifier

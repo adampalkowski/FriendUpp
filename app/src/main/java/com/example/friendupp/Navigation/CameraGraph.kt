@@ -86,7 +86,7 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
             val systemUiController = rememberSystemUiController()
             val scope = rememberCoroutineScope()
             val context = LocalContext.current
-            CameraView(outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
+            CameraView(modifier=modifier,outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
                 photoUri= uri
 
                 /*todo handle the image uri*/

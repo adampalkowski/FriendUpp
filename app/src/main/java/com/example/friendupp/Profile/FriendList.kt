@@ -59,7 +59,7 @@ fun FriendListScreen(
     val friendsList = remember { mutableStateListOf<User>() }
     val moreFriendsList = remember { mutableStateListOf<User>() }
     friendsLoading(userViewModel, friendsList, moreFriendsList)
-    Column(modifier = Modifier) {
+    Column(modifier = modifier) {
         ScreenHeading(
             title = "Friend list",
             backButton = true,

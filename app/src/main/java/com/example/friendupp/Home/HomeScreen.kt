@@ -203,7 +203,7 @@ fun HomeScreen(
 
     val pState = rememberPullRefreshState(refreshing, ::refresh)
 
-    Column {
+    Column (modifier=modifier){
         TopBar(
             modifier = Modifier,
             onOptionSelected = { option -> selectedOption.option = option },
@@ -212,7 +212,6 @@ fun HomeScreen(
         Box(Modifier.pullRefresh(pState)) {
             Column() {
                 LazyColumn(
-                    modifier,
                     state = lazyListState
                 ) {
                     item {
@@ -279,7 +278,6 @@ fun HomeScreen(
                                 },
                                 deleteActivity = {
                                     Log.d(TAG,"DELETE CAVITIVY")
-                                    activityViewModel.deleteActivity(activity)
                                 }
                             )
                         }

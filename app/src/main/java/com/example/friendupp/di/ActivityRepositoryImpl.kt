@@ -1502,6 +1502,15 @@ class ActivityRepositoryImpl @Inject constructor(
             emit(Response.Failure(e = SocialException("deleteUser exception", Exception())))
         }
     }
+    override suspend fun updateDescription(id:String,description:String): Flow<Response<Void?>> = flow {
+        try {
+            emit(Response.Loading)
+            val deletion = activitiesRef.document(id).update("description",description).await()
+            emit(Response.Success(deletion))
+        } catch (e: Exception) {
+            emit(Response.Failure(e = SocialException("deleteUser exception", Exception())))
+        }
+    }
     override suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>> = callbackFlow {
         val activeUsersQuery = activeUsersRef
             .whereEqualTo("creator_id", id)

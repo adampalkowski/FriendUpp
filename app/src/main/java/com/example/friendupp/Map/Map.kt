@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.VectorDrawable
 import android.os.Build
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,8 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.Icon
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotMutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -100,7 +105,7 @@ fun MapScreen(
 
     val activityToScroll = remember { mutableStateOf<Activity?>(null) }
 
-    Box(modifier = Modifier) {
+    Box(modifier = Modifier.consumeWindowInsets(WindowInsets.ime)) {
 
         GoogleMap(
             Modifier.fillMaxSize(), cameraPositionState,
@@ -174,52 +179,66 @@ fun MapScreen(
                 .padding(24.dp)
         ) {
 
-            Box(
-                Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(SocialTheme.colors.uiBackground)
-                    .clickable(onClick = {
-                        cameraPositionState.position =
-                            CameraPosition.fromLatLngZoom(currentLocation, 11f)
-                    }), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_my_location),
-                    contentDescription = null,
-                    tint = Color.Black
-                )
+            Card(elevation = 5.dp) {
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SocialTheme.colors.uiBackground)
+                        .clickable(onClick = {
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                        }), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_my_location),
+                        contentDescription = null,
+                        tint = Color.Black
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(SocialTheme.colors.uiBackground)
-                    .clickable(onClick = {
-                        cameraPositionState.position =
-                            CameraPosition.fromLatLngZoom(currentLocation, 11f)
-                    }), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_refresh_map),
-                    contentDescription = null,
-                    tint = Color.Black
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            SocialButtonNormal(
-                icon = R.drawable.ic_filte_300,
-                onClick = { },
-                false
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            SocialButtonNormal(
-                icon = R.drawable.ic_calendar_300,
-                onClick = { },
-                false
-            )
 
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Card(elevation = 5.dp) {
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SocialTheme.colors.uiBackground)
+                        .clickable(onClick = {
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                        }), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_refresh_map),
+                        contentDescription = null,
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Card(elevation = 5.dp) {
+                SocialButtonNormal(
+                    icon = R.drawable.ic_filte_300,
+                    onClick = { },
+                    false
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+            Card(elevation = 5.dp) {
+                SocialButtonNormal(
+                    icon = R.drawable.ic_calendar_300,
+                    onClick = { },
+                    false
+                )
+
+
+            }
 
         }
 
@@ -236,23 +255,52 @@ fun MapActivitiesDisplay(
     morePublicActivities: MutableList<Activity>,
     CenterOnPoint: (LatLng) -> Unit, onEvent: (MapEvent) -> Unit,
 ) {
-    val lazyListState = rememberLazyListState()
-
-
-    LazyRow(
-        modifier = modifier,
-        state = lazyListState
-    ) {
-        items(publicActivities) { activity ->
-            MapActivityItem(onClick = {
-                val latLng = LatLng(activity.lat!!, activity.lng!!)
-
-                CenterOnPoint(latLng)
-            }, activity = activity, onEvent = onEvent)
-            Spacer(modifier = Modifier.width(16.dp))
-        }
+    var hideActivities by rememberSaveable  {
+        mutableStateOf(true)
     }
+    val icon= if(hideActivities){
+        painterResource(id = R.drawable.ic_down)}else{
+        painterResource(id = R.drawable.ic_up)}
+    val lazyListState = rememberLazyListState()
+    Column(horizontalAlignment = Alignment.End,                modifier = modifier.fillMaxWidth(),
+    ) {
+        Card(elevation = 5.dp, shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)) {
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp))
+                    .background(SocialTheme.colors.uiBackground)
+                    .clickable(onClick = {
+                        hideActivities = !hideActivities
+                    }), contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter =icon,
+                    contentDescription = null,
+                    tint = Color.Black
+                )
+            }
+        }
+        if(!hideActivities){
+            Spacer(modifier = Modifier.height(24.dp))
 
+        }
+        AnimatedVisibility(visible = hideActivities) {
+            LazyRow(
+                state = lazyListState
+            ) {
+                items(publicActivities) { activity ->
+                    MapActivityItem(onClick = {
+                        val latLng = LatLng(activity.lat!!, activity.lng!!)
+
+                        CenterOnPoint(latLng)
+                    }, activity = activity, onEvent = onEvent)
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+            }
+        }
+
+    }
     // Trigger scrolling when the activityToScroll value changes
     LaunchedEffect(activityToScroll.value) {
         val index = publicActivities.indexOf(activityToScroll.value)

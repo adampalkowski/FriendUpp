@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -122,7 +123,7 @@ fun NavGraphBuilder.createGraph(
             }
 
             val context = LocalContext.current
-            CameraView(
+            CameraView(modifier=modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -242,7 +243,7 @@ fun NavGraphBuilder.createGraph(
             val context = LocalContext.current
 
             FriendPickerScreen(
-                modifier = Modifier,
+                modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
                 chatViewModel = chatViewModel,
@@ -468,7 +469,7 @@ fun NavGraphBuilder.createGraph(
                         }
                     }
                 },
-                modifier = Modifier, activity = currentActivity.value, activityState = activityState
+                modifier = Modifier.safeDrawingPadding(), activity = currentActivity.value, activityState = activityState
 
             )
         }

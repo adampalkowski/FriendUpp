@@ -47,7 +47,7 @@ fun PickUsernameScreen(userViewModel: UserViewModel?, authViewModel: AuthViewMod
     val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
         mutableStateOf(UsernameState())
     }
-        Column(modifier = Modifier
+        Column(modifier = Modifier.safeDrawingPadding()
             .fillMaxSize()
             .padding(24.dp)) {
             Text(text= "Select your social username to help others identify you"

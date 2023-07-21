@@ -28,7 +28,7 @@ fun SplashScreen(splash_screen_delay:Long){
     Box(
         Modifier
             .fillMaxSize()
-            .background(SocialTheme.colors.uiBackground)) {
+            .background(SocialTheme.colors.uiBackground).safeDrawingPadding()) {
         val scale = remember {
             androidx.compose.animation.core.Animatable(0.0f)
         }

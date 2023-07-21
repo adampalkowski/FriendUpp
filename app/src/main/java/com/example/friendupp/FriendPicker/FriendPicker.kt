@@ -88,7 +88,7 @@ fun FriendPickerScreen(
         goBack()
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         LazyColumn {
             item {
                 ScreenHeading(title = "Select users", backButton = true, onBack = goBack) {

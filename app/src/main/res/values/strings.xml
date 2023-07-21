@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">FriendUpp</string>
+    <string name="MAIN_STORAGE_LINK">${MAIN_STORAGE_LINK}</string>
+    <string name="MEDIUM_STORAGE_LINK">${MEDIUM_STORAGE_LINK}</string>
+    <string name="liveShareLocation">Share current location</string>
+    <string name="LARGE_STORAGE_LINK">${LARGE_STORAGE_LINK}</string>
+    <string name="NOTIFICATION_JOINED_ACTIVITY_TITLE">"New participant"</string>
 </resources>

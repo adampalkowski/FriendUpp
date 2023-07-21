@@ -14,6 +14,7 @@ interface ActivityRepository {
     suspend fun getUserActivities(id: String): Flow<Response<List<Activity>>>
     suspend fun watchCurrentUserActive(id:String): Flow<Response<List<ActiveUser>>>
     suspend fun increaseUserStats(user_id:String,numberOfParticipants:Int): Flow<Response<Void?>>
+    suspend fun updateDescription(id:String,description:String): Flow<Response<Void?>>
 
     suspend fun updateActivityCustomization(activityId: String,activitySharing:Boolean,disableChat:Boolean,participantConfirmation:Boolean):Flow<Response<Boolean>>
     suspend fun getJoinedActivities(id: String): Flow<Response<List<Activity>>>

@@ -5,6 +5,7 @@ import com.example.friendupp.model.Response
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
+import java.util.concurrent.Flow
 
 typealias OneTapSignInResponse = OneTapResponse<BeginSignInResult>
 typealias SignInWithGoogleResponse = Response<Boolean>
@@ -25,7 +26,6 @@ interface AuthRepository {
      suspend fun deleteAccount(id:String)
 
     suspend fun oneTapSignInWithGoogle(): OneTapSignInResponse
-
-
+     suspend fun removeUserImage( url: String ): kotlinx.coroutines.flow.Flow<Response<Boolean>>
     suspend fun firebaseSignInWithGoogle(googleCredential: AuthCredential): SignInWithGoogleResponse
 }

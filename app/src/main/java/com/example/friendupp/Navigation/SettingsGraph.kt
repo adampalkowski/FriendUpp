@@ -235,8 +235,8 @@ fun NavGraphBuilder.settingsGraph(
                     onCancel = { openDeleteAccountDialog = false },
                     onConfirm = {
                         if (UserData.user != null) {
-                            authViewModel.deleteAccount(UserData.user!!.id)
-                            authViewModel.deleteAuth()
+                            authViewModel.deleteAccount(UserData.user!!)
+                             authViewModel.deleteAuth()
                             userViewModel.resetUserValidation()
                             Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
 

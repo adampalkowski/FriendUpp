@@ -15,6 +15,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -49,6 +50,9 @@ import com.example.friendupp.Profile.ProfileDisplayEvents
 import com.example.friendupp.R
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
+import com.example.friendupp.Settings.ChangeEmailDialog
+import com.example.friendupp.bottomBar.ActivityUi.ChangeDescriptionDialog
+import com.example.friendupp.bottomBar.ActivityUi.RemoveUsersDialog
 import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.ChatViewModel
@@ -56,6 +60,7 @@ import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -80,7 +85,7 @@ fun NavGraphBuilder.mainGraph(
     userViewModel: UserViewModel,chatViewModel:ChatViewModel,
     homeViewModel:HomeViewModel,
     mapViewModel:MapViewModel,
-    activeUserViewModel:ActiveUsersViewModel
+    activeUserViewModel:ActiveUsersViewModel,
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
@@ -143,7 +148,7 @@ fun NavGraphBuilder.mainGraph(
                         called=false
                     }
                 }
-                ParticipantsScreen(userViewModel=userViewModel, onEvent = {event->
+                ParticipantsScreen(modifier=Modifier.safeDrawingPadding(),userViewModel=userViewModel, onEvent = {event->
                     when(event){
                         is ParticipantsEvents.GoBack->{
                             navController.popBackStack()
@@ -278,14 +283,17 @@ fun NavGraphBuilder.mainGraph(
                 }
             }
             homeViewModel.notificationType.value.let { type ->
+
                 when (type) {
                     "message" -> {
                         homeViewModel.notificationLink.value.let { link->
+                            homeViewModel.resetNotificationLink()
+
                             navController.navigate(
                                 "ChatItem/" + link
                             )
                         }
-                        homeViewModel.resetNotificationLink()
+
                     }
                     "joinActivity" -> {
                         homeViewModel.notificationLink.value.let { link->
@@ -294,7 +302,10 @@ fun NavGraphBuilder.mainGraph(
                                 when(response){
                                     is Response.Success->{
                                         homeViewModel.setExpandedActivity(response.data)
+                                        homeViewModel.resetNotificationLink()
                                         navController.navigate("ActivityPreview")
+
+
                                     }
                                     else->{}
                                 }
@@ -312,7 +323,10 @@ fun NavGraphBuilder.mainGraph(
                                 when(response){
                                     is Response.Success->{
                                         homeViewModel.setExpandedActivity(response.data)
+                                        homeViewModel.resetNotificationLink()
+
                                         navController.navigate("ActivityPreview")
+
                                     }
                                     else->{}
                                 }
@@ -324,11 +338,14 @@ fun NavGraphBuilder.mainGraph(
                     }
                     "friendRequest" -> {
                         homeViewModel.notificationLink.value.let { link->
+                            homeViewModel.resetNotificationLink()
                             navController.navigate(
                                 "ProfileDisplay/" + link
                             )
+
+
                         }
-                        homeViewModel.resetNotificationLink()
+
                     }
                 }
             }
@@ -357,7 +374,7 @@ fun NavGraphBuilder.mainGraph(
 
             }
             val context= LocalContext.current
-            HomeScreen(modifier = Modifier, onEvent = { event ->
+            HomeScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                 when (event) {
                     is HomeEvents.OpenDrawer -> {
                         openDrawer()
@@ -546,10 +563,9 @@ fun NavGraphBuilder.mainGraph(
         ) {
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
-
             var openReportDialog by remember{ mutableStateOf<String?>(null) }
 
-            ActivityPreview(onEvent = { event ->
+            ActivityPreview(modifier= modifier,onEvent = { event ->
                 when (event) {
                     is ActivityPreviewEvents.GoBack -> {
                         navController.popBackStack()
@@ -586,7 +602,8 @@ fun NavGraphBuilder.mainGraph(
                                     )
                                     if(it.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = it.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",
+                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",
+                                            title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",
                                             id=    it.id)
                                     }
 
@@ -600,7 +617,7 @@ fun NavGraphBuilder.mainGraph(
                                     if(it.creator_id!=UserData.user!!.id){
                                         sendNotification(receiver = it.creator_id,
                                             picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",
-                                            title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",  id=  it.id)
+                                            title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",  id=  it.id)
                                     }
                                 }
                             }
@@ -724,6 +741,12 @@ fun NavGraphBuilder.mainGraph(
             var openDeleteActivityDialog by  remember {
                 mutableStateOf<com.example.friendupp.model.Activity?>(null)
             }
+            var openEditDescription by rememberSaveable {
+                mutableStateOf(false)
+            }
+            var openRemoveUsers by rememberSaveable {
+                mutableStateOf(false)
+            }
             var openDeleteImageDialog by  remember {
                 mutableStateOf<com.example.friendupp.model.Activity?>(null)
             }
@@ -731,7 +754,7 @@ fun NavGraphBuilder.mainGraph(
             val activityId = backStackEntry.arguments?.getString("activityId")
             val activityData=homeViewModel.expandedActivity.collectAsState()
             activityData.value.let {activity->
-                CreatorSettingsScreen(onEvent={event->
+                CreatorSettingsScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
                     when(event){
                         is CreatorSettingsEvent.GoBack->{navController.popBackStack()}
                         is CreatorSettingsEvent.Share->{
@@ -756,9 +779,22 @@ fun NavGraphBuilder.mainGraph(
                             openDeleteActivityDialog=activity
 
                         }
+
+                        is CreatorSettingsEvent.AddUsers->{
+                            navController.navigate("FriendPickerAddActivityUsers/"+activity!!.id)
+                        }
+                        is CreatorSettingsEvent.RemoveParticipant->{
+                            openRemoveUsers=true
+
+
+                        }
+                        is CreatorSettingsEvent.EditDescription->{
+                            openEditDescription=true
+                        }
                         else->{}
                     }},activity=activity!!,
                 updateCutomization = {activitySharing,disableChat,participantConifrmation,disableNotification->
+                    Log.d("CreateorSettingsCreen","updated customization")
                     activityViewModel.updateActivityCustomization(activityId=activity.id,activitySharing=activitySharing,disableChat=disableChat,participantConfirmation=participantConifrmation)
                 })
             }
@@ -776,6 +812,64 @@ fun NavGraphBuilder.mainGraph(
                             Toast.LENGTH_LONG
                         ).show()
                         navController.navigate("Home")})
+            }
+            if (openEditDescription) {
+                ChangeDescriptionDialog(
+                    label = "Update activity description.",
+                    icon = R.drawable.ic_edit,
+                    onCancel = { openEditDescription = false },
+                    onConfirm = { description ->
+                        if(!activityId.isNullOrEmpty()){
+                            activityViewModel.updateDescription(activityId,description)
+                            openEditDescription = false
+                            Toast.makeText(
+                                context,
+                                "Activity description updated.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }else{
+                            Toast.makeText(
+                                context,
+                                "Failure.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                    },
+                    confirmTextColor = SocialTheme.colors.textInteractive,
+                    disableConfirmButton = false
+                )
+            }
+            if (openRemoveUsers) {
+                activityData.value?.let {
+                    RemoveUsersDialog(
+                        label = "Select users to be removed.",
+                        icon = R.drawable.ic_person_remove,
+                        onCancel = { openRemoveUsers = false },
+                        onConfirm = { ids ->
+                            if(!activityId.isNullOrEmpty()){
+                                openRemoveUsers = false
+                                ids.forEach {id->
+                                    activityViewModel.unlikeActivity(activityId,id)
+
+                                }
+                                Toast.makeText(
+                                    context,
+                                    "Removed users from activity.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }else{
+                                Toast.makeText(
+                                    context,
+                                    "Failure.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        confirmTextColor = SocialTheme.colors.textInteractive,
+                        disableConfirmButton = false, activity = it)
+                }
+
             }
 
         }
@@ -848,7 +942,7 @@ fun NavGraphBuilder.mainGraph(
             if(activityId!=null){
 
                 FriendPickerScreen(
-                    modifier = Modifier,
+                    modifier = Modifier.safeDrawingPadding(),
                     userViewModel = userViewModel,
                     goBack = { navController.popBackStack() },
                     chatViewModel=chatViewModel,
@@ -970,10 +1064,7 @@ fun NavGraphBuilder.mainGraph(
             val context= LocalContext.current
             // Location permission state
             val locationPermissionState = rememberPermissionState(
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            )
-
-
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
 
 
             if(locationPermissionState.status.isGranted){
@@ -1061,7 +1152,7 @@ fun NavGraphBuilder.mainGraph(
             userViewModel.resetUserValue()
 
 
-            SearchScreen(onEvent = { event ->
+            SearchScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is SearchEvents.GoBack -> {
                         navController.popBackStack()
