@@ -40,7 +40,6 @@ import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
 import com.example.friendupp.Groups.SelectedUsersState
-import com.example.friendupp.Profile.friendsLoading
 import com.example.friendupp.Profile.groupsLoading
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
@@ -69,11 +68,11 @@ fun FriendPickerScreen(
         SelectedUsersState(mutableStateListOf())
     }
     val IconTint = SocialTheme.colors.textPrimary.copy(0.8f)
-    friendsLoading(
+   /* friendsLoading(
         userViewModel = userViewModel,
         friendsList = friendsList,
         moreFriendsList = moreFriendsList
-    )
+    )*/
     groupsLoading(
         chatViewModel = chatViewModel,
         groupList = groupList,

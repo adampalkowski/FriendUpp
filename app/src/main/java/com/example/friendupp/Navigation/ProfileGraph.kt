@@ -25,8 +25,10 @@ import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
+import com.example.friendupp.Search.invitesLoading
 import com.example.friendupp.Settings.ChangeEmailDialog
 import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.di.ActivityViewModel
@@ -37,11 +39,13 @@ import com.example.friendupp.model.*
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
+import com.google.firebase.Timestamp
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
 import java.io.File
+import java.util.*
 import java.util.concurrent.Executor
 
 fun loadUser(userViewModel: UserViewModel, currentUser: MutableState<User?>) {
@@ -67,7 +71,9 @@ fun loadUser(userViewModel: UserViewModel, currentUser: MutableState<User?>) {
 }
 
 
-val modifier=Modifier.fillMaxSize().safeDrawingPadding()
+val modifier= Modifier
+    .fillMaxSize()
+    .safeDrawingPadding()
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.profileGraph(
     navController: NavController, outputDirectory: File,
@@ -75,6 +81,7 @@ fun NavGraphBuilder.profileGraph(
     chatViewModel: ChatViewModel,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
+    invitesViewModel: InvitesViewModel
 ) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
@@ -299,7 +306,9 @@ fun NavGraphBuilder.profileGraph(
                 activityViewModel.getJoinedActivities(user.id)
                 activityViewModel.getUserActivities(user.id)
 
-                ProfileScreen(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+                ProfileScreen(modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                     onEvent = { event ->
                         when (event) {
                             is ProfileEvents.GoBack -> {
@@ -312,7 +321,7 @@ fun NavGraphBuilder.profileGraph(
                                 navController.navigate("Search")
                             }
                             is ProfileEvents.GoToFriendList -> {
-                                navController.navigate("FriendList")
+                                navController.navigate("FriendList/"+UserData.user!!.id)
                             }
                             is ProfileEvents.GoToSettings -> {
                                 navController.navigate("Settings")
@@ -501,7 +510,9 @@ fun NavGraphBuilder.profileGraph(
                 val usernameFlow = userViewModel.isUsernameAddedFlow?.collectAsState()
 
                 EditProfile(
-                    modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .safeDrawingPadding(),
                     goBack = { navController.navigate("Profile") },
                     userVa = currentUser,
                     onEvent = { event ->
@@ -634,8 +645,9 @@ fun NavGraphBuilder.profileGraph(
 
 
         }
+
         composable(
-            "FriendList",
+            "FriendList/{userID}",    arguments = listOf(navArgument("userID") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "EditProfile" ->
@@ -643,21 +655,7 @@ fun NavGraphBuilder.profileGraph(
                             AnimatedContentScope.SlideDirection.Right,
                             animationSpec = tween(300)
                         )
-                    "Home" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(300)
-                        )
-                    "Chat" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
-                    "Map" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
+
                     else -> null
                 }
             },
@@ -668,21 +666,7 @@ fun NavGraphBuilder.profileGraph(
                             AnimatedContentScope.SlideDirection.Left,
                             animationSpec = tween(700)
                         )
-                    "Home" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    "Chat" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    "Map" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
+
                     else -> null
                 }
             },
@@ -693,21 +677,7 @@ fun NavGraphBuilder.profileGraph(
                             AnimatedContentScope.SlideDirection.Right,
                             animationSpec = tween(700)
                         )
-                    "Home" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
-                    "Chat" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
-                    "Map" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(350)
-                        )
+
                     else -> null
                 }
             },
@@ -718,26 +688,23 @@ fun NavGraphBuilder.profileGraph(
                             AnimatedContentScope.SlideDirection.Left,
                             animationSpec = tween(700)
                         )
-                    "Home" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    "Chat" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    "Map" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
+
                     else -> null
                 }
             }
-        ) {
+        ) { backStackEntry ->
+            val userID = backStackEntry.arguments?.getString("userID")
+            if(userID!=null){
+                LaunchedEffect(Unit) {
+                    Log.d("FriendsViewModel","Get friends called")
+                        userViewModel.getFriends(userID)
+                }
+            }else{
+                navController.popBackStack()
+            }
 
+            var friendList= userViewModel.getFriendsList()
+            var isLoading = userViewModel.friendsLoading.value
 
             FriendListScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
@@ -750,9 +717,12 @@ fun NavGraphBuilder.profileGraph(
                     is FriendListEvents.ProfileDisplay -> {
                         navController.navigate("ProfileDisplay/" + event.userId)
                     }
+                    is FriendListEvents.GetMoreFriends -> {
+                        userViewModel.getMoreFriends(UserData.user!!.id)
+                    }
                     else -> {}
                 }
-            }, userViewModel = userViewModel)
+            },friendList=friendList,isLoading)
         }
         composable(
             "ProfileDisplay/{userID}",
@@ -862,27 +832,28 @@ fun NavGraphBuilder.profileGraph(
             val userID = backStackEntry.arguments?.getString("userID")
             val activityViewModel: ActivityViewModel = hiltViewModel()
 
-
             if (userID != null) {
                 LaunchedEffect(key1 = userID) {
                     Log.d("SEARCHSCREENDEBUG", "get user")
-                    userViewModel.getUser(userID)
+                    userViewModel.getUserListener(userID)
                 }
             }
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
-            val userFlow = userViewModel.userState?.collectAsState()
-            val user = remember { mutableStateOf<User?>(null) }
-            if (user.value == null) {
+
+            val user =userViewModel.getUserProfile()
+            if (user == null) {
                 CircularProgressIndicator()
             } else {
                 //check if user is me then go to profiel
-                if (user.value!!.id == UserData.user!!.id) {
+                if (user.id == UserData.user!!.id) {
                     navController.navigate("Profile")
-                }else if(user.value!!.blocked_ids.contains(UserData.user!!.id)){
+                }else if(user.blocked_ids.contains(UserData.user!!.id)){
                     navController.popBackStack()
                 }
-                ProfileDisplayScreen(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+                ProfileDisplayScreen(modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                     onEvent = { event ->
                         when (event) {
                             is ProfileDisplayEvents.GoBack -> {
@@ -941,7 +912,7 @@ fun NavGraphBuilder.profileGraph(
 
                             }
                             is ProfileDisplayEvents.GoToFriendList -> {
-                                navController.navigate("FriendList")
+                                navController.navigate("FriendList/"+event.id)
                             }
                             is ProfileDisplayEvents.GoToSettings -> {
                                 navController.navigate("Settings")
@@ -997,7 +968,19 @@ fun NavGraphBuilder.profileGraph(
 
                             is ProfileDisplayEvents.InviteUser -> {
                                 /*add inivte to both users*/
-                                userViewModel.addInvitedIdToUser(UserData.user!!.id, event.user_id)
+                                val timestamp = getCurrentUTCTime() // Using the provided Timestamp class or any other suitable timestamp representation
+                                val newInvite = Invite(
+                                    id = generateInviteId(), // You need to generate a unique inviteId, it could be a random string or a combination of IDs and timestamp.
+                                    senderId = UserData.user!!.id,
+                                    receiverId = event.user_id,
+                                    timestamp = timestamp,
+                                    senderName = UserData.user?.username!!,
+                                    senderProfilePictureUrl = UserData.user!!.pictureUrl!!
+                                )
+
+                                // create invite and add it to invites repo
+                                invitesViewModel.addInvite(newInvite)
+
                                 /*handle notification*/
                                 sendNotification(receiver = event.user_id, message = " sent you a friend request",
                                     title = "New friend request", username = UserData.user?.username!!, picture = UserData.user!!.pictureUrl,
@@ -1071,29 +1054,10 @@ fun NavGraphBuilder.profileGraph(
                                 navController.navigate("ProfileDisplay/" + event.id)
                             }
                         }
-                    }, user = user.value!!, activityViewModel = activityViewModel)
+                    }, user = user, activityViewModel = activityViewModel)
             }
 
 
-
-            userFlow?.value.let { response ->
-                when (response) {
-                    is Response.Success -> {
-                        Log.d("SEARCHSCREENDEBUG", "saearch sucess")
-                        user.value = response.data
-                        userViewModel.resetUserValue()
-                    }
-                    is Response.Failure -> {
-
-                    }
-                    is Response.Loading -> {
-                        CircularProgressIndicator()
-                    }
-                    null -> {
-                    }
-                }
-
-            }
 
 
         }
@@ -1102,3 +1066,6 @@ fun NavGraphBuilder.profileGraph(
 
 
 
+fun generateInviteId(): String {
+    return UUID.randomUUID().toString()
+}

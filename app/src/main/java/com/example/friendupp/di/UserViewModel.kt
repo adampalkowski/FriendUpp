@@ -2,6 +2,7 @@ package com.example.friendupp.di
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -50,12 +51,11 @@ class UserViewModel @Inject constructor(
     private val _userListenerState = MutableStateFlow<Response<User?>?>(null)
     val userListenerState: StateFlow<Response<User?>?> = _userListenerState
 
+    private val _friendsList = mutableStateOf<List<User>>(emptyList())
+    val friendsList: MutableState<List<User>> = _friendsList
+    private val _friendsLoading = mutableStateOf(false)
+    val friendsLoading: State<Boolean> = _friendsLoading
 
-    private val _friendState = MutableStateFlow<Response<ArrayList<User>>?>(null)
-    val friendState: StateFlow<Response<ArrayList<User>>?> = _friendState
-    fun resetFriendState() {
-        _friendState.value=null
-    }
     // Function to cancel the listener and flow
     fun cancelCurrentUserListener() {
         viewModelScope.coroutineContext.cancelChildren()
@@ -198,11 +198,34 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
+    fun getFriendsList(): List<User> {
+        return friendsList.value
+    }
     fun getFriends(id: String) {
         viewModelScope.launch {
             repo.getFriends(id).collect { response ->
-                _friendState.value = response
+                _friendsLoading.value = true // Set the loading state to true before fetching data
+
+                when (response) {
+                    is Response.Success -> {
+                        _friendsList.value = response.data ?: emptyList()
+                        Log.d("FriendsViewModel", "Friends fetched successfully for user: $id")
+                    }
+                    is Response.Failure -> {
+                        // Handle the failure case if needed (e.g., show an error message)
+                        // For example:
+                        _friendsList.value = emptyList()
+                        Log.e("FriendsViewModel", "Failed to fetch friends for user: $id")
+                    }
+                    is Response.Loading -> {
+                        Log.d("FriendsViewModel", "Loading friends for user: $id...")
+                    }
+                    null -> {
+                        Log.e("FriendsViewModel", "Null response received for user: $id")
+                    }
+                }
+                _friendsLoading.value = false // Set the loading state to true before fetching data
+
             }
         }
     }
@@ -210,15 +233,33 @@ class UserViewModel @Inject constructor(
     fun getMoreFriends(id: String) {
         viewModelScope.launch {
             repo.getMoreFriends(id).collect { response ->
-                _friendMoreState.value = response
-                registration?.remove()
+                when (response) {
+                    is Response.Success -> {
+                        // If the addition was successful, append the new friends to the existing list
+                        // This assumes that you have access to the local list of friends in this view model.
+                        _friendsList.value = _friendsList.value + (response.data ?: emptyList())
+                        Log.d("FriendsViewModel", "More friends fetched successfully for user: $id")
+                    }
+                    is Response.Failure -> {
+                        // Handle the failure case if needed (e.g., show an error message)
+                        // For example:
+                        Log.e("FriendsViewModel", "Failed to fetch more friends for user: $id")
+                    }
+                    is Response.Loading -> {
+                        Log.d("FriendsViewModel", "Loading more friends for user: $id...")
+                    }
+                    null -> {
+                        Log.e("FriendsViewModel", "Null response received for user: $id")
+                    }
+                }
             }
+
         }
     }
 
-    fun acceptInvite(current_user: User, user: User, chat: Chat) {
+    fun acceptInvite(current_user: User, senderId: String, chat: Chat) {
         viewModelScope.launch {
-            repo.acceptInvite(current_user, user, chat).collect { response ->
+            repo.acceptInvite(current_user, senderId, chat).collect { response ->
                 _isInviteAcceptedState.value = response
             }
         }
@@ -406,26 +447,31 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+    private val _user= mutableStateOf<User?> (null)
+    val user: MutableState<User?> = _user
+    fun getUserProfile(): User? {
+        return user.value
+    }
 
     fun getUserListener(id: String) {
         viewModelScope.launch {
             repo.getUserListener(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        Log.d("EDITPROFILEDEBUG","response Success"+response.data.toString())
-                        var user:User= response.data
-                        _userListenerState.value = Response.Success(user)
+                        val user: User = response.data
+                        _user.value = user
+                        Log.d("UserViewModel", "User data fetched successfully")
                     }
                     is Response.Failure -> {
-                        Log.d("EDITPROFILEDEBUG","response Fail")
-                        _userListenerState.value = response
+                        _user.value = null
+                        Log.e("UserViewModel", "Failed to fetch user data: ${response.e.message}")
                     }
                     is Response.Loading -> {
-                        Log.d("EDITPROFILEDEBUG","response Load")
-                        _userListenerState.value = response
+                        Log.d("UserViewModel", "Loading user data...")
                     }
                     null -> {
-
+                        _user.value = null
+                        Log.e("UserViewModel", "Null response received")
                     }
                 }
 

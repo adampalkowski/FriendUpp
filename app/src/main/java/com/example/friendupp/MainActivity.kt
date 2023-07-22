@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.friendupp.Categories.Category
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
@@ -57,6 +58,7 @@ class MainActivity : ComponentActivity() {
     private val authViewModel by viewModels<AuthViewModel>()
     private val homeViewModel by viewModels<HomeViewModel>()
     private val activeUserViewModel by viewModels<ActiveUsersViewModel>()
+    private val invitesViewModel by viewModels<InvitesViewModel>()
     private val activityViewModel by viewModels<ActivityViewModel>()
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
@@ -148,7 +150,8 @@ class MainActivity : ComponentActivity() {
                     userViewModel = userViewModel,
                     homeViewModel = homeViewModel,
                     activityViewModel = activityViewModel,
-                    activeUserViewModel=activeUserViewModel
+                    activeUserViewModel=activeUserViewModel,
+                    invitesViewModel=invitesViewModel
                 )
             }
 

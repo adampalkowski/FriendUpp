@@ -41,6 +41,7 @@ import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Home.LiveUserSettingsDialog
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.MapEvent
 import com.example.friendupp.MapScreen
@@ -86,6 +87,7 @@ fun NavGraphBuilder.mainGraph(
     homeViewModel: HomeViewModel,
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
+    invitesViewModel: InvitesViewModel
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
@@ -1251,25 +1253,26 @@ fun NavGraphBuilder.mainGraph(
                         userViewModel.getUserByUsername(event.username)
                     }
                     is SearchEvents.OnInviteAccepted -> {
+                        invitesViewModel.removeInvite(event.invite)
                         val uuid: UUID = UUID.randomUUID()
                         val id: String = uuid.toString()
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val current = LocalDateTime.now().format(formatter)
                         userViewModel.acceptInvite(
-                            UserData.user!!, event.user, Chat(
+                            UserData.user!!, event.invite.senderId, Chat(
                                 current,
-                                owner_id = event.user.id,
+                                owner_id = event.invite.senderId,
                                 id = id,
                                 name = null,
                                 imageUrl = null,
                                 recent_message = "",
                                 recent_message_time = current,
                                 type = "duo",
-                                members = arrayListOf(UserData.user!!.id, event.user.id),
+                                members = arrayListOf(UserData.user!!.id, event.invite.senderId),
                                 user_one_username = UserData.user!!.username,
-                                user_two_username = event.user.username,
+                                user_two_username = event.invite.senderName,
                                 user_one_profile_pic = UserData.user!!.pictureUrl,
-                                user_two_profile_pic = event.user.pictureUrl,
+                                user_two_profile_pic = event.invite.senderProfilePictureUrl,
                                 highlited_message = "",
                                 description = "",
                                 numberOfUsers = 2,
@@ -1278,13 +1281,13 @@ fun NavGraphBuilder.mainGraph(
                                 reports = 0,
                                 blocked = false,
                                 user_one_id = UserData.user!!.id.toString(),
-                                user_two_id = event.user.id.toString(),
+                                user_two_id =event.invite.senderId.toString(),
                             )
                         )
 
                     }
                 }
-            }, userViewModel = userViewModel)
+            }, userViewModel = userViewModel, invitesViewModel = invitesViewModel)
 
             /*
             CHECK IF USER EXISTS in search, if succes navigate to profile with user

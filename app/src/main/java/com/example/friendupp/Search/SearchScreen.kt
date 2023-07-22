@@ -43,10 +43,12 @@ import com.example.friendupp.Components.NameEditText
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Create.CreateHeading
 import com.example.friendupp.Home.eButtonSimpleBlue
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Profile.UsernameState
 import com.example.friendupp.Profile.UsernameStateSaver
 import com.example.friendupp.R
 import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.Invite
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
@@ -60,20 +62,19 @@ sealed class SearchEvents{
     object GoBack:SearchEvents()
     class SearchForUser(val username :String):SearchEvents()
     class DisplayUser(val id :String):SearchEvents()
-    class OnInviteAccepted(user: User) : SearchEvents() {
-        val user = user
+    class OnInviteAccepted(invite:Invite) : SearchEvents() {
+        val invite = invite
     }
 }
 
 @Composable
-fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:UserViewModel) {
+fun SearchScreen(modifier:Modifier, onEvent:(SearchEvents)->Unit, invitesViewModel: InvitesViewModel, userViewModel:UserViewModel) {
     val focusRequester = remember { FocusRequester() }
     val usernameState by rememberSaveable(stateSaver = UsernameStateSaver) {
         mutableStateOf(UsernameState())
     }
-    var invitesList = remember { mutableStateListOf<User>() }
-    var moreInvitesList = remember { mutableStateListOf<User>() }
-    invitesLoading(userViewModel,invitesList,moreInvitesList)
+    var invitesList= invitesViewModel.getCurrentInvitesList()
+    invitesLoading(invitesViewModel)
 
     BackHandler(true) {
         onEvent(SearchEvents.GoBack)
@@ -119,89 +120,32 @@ fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:Us
             item {
                 CreateHeading(text = "Invites", icon = R.drawable.ic_invites, tip = false)
             }
-            items(invitesList) { user ->
+            items(invitesList) { invite ->
                 InviteItem(
-                    name = user.name.toString(),
-                    username = user.username.toString(),
-                    profilePictureUrl = user.pictureUrl.toString(),
+                    name = invite.senderName,
+                    username = invite.senderName,
+                    profilePictureUrl = invite.senderProfilePictureUrl,
                     onAccept = {
-                        onEvent(SearchEvents.OnInviteAccepted(user))
-                        invitesList.remove(user)
-                    },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
+                        onEvent(SearchEvents.OnInviteAccepted(invite))
+                    },onClick={onEvent(SearchEvents.DisplayUser(invite.senderId))})
                 Spacer(modifier = Modifier.width(16.dp))
             }
-            items(moreInvitesList) { user ->
-                InviteItem(
-                    name = user.name.toString(),
-                    username = user.username.toString(),
-                    profilePictureUrl = user.pictureUrl.toString(),
-                    onAccept = {
-                        onEvent(SearchEvents.OnInviteAccepted(user))
-                        invitesList.remove(user)
-                    },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
-                Spacer(modifier = Modifier.width(16.dp))
-            }
+
             item { Spacer(modifier = Modifier.height(64.dp)) }
             item { 
                 LaunchedEffect(Unit ){
-                    userViewModel.getMoreInvites(UserData.user!!.id)
+                    invitesViewModel.getMoreInvites(UserData.user!!.id)
                 }
             }
-            items(5) {
-                var visibility by remember {
-                    mutableStateOf(true)
-                }
-                AnimatedVisibility(visible = visibility) {
-
-                }
-
-            }
-
         }
     }
 
 }
 @Composable
-fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>,moreInvitesList:MutableList<User>){
+fun invitesLoading(invitesViewModel: InvitesViewModel){
     //call for invites
-    LaunchedEffect(key1 = userViewModel) {
-        userViewModel.getInvites(UserData.user!!.id)
-    }
-
-    //retrieve invites
-    userViewModel.invitesStateFlow.value.let { response ->
-        when (response) {
-            is Response.Success ->{
-                Log.d("invites","load")
-
-                invitesList.clear()
-                invitesList.addAll(response.data)
-                userViewModel.clearInvites()
-            }
-            is Response.Loading -> {
-                androidx.compose.material3.CircularProgressIndicator()
-            }
-            is Response.Failure -> {
-                Toast.makeText(LocalContext.current,"Failed to load in invites ", Toast.LENGTH_SHORT).show()
-            }
-            else->{}
-        }
-    }
-    //retrieve invites
-    userViewModel.moreInvitesState.value.let { response ->
-        when (response) {
-            is Response.Success ->{
-                Log.d("invites","more invites load")
-                moreInvitesList.clear()
-                moreInvitesList.addAll(response.data)            }
-            is Response.Loading -> {
-                androidx.compose.material3.CircularProgressIndicator()
-            }
-            is Response.Failure -> {
-                Toast.makeText(LocalContext.current,"Failed to load in invites ", Toast.LENGTH_SHORT).show()
-            }
-            else->{}
-        }
+    LaunchedEffect(key1 = invitesViewModel) {
+        invitesViewModel.getInvites(UserData.user!!.id)
     }
 }
 

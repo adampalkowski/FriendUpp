@@ -1,16 +1,12 @@
 package com.example.friendupp.Profile
 
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
-import androidx.camera.core.ImageProcessor.Response
-import androidx.compose.foundation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -30,13 +26,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
-import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
-import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.User
-import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
@@ -48,17 +41,16 @@ sealed class FriendListEvents {
     object RemoveFriend : FriendListEvents()
     class ProfileDisplay(val userId: String) : FriendListEvents()
     object BlockFriend : FriendListEvents()
+    object GetMoreFriends : FriendListEvents()
 }
 
 @Composable
 fun FriendListScreen(
     modifier: Modifier = Modifier,
     onEvent: (FriendListEvents) -> Unit,
-    userViewModel: UserViewModel,
+    friendList:List<User>,
+    isLoading:Boolean
 ) {
-    val friendsList = remember { mutableStateListOf<User>() }
-    val moreFriendsList = remember { mutableStateListOf<User>() }
-    friendsLoading(userViewModel, friendsList, moreFriendsList)
     Column(modifier = modifier) {
         ScreenHeading(
             title = "Friend list",
@@ -66,101 +58,33 @@ fun FriendListScreen(
             onBack = { onEvent(FriendListEvents.GoBack) })
         {}
         Modifier.height(32.dp)
+        if(isLoading){
+            CircularProgressIndicator()
+        }else{
+            LazyColumn {
+                items(friendList) { user ->
+                    FriendItem(
+                        username = user.username.toString(),
+                        name = user.name.toString(),
+                        pictureUrl = user.pictureUrl.toString(),
+                        onEvent = {onEvent(FriendListEvents.ProfileDisplay(it))},
+                        user = user
+                    )
+                }
+                item{
+                    Spacer(modifier = Modifier.height(64.dp))
+                }
+                item{
+                    onEvent(FriendListEvents.GetMoreFriends)
+                }
+            }
 
-        LazyColumn {
-            items(friendsList) { user ->
-                FriendItem(
-                    username = user.username.toString(),
-                    name = user.name.toString(),
-                    pictureUrl = user.pictureUrl.toString(),
-                    onEvent = {onEvent(FriendListEvents.ProfileDisplay(it))},
-                    user = user
-                )
-            }
-            items(moreFriendsList) { user ->
-                FriendItem(
-                    username = user.username.toString(),
-                    name = user.name.toString(),
-                    pictureUrl = user.pictureUrl.toString(),
-                    onEvent = { onEvent(FriendListEvents.ProfileDisplay(it)) },
-                    user = user
-                )
-            }
         }
 
     }
 
 }
 
-@Composable
-fun friendsLoading(
-    userViewModel: UserViewModel,
-    friendsList: MutableList<User>,
-    moreFriendsList: MutableList<User>,
-    ) {
-
-    //call get activities only once
-    val activitiesFetched = remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = activitiesFetched.value) {
-        if (!activitiesFetched.value) {
-            userViewModel.getFriends(UserData.user!!.id)
-
-            activitiesFetched.value = true
-        }
-    }
-    val friendsFlow = userViewModel.friendState.collectAsState()
-    val moreFriendsFlow = userViewModel.friendMoreState.collectAsState()
-    friendsFlow.value.let { response ->
-        when (response) {
-            is com.example.friendupp.model.Response.Success -> {
-                friendsList.clear()
-                response.data.forEach {
-                    if (!UserData.user!!.blocked_ids.contains(it.id)){
-                        friendsList.add(it)
-                    }
-                }
-                userViewModel.resetFriendState()
-            }
-            is com.example.friendupp.model.Response.Loading -> {
-                friendsList.clear()
-                CircularProgressIndicator()
-            }
-            is com.example.friendupp.model.Response.Failure -> {
-                friendsList.clear()
-            }
-            else -> {
-
-            }
-        }
-    }
-    moreFriendsFlow.value.let { response ->
-        when (response) {
-            is com.example.friendupp.model.Response.Success -> {
-                moreFriendsList.clear()
-                response.data.forEach {
-                    if (!UserData.user!!.blocked_ids.contains(it.id)){
-                        moreFriendsList.add(it)
-                    }
-                }
-                userViewModel.resetMoreFriends()
-
-            }
-
-            is com.example.friendupp.model.Response.Loading -> {
-                moreFriendsList.clear()
-                CircularProgressIndicator()
-            }
-            is com.example.friendupp.model.Response.Failure -> {
-                moreFriendsList.clear()
-            }
-            else -> {
-
-            }
-        }
-    }
-
-
-}
 
 @Composable
 fun groupsLoading(
@@ -237,7 +161,8 @@ fun FriendItem(
     Column() {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .clickable(onClick = { onEvent(user.id) },
+                .clickable(
+                    onClick = { onEvent(user.id) },
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(color = Color.Black)
                 )

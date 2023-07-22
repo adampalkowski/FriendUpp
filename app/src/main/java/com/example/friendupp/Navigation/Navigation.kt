@@ -36,6 +36,7 @@ import com.example.friendupp.Create.*
 import com.example.friendupp.Drawer.drawerGraph
 import com.example.friendupp.Groups.rememberGroupState
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.bottomBar.BottomBar
@@ -84,6 +85,7 @@ fun NavigationComponent(
     homeViewModel: HomeViewModel,
     activityViewModel: ActivityViewModel,
     activeUserViewModel: ActiveUsersViewModel,
+    invitesViewModel: InvitesViewModel
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -293,7 +295,7 @@ fun NavigationComponent(
                     chatViewModel,
                     homeViewModel = homeViewModel,
                     mapViewModel = mapViewModel,
-                    activeUserViewModel = activeUserViewModel,
+                    activeUserViewModel = activeUserViewModel, invitesViewModel = invitesViewModel
                 )
                 chatGraph(
                     navController, chatViewModel, currentChat, outputDirectory = outputDirectory,
@@ -306,7 +308,8 @@ fun NavigationComponent(
                     userViewModel = userViewModel,
                     chatViewModel = chatViewModel,
                     authViewModel = authViewModel,
-                    homeViewModel = homeViewModel
+                    homeViewModel = homeViewModel,
+                    invitesViewModel=invitesViewModel
                 )
                 createGraph(
                     navController,

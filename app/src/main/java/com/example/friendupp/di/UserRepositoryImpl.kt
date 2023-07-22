@@ -83,33 +83,28 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    // Function to listen for user data changes
     override suspend fun getUserListener(id: String): Flow<Response<User>> = callbackFlow {
-
         val registration = usersRef.document(id).addSnapshotListener { snapshot, exception ->
-            Log.d("EDITPROFILEDEBUG","LISTEN")
-
             if (exception != null) {
                 channel.close(exception)
                 return@addSnapshotListener
             }
             if (snapshot != null && snapshot.exists()) {
                 val user: User? = snapshot.toObject<User>()
-                Log.d("EDITPROFILEDEBUG",user.toString())
-
                 if (user != null) {
-                    Log.d("EDITPROFILEDEBUG","SEND")
                     trySend(Response.Success(user))
                 }
-
             } else {
+                // User data not found
+                trySend(Response.Failure(SocialException("User data not found",e=java.lang.Exception())))
             }
-
         }
-        awaitClose() {
+
+        awaitClose {
             registration.remove()
         }
     }
-
 
     override suspend fun getUserByUsername(username: String): Flow<Response<User>> = callbackFlow {
         val registration =
@@ -624,17 +619,17 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun acceptInvite(
         current_user: User,
-        user: User,
+        senderId: String,
         chat: Chat,
     ): Flow<Response<Void?>> = flow {
         try {
             emit(Response.Loading)
             val list_for_user_two = ArrayList<String>()
             val list_for_user_one = ArrayList<String>()
-            list_for_user_two.add(user.id)
+            list_for_user_two.add(senderId)
             list_for_user_one.add(current_user.id)
             val one = chatCollectionsRef.document(chat.id!!).set(chat).await1()
-            val two = usersRef.document(user.id).update(
+            val two = usersRef.document(senderId).update(
                 "friends_ids" + "." + current_user.id,
                 chat.id, "friends_ids_list", list_for_user_one,
                 "invited_ids",
@@ -643,7 +638,7 @@ class UserRepositoryImpl @Inject constructor(
 
             val three =
                 usersRef.document(current_user.id).update(
-                    "friends_ids" + "." + user.id,
+                    "friends_ids" + "." + senderId,
                     chat.id,
                     "friends_ids_list",
                     list_for_user_two

@@ -60,7 +60,7 @@ sealed class ProfileDisplayEvents {
     object GoToEditProfile : ProfileDisplayEvents()
 
     /*todo*/
-    object GoToFriendList : ProfileDisplayEvents()
+    class GoToFriendList (val id :String): ProfileDisplayEvents()
     object GetProfileLink : ProfileDisplayEvents()
 
     class ExpandActivity(val activityData: Activity) : ProfileDisplayEvents()
@@ -166,10 +166,10 @@ fun ProfileDisplayScreen(
                     TagDivider(user.tags)
                     ProfileStats(
                         modifier = Modifier.fillMaxWidth(),
-                        user.activitiesCreated,
                         user.friends_ids.size,
+                        user.activitiesCreated,
                         user.usersReached,
-                        GoToFriends = {onEvent(ProfileDisplayEvents.GoToFriendList)}
+                        GoToFriends = {onEvent(ProfileDisplayEvents.GoToFriendList(user.id))}
                     )
                 }
 
