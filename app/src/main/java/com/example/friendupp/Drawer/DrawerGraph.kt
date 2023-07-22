@@ -84,7 +84,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
             when(backStackEntry.arguments?.getString("type")){
                 "Inbox"->{
-                    LanguageScreen(onEvent = {event->
+                    LanguageScreen(modifier=modifier,onEvent = {event->
                         when(event){
                             is LanguageEvents.GoBack->{navController.navigate("Settings")}
                         }

@@ -1294,8 +1294,18 @@ fun NavGraphBuilder.mainGraph(
                     is Response.Success -> {
                         if (it.data != null) {
                             Log.d("SEARCHSCREENDEBUG", "search cseren scuesss")
+                            //check if user is me then go to profiel
+                            if (it.data.id == UserData.user!!.id) {
+                                navController.navigate("Profile")
+                            }else if(it.data.blocked_ids.contains(UserData.user!!.id)){
+                                Toast.makeText(
+                                    LocalContext.current,
+                                    "Failed to find user with given username", Toast.LENGTH_LONG
+                                ).show()
+                            }else{
+                                navController.navigate("ProfileDisplay/" + it.data.id.toString())
 
-                            navController.navigate("ProfileDisplay/" + it.data.id.toString())
+                            }
                         }
 
                     }

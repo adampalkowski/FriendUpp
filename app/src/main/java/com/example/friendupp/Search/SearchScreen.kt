@@ -1,5 +1,6 @@
 package com.example.friendupp.Search
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -71,7 +72,8 @@ fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:Us
         mutableStateOf(UsernameState())
     }
     var invitesList = remember { mutableStateListOf<User>() }
-    invitesLoading(userViewModel,invitesList)
+    var moreInvitesList = remember { mutableStateListOf<User>() }
+    invitesLoading(userViewModel,invitesList,moreInvitesList)
 
     BackHandler(true) {
         onEvent(SearchEvents.GoBack)
@@ -128,9 +130,19 @@ fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:Us
                     },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
                 Spacer(modifier = Modifier.width(16.dp))
             }
+            items(moreInvitesList) { user ->
+                InviteItem(
+                    name = user.name.toString(),
+                    username = user.username.toString(),
+                    profilePictureUrl = user.pictureUrl.toString(),
+                    onAccept = {
+                        onEvent(SearchEvents.OnInviteAccepted(user))
+                        invitesList.remove(user)
+                    },onClick={onEvent(SearchEvents.DisplayUser(user.id))})
+                Spacer(modifier = Modifier.width(16.dp))
+            }
             item { Spacer(modifier = Modifier.height(64.dp)) }
             item { 
-             
                 LaunchedEffect(Unit ){
                     userViewModel.getMoreInvites(UserData.user!!.id)
                 }
@@ -150,7 +162,7 @@ fun SearchScreen(modifier:Modifier,onEvent:(SearchEvents)->Unit,userViewModel:Us
 
 }
 @Composable
-fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>){
+fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>,moreInvitesList:MutableList<User>){
     //call for invites
     LaunchedEffect(key1 = userViewModel) {
         userViewModel.getInvites(UserData.user!!.id)
@@ -160,9 +172,28 @@ fun invitesLoading(userViewModel: UserViewModel,invitesList:MutableList<User>){
     userViewModel.invitesStateFlow.value.let { response ->
         when (response) {
             is Response.Success ->{
+                Log.d("invites","load")
+
                 invitesList.clear()
                 invitesList.addAll(response.data)
+                userViewModel.clearInvites()
             }
+            is Response.Loading -> {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+            is Response.Failure -> {
+                Toast.makeText(LocalContext.current,"Failed to load in invites ", Toast.LENGTH_SHORT).show()
+            }
+            else->{}
+        }
+    }
+    //retrieve invites
+    userViewModel.moreInvitesState.value.let { response ->
+        when (response) {
+            is Response.Success ->{
+                Log.d("invites","more invites load")
+                moreInvitesList.clear()
+                moreInvitesList.addAll(response.data)            }
             is Response.Loading -> {
                 androidx.compose.material3.CircularProgressIndicator()
             }

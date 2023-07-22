@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +33,7 @@ import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
+import com.example.friendupp.Create.Option
 import com.example.friendupp.Drawer.CreatedActivitiesEvents
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.loadMoreFriendsActivities
@@ -216,6 +218,8 @@ fun ProfileDisplayScreen(
 
             }
         }
+        if(userOption==UserOption.FRIEND){
+
         if(ifCalendar){
             items(joinedActivities) { activity ->
                 activityItem(
@@ -291,6 +295,13 @@ fun ProfileDisplayScreen(
                 }
             }
         }
+        }else{
+            item{
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(modifier=Modifier.padding(horizontal = 12.dp),textAlign = TextAlign.Center,text = LocalContext.current.getString(R.string.Profile_display_not_friends_history_text), style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Normal, fontSize = 14.sp),color=SocialTheme.colors.iconPrimary)
+            }
+        }
+
     }
 
     AnimatedVisibility(visible = displaySettings) {
@@ -424,7 +435,7 @@ fun ProfileInfoDisplay(name:String,username:String,profilePictureUrl:String,loca
 
 
 @Composable
-fun ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={},shareProfileLink: () -> Unit={},blockUser: () -> Unit={}) {
+fun  ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={},shareProfileLink: () -> Unit={},blockUser: () -> Unit={}) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
         ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary, onClick = shareProfileLink)
         ProfileDisplaySettingsItem(label="Remove friend",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)

@@ -308,7 +308,7 @@ fun NavGraphBuilder.settingsGraph(
         when (backStackEntry.arguments?.getString("type")) {
             "Language" -> {
 
-                LanguageScreen(onEvent = { event ->
+                LanguageScreen(modifier=modifier,onEvent = { event ->
                     when (event) {
                         is LanguageEvents.GoBack -> {
                             navController.navigate("Settings")

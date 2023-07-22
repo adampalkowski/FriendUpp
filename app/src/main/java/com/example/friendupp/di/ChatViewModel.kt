@@ -395,7 +395,7 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
-    fun deleteMessage(
+    fun deleteMessages(
         chat_collection_id: String,
         message_id: String
     ) {

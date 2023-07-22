@@ -53,14 +53,14 @@ fun SplashScreen(splash_screen_delay:Long){
                     .scale(scale.value)
             )
             Spacer(modifier = Modifier.height(48.dp))
-            Text(
+        /*    Text(
                 text = "Go out with friends and have fun!",
                 textAlign = TextAlign.Center,
                 style = TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Light, fontSize = 30.sp),color=SocialTheme.colors.textPrimary,
                 modifier = Modifier
                     .padding(16.dp)
                     .scale(scale.value)
-            )
+            )*/
         }
 
 

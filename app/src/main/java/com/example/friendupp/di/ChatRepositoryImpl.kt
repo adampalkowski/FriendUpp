@@ -599,9 +599,10 @@ class ChatRepositoryImpl @Inject constructor(
         message_id: String
     ): Flow<Response<Void?>> = flow {
         try {
+
+            Log.d("ProfileDisplay","delete messages")
             emit(Response.Loading)
-            val deletion = chatCollectionsRef.document(chat_collection_id).collection("messages")
-                .document(message_id).delete().await()
+            val deletion = messagesRef.document(chat_collection_id).delete().await()
             emit(Response.Success(deletion))
         } catch (e: Exception) {
             emit(Response.Failure(e = SocialException("deleteMessage exception", Exception())))

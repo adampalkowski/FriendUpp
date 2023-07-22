@@ -114,10 +114,15 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     }
     var hasAssignedTitle by remember { mutableStateOf(false) }
     var hasAssignedDescription by remember { mutableStateOf(false) }
-    LaunchedEffect(activityState.location ){
+    LaunchedEffect(activityState.location,activityState.selectedOptionState ){
         if (activityState.location== LatLng(0.0, 0.0)) {
-            errorMessage= "Please select location to create the public activity."
-            progressBlocked=true
+            if(activityState.selectedOptionState.option==Option.PUBLIC){
+                errorMessage= "Please select location to create the public activity."
+                progressBlocked=true
+            }else{
+                progressBlocked=false
+            }
+
         }
     }
 

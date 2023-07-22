@@ -46,7 +46,7 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
             .fillMaxHeight()
             .wrapContentWidth()
             .background(SocialTheme.colors.uiBackground)
-            .padding(vertical = 24.dp)
+            .padding(vertical = 48.dp)
             .padding(start = 8.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.Start,

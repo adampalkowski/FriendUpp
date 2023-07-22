@@ -32,7 +32,7 @@ sealed class LanguageEvents{
 
 data class Language(val label: String, val code: String)
 @Composable
-fun LanguageScreen(onEvent:(LanguageEvents)->Unit){
+fun LanguageScreen(modifier:Modifier,onEvent:(LanguageEvents)->Unit){
     val currentLanguage = Locale.getDefault().getDisplayLanguage()
     val languages = listOf(
         Language("Use device language - $currentLanguage", currentLanguage),
@@ -48,7 +48,7 @@ fun LanguageScreen(onEvent:(LanguageEvents)->Unit){
 
     val selectedLanguage = remember { mutableStateOf<Language?>(languages.get(0)) }
 
-    Column() {
+    Column(modifier=modifier) {
         ScreenHeading(title = "Language", backButton = true, onBack = {onEvent(LanguageEvents.GoBack)}) { }
         Spacer(modifier = Modifier.height(24.dp))
         Box(modifier = Modifier.fillMaxSize()){

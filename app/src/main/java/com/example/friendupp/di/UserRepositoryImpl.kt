@@ -882,7 +882,8 @@ class UserRepositoryImpl @Inject constructor(
 
     }
     override suspend fun getMoreInvites(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
-        usersRef.whereArrayContains("invited_ids", id)   .orderBy("invited_ids", Query.Direction.DESCENDING) .startAfter(lastVisibleInvite).limit(5).get()
+        Log.d("invite","ger more invited Db: "+lastVisibleInvite?.data.toString())
+        usersRef.whereArrayContains("invited_ids", id) .orderBy("invited_ids", Query.Direction.DESCENDING) .startAfter(lastVisibleInvite).limit(5).get()
             .addOnCompleteListener { task->
                 if (task.isSuccessful) {
                     val documents = task.result?.documents

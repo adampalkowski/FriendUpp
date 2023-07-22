@@ -176,7 +176,7 @@ fun MapScreen(
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(24.dp)
+                .padding(24.dp).padding(top=24.dp)
         ) {
 
             Card(elevation = 5.dp) {

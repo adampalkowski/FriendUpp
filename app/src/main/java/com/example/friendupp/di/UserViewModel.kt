@@ -37,6 +37,9 @@ class UserViewModel @Inject constructor(
     fun onUriProcessed() {
         _uriReceived.value = false
     }
+    fun clearInvites() {
+        _invitesStateFlow.value=null
+    }
 
     private val _currentUserState = MutableStateFlow<Response<User?>?>(null)
     val currentUserState: StateFlow<Response<User?>?> = _currentUserState

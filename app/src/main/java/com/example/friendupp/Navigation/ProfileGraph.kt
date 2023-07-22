@@ -879,6 +879,8 @@ fun NavGraphBuilder.profileGraph(
                 //check if user is me then go to profiel
                 if (user.value!!.id == UserData.user!!.id) {
                     navController.navigate("Profile")
+                }else if(user.value!!.blocked_ids.contains(UserData.user!!.id)){
+                    navController.popBackStack()
                 }
                 ProfileDisplayScreen(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
                     onEvent = { event ->
@@ -894,6 +896,7 @@ fun NavGraphBuilder.profileGraph(
 
                                 //UPDATE DATA
                                 userViewModel.addBlockedIdToUser(UserData.user!!.id, event.user_id)
+                                userViewModel.removeFriendFromBothUsers(UserData.user!!.id, event.user_id)
 
                                 //to update the user data ??
                                 val currentUser = authViewModel.currentUser
@@ -904,7 +907,7 @@ fun NavGraphBuilder.profileGraph(
                                 navController.popBackStack()
                                 Toast.makeText(
                                     context,
-                                    "User " + event.user_id + " invited ", Toast.LENGTH_LONG
+                                    "User blocked ", Toast.LENGTH_LONG
                                 ).show()
                             }
 
@@ -977,15 +980,18 @@ fun NavGraphBuilder.profileGraph(
 
 
                                 val chat_id = UserData.user!!.friends_ids.get(event.user_id)
+
                                 // REMOVE CHAT BETWEEN USERS ????/
                                 if (chat_id != null) {
+                                    Log.d("ProfileDisplay","DElete Chat collection")
                                     chatViewModel.deleteChatCollection(chat_id)
+                                    chatViewModel.deleteMessages(chat_id,"123")
+                                    Toast.makeText(
+                                            context,
+                                    "Removed", Toast.LENGTH_LONG
+                                    ).show()
 
                                 }
-                                Toast.makeText(
-                                    context,
-                                    "Removed", Toast.LENGTH_LONG
-                                ).show()
 
                             }
 
