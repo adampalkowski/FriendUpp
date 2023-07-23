@@ -115,9 +115,7 @@ fun ChatContent(
     displayLocation: (LatLng) -> Unit,
     higlightDialog: (String) -> Unit,
     chat:Chat,
-    data: MutableList<ChatMessage>,
-    new_data: MutableList<ChatMessage>,
-    first_data: MutableList<ChatMessage>,
+    messages:List<ChatMessage>,
     valueExist: Boolean,
     displayImage:(String)->Unit
 
@@ -182,9 +180,7 @@ fun ChatContent(
                             }
                         }
                     },
-                    data,
-                    new_data,
-                    first_data,
+                    messages,
                     valueExist = valueExist,
                     chat_id = chat.id.toString(),
                     highlightMessage = { highlited_message_text = it },
@@ -285,99 +281,6 @@ fun LoadingImage(showLoading: Boolean) {
 }
 
 @Composable
-fun loadMessages(
-    fristData: MutableList<ChatMessage>,
-    data: MutableList<ChatMessage>,
-    dataNew: MutableList<ChatMessage>,
-    chatViewModel: ChatViewModel,
-    valueExist: MutableState<Boolean>,
-    chatID: String,
-) {
-    val activitiesFetched = rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(key1 = activitiesFetched.value) {
-        if (!activitiesFetched.value) {
-
-            Log.d("CHATDEBUG", "BIGGGGG CALLLL")
-            chatViewModel.getFirstMessages(chatID, getCurrentUTCTime())
-            chatViewModel.getMessages(chatID, getCurrentUTCTime())
-            activitiesFetched.value = true
-        }
-    }
-
-
-    /*Here clean up the loaded messages , otherwise when loading chat again loaded messages will double*/
-    DisposableEffect(Unit) {
-        onDispose {
-            Log.d("CHATDEBUGed", "DISPOSE")
-            chatViewModel.resetLoadedMessages()
-        }
-    }
-
-    chatViewModel.firstMessagesState.value.let {
-        when (it) {
-            is Response.Success -> {
-                fristData.clear()
-                fristData.addAll(it.data)
-                Log.d("CHATMESSAGEDDEUG", "First")
-                Log.d("CHATMESSAGEDDEUG", it.data.toString())
-                valueExist.value = true
-                chatViewModel.resetFirstMessages()
-            }
-            is Response.Loading -> {
-
-                CircularProgressIndicator(color = SocialTheme.colors.textPrimary)
-                fristData.clear()
-            }
-            is Response.Failure -> {
-                fristData.clear()
-            }
-            else -> {}
-        }
-    }
-    chatViewModel.messagesState.value.let {
-        when (it) {
-            is Response.Success -> {
-                dataNew.clear()
-                it.data.forEach {
-                    if (it.collectionId == chatID) {
-                        dataNew.add(it)
-                    }
-                }
-                Log.d("CHATMESSAGEDDEUG", "new")
-                Log.d("CHATMESSAGEDDEUG", it.data.toString())
-                chatViewModel.resetNewMessages()
-
-            }
-            is Response.Loading -> {
-                data.clear()
-            }
-            is Response.Failure -> {
-                data.clear()
-            }
-            else -> {}
-        }
-    }
-    chatViewModel.moreMessagesState.value.let {
-        when (it) {
-            is Response.Success -> {
-
-                Log.d("CHATMESSAGEDDEUG", "more")
-                Log.d("CHATMESSAGEDDEUG", it.data.toString())
-                data.clear()
-                data.addAll(chatViewModel.loadedMessages)
-                chatViewModel.resetMoreMessages()
-
-            }
-            is Response.Loading -> {
-            }
-            is Response.Failure -> {
-            }
-            else -> {}
-        }
-    }
-}
-
-@Composable
 fun loadChat(
     modifier: Modifier,
     chatViewModel: ChatViewModel,
@@ -419,9 +322,7 @@ fun loadChat(
 fun ChatMessages(
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
-    data: MutableList<ChatMessage>,
-    new_data: MutableList<ChatMessage>,
-    first_data: MutableList<ChatMessage>,
+    messages:List<ChatMessage>,
     valueExist: Boolean,
     chat_id: String,
     highlightMessage: (String) -> Unit,
@@ -444,7 +345,7 @@ fun ChatMessages(
         reverseLayout = true,
         state = lazyListState
     ) {
-        items(new_data) { message ->
+        items(messages) { message ->
             val shouldGroup =
                 lastMessageSenderID == message.sender_id || lastMessageSenderID == null
             ChatBox(
@@ -464,44 +365,7 @@ fun ChatMessages(
             lastMessageSenderID = message.sender_id
         }
 
-        items(first_data) { message ->
-            val shouldGroup =
-                lastMessageSenderID == message.sender_id || lastMessageSenderID == null
-            ChatBox(
-                message,
-                onLongPress = {
-                },
-                highlite_message = highlight_message,
-                displayPicture = {},
-                highlightMessage = highlightMessage,
-                openDialog = higlightDialog,
-                onEvent = onEvent,
-                shouldGroup = shouldGroup,
-                displayLocation = displayLocation,
-                displayImage = displayImage
-            )
 
-            lastMessageSenderID = message.sender_id
-        }
-        items(data) { message ->
-            val shouldGroup =
-                lastMessageSenderID == message.sender_id || lastMessageSenderID == null
-            ChatBox(
-                message,
-                onLongPress = {
-                },
-                highlite_message = highlight_message,
-                displayPicture = {},
-                highlightMessage = highlightMessage,
-                openDialog = higlightDialog,
-                onEvent = onEvent,
-                shouldGroup = shouldGroup, displayLocation = displayLocation,
-                displayImage=displayImage
-
-            )
-
-            lastMessageSenderID = message.sender_id
-        }
         item {
             LaunchedEffect(true) {
                 if (valueExist) {

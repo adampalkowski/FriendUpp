@@ -487,7 +487,7 @@ fun ProfileOptions(onEvent: (ProfileEvents) -> Unit){
 @Composable
 fun ProfileOptionItem(icon: Int,label: String,onClick:()->Unit){
     val color =SocialTheme.colors.textPrimary.copy(0.8f)
-    Card(onClick=onClick, shape = RoundedCornerShape(10.dp), elevation = 0.dp, backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.uiBackground) {
+    Card(modifier=Modifier.fillMaxWidth().padding(horizontal = 24.dp),onClick=onClick, shape = RoundedCornerShape(10.dp), elevation = 0.dp, backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.uiBackground) {
             Row(
                 Modifier
                     .background(SocialTheme.colors.uiBorder.copy(0.2f))

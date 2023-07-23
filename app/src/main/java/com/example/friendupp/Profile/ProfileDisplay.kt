@@ -172,15 +172,11 @@ fun ProfileDisplayScreen(
                         GoToFriends = {onEvent(ProfileDisplayEvents.GoToFriendList(user.id))}
                     )
                 }
-
-                Row() {
-                    Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                     ProfileDisplayOptions(userOption,
-
                         onEvent=onEvent, user_id = user.id)
 
-                }
-        
+
 
             }
         }
@@ -315,7 +311,7 @@ fun ProfileDisplayScreen(
             },blockUser={
                 onEvent(ProfileDisplayEvents.BlockUser(user.id))
                 displaySettings=false
-            })
+            },userOption)
         }
     }
 
@@ -334,10 +330,7 @@ fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents)
                 if(chat_id!=null){
                     onEvent(ProfileDisplayEvents.GoToChat(chat_id=chat_id))
                 }else{
-
-
                 }
-
 
             })
 
@@ -435,11 +428,28 @@ fun ProfileInfoDisplay(name:String,username:String,profilePictureUrl:String,loca
 
 
 @Composable
-fun  ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={},shareProfileLink: () -> Unit={},blockUser: () -> Unit={}) {
+fun  ProfileDisplaySettingContent(onCancel: () -> Unit={},onRemoveFriend: () -> Unit={},shareProfileLink: () -> Unit={},blockUser: () -> Unit={},userOption: UserOption) {
     Column(Modifier.clip(RoundedCornerShape(24.dp))) {
         ProfileDisplaySettingsItem(label="Share",icon=R.drawable.ic_share, textColor = SocialTheme.colors.textPrimary, onClick = shareProfileLink)
-        ProfileDisplaySettingsItem(label="Remove friend",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
-        ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error, onClick = blockUser)
+
+        if(userOption==UserOption.UNKNOWN){
+            ProfileDisplaySettingsItem(label="Invite",icon=R.drawable.ic_add , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
+            ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error, onClick = blockUser)
+
+
+        }else if(userOption==UserOption.FRIEND){
+            ProfileDisplaySettingsItem(label="Remove friend",icon=R.drawable.ic_delete , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
+            ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error, onClick = blockUser)
+
+        }else if(userOption==UserOption.BLOCKED){
+            ProfileDisplaySettingsItem(label="Unblock",icon=R.drawable.ic_unblock , textColor = SocialTheme.colors.error, onClick =onRemoveFriend)
+
+        }else if(userOption==UserOption.INVITED){
+            ProfileDisplaySettingsItem(label="Block",icon=R.drawable.ic_block , textColor = SocialTheme.colors.error, onClick = blockUser)
+
+        }
+
+
         ProfileDisplaySettingsItem(label="Cancel" , turnOffIcon = true, textColor = SocialTheme.colors.textPrimary.copy(0.5f), onClick = onCancel)
     }
 }

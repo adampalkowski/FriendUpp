@@ -970,7 +970,7 @@ fun NavGraphBuilder.profileGraph(
                                 /*add inivte to both users*/
                                 val timestamp = getCurrentUTCTime() // Using the provided Timestamp class or any other suitable timestamp representation
                                 val newInvite = Invite(
-                                    id = generateInviteId(), // You need to generate a unique inviteId, it could be a random string or a combination of IDs and timestamp.
+                                    id = UserData.user!!.id+event.user_id, // You need to generate a unique inviteId, it could be a random string or a combination of IDs and timestamp.
                                     senderId = UserData.user!!.id,
                                     receiverId = event.user_id,
                                     timestamp = timestamp,

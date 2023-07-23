@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toFile
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -37,6 +38,7 @@ import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.DisplayLocationDialog
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.Message.MessagesViewModel
 import com.example.friendupp.Notification.*
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
@@ -159,7 +161,9 @@ fun NavGraphBuilder.chatGraph(
             if (user != null) {
                 chatViewModel.getChatCollections(user.id)
             }
-            ChatCollection(modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+            ChatCollection(modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
                 chatEvent = { event ->
                     when (event) {
                         is ChatCollectionEvents.GoToChat -> {
@@ -461,7 +465,7 @@ fun NavGraphBuilder.chatGraph(
 
 
             val chatID = backStackEntry.arguments?.getString("chatID")
-
+            val messagesViewModel :MessagesViewModel= hiltViewModel()
             /*
             1.get chat id
             2.call for chat
@@ -472,7 +476,8 @@ fun NavGraphBuilder.chatGraph(
                 if (chatID != null) {
                     Log.d("CHATDEBUG", "GET CHAT CALLED " + chatID)
                     chatViewModel.getChatCollection(chatID)
-
+                    messagesViewModel.getFirstMessages(chatID, getCurrentUTCTime())
+                    messagesViewModel.getMessages(chatID, getCurrentUTCTime())
                 }
             }
 
@@ -495,12 +500,9 @@ fun NavGraphBuilder.chatGraph(
                     currentLocation = latLng
                 }
             }
-            LaunchedEffect(Unit) {
-                Log.d("RESETCHAT", "RESET")
-
-            }
 
             var chat = rememberSaveable { mutableStateOf<Chat?>(null) }
+
             loadChat(
                 modifier = Modifier,
                 chatViewModel,
@@ -524,33 +526,12 @@ fun NavGraphBuilder.chatGraph(
                     }
                 })
 
-            val dataSaver = ChatMessageListSaver()
-            var data = rememberSaveable(
-                saver = dataSaver,
-                init = { mutableStateListOf<ChatMessage>() }
-            )
-            val dataNewSaver = ChatMessageListSaver()
-            var data_new = rememberSaveable(
-                saver = dataNewSaver,
-                init = { mutableStateListOf<ChatMessage>() }
-            )
-            val dataFirstSaver = ChatMessageListSaver()
-            var frist_data = rememberSaveable(
-                saver = dataFirstSaver,
-                init = { mutableStateListOf<ChatMessage>() }
-            )
             val valueExist = rememberSaveable { mutableStateOf(false) }
             var chatFinal = chat.value
-            if (chatFinal != null) {
-                loadMessages(
-                    frist_data,
-                    data,
-                    data_new,
-                    chatViewModel,
-                    valueExist = valueExist,
-                    chatFinal.id!!
-                )
 
+            var messages =messagesViewModel.getMessagesList()
+
+            if (chatFinal != null) {
                 ChatContent(
                     modifier = Modifier.safeDrawingPadding(),
                     onEvent = { event ->
@@ -582,7 +563,7 @@ fun NavGraphBuilder.chatGraph(
                                 navController.navigate("ChatSettings")
                             }
                             is ChatEvents.GetMoreMessages -> {
-                                chatViewModel.getMoreMessages(event.chat_id)
+                                messagesViewModel.getMoreMessages(event.chat_id)
                             }
                             is ChatEvents.OpenGallery -> {
                                 navController.navigate("ChatCamera")
@@ -660,9 +641,7 @@ fun NavGraphBuilder.chatGraph(
 
                     },
                     chatFinal!!,
-                    data = data,
-                    first_data = frist_data,
-                    new_data = data_new,
+                    messages =messages,
                     valueExist = valueExist.value,
                     displayImage = {image->
                         imageDisplay=image

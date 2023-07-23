@@ -191,6 +191,7 @@ class ChatRepositoryImpl @Inject constructor(
         try {
             emit(Response.Loading)
             val deletion = chatCollectionsRef.document(id).delete().await()
+
             emit(Response.Success(deletion))
         } catch (e: Exception) {
             emit(
@@ -342,10 +343,8 @@ class ChatRepositoryImpl @Inject constructor(
 
 
 
-    override suspend fun getMessages(chatCollectionId: String, currentTime: String): Flow<Response<ArrayList<ChatMessage>>> =
+    override suspend fun getMessages(chatCollectionId: String, currentTime: String): Flow<Response<ChatMessage>> =
         callbackFlow {
-            var messages: ArrayList<ChatMessage> = ArrayList()
-            Log.d("ChatDebug", "setting null")
             Log.d("ChatDebug", "getMessages called")
             val registration = messagesRef.document(chatCollectionId)
                 .collection("messages")
@@ -361,20 +360,19 @@ class ChatRepositoryImpl @Inject constructor(
                         when (dc.type) {
                             DocumentChange.Type.ADDED -> {
                                 val message = dc.document.toObject(ChatMessage::class.java)
-                                Log.d("NEW MESSAGES", message.toString() + "\n")
-                                messages.add(message)
+                                trySend(Response.Success(message))
                             }
                             DocumentChange.Type.MODIFIED -> {
                                 val message = dc.document.toObject(ChatMessage::class.java)
-                                messages.add(message)
+                                trySend(Response.Success(message))
                             }
                             DocumentChange.Type.REMOVED -> {
                                 val message = dc.document.toObject(ChatMessage::class.java)
-                                messages.remove(message)
+                                trySend(Response.Success(message))
                             }
                         }
                     }
-                    trySend(Response.Success(ArrayList(messages.reversed())))
+
                 }
 
             awaitClose {

@@ -2,6 +2,7 @@ package com.example.friendupp.di
 
 import android.net.Uri
 import android.util.Log
+import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.await1
 import com.example.friendupp.model.*
 import com.firebase.geofire.GeoFireUtils
@@ -391,20 +392,39 @@ class ActivityRepositoryImpl @Inject constructor(
         }
 
     override suspend fun likeActivity(id: String, user: User): Flow<Response<Void?>> = flow {
-        try {
-            emit(Response.Loading)
-            val update = activitiesRef.document(id).update(
-                "participants_profile_pictures" + "." + user.id,
-                user.pictureUrl,
-                "participants_usernames" + "." + user.id,
-                user.username,
-                "participants_ids",
-                FieldValue.arrayUnion(user.id)
-            ).await()
-            emit(Response.Success(update))
-        } catch (e: Exception) {
-            emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
-        }
+
+
+            try {
+                emit(Response.Loading)
+
+                // Create a Participant object
+                val participant = Participant(
+                    id = user.id,
+                    profile_picture = user.pictureUrl!!,
+                    name = user.name!!,
+                    username = user.username!!,
+                    timestamp = getCurrentUTCTime()
+                )
+
+                // Add the participant data to the subcollection under the activity document
+                val participantsCollectionRef = activitiesRef.document(id).collection("participants")
+                participantsCollectionRef.document(participant.id).set(participant).await()
+
+                val update = activitiesRef.document(id).update(
+                    "participants_profile_pictures" + "." + user.id,
+                    user.pictureUrl,
+                    "participants_usernames" + "." + user.id,
+                    user.username,
+                    "participants_ids",
+                    FieldValue.arrayUnion(user.id)
+                ).await()
+
+                emit(Response.Success(null))
+            } catch (e: Exception) {
+                emit(Response.Failure(e = SocialException("likeActivity exception", Exception())))
+            }
+
+
     }
     override suspend fun likeActivityOnlyId(id: String, user: User): Flow<Response<Void?>> = flow {
         try {
@@ -445,6 +465,19 @@ class ActivityRepositoryImpl @Inject constructor(
         flow {
             try {
                 emit(Response.Loading)
+                // Create a Participant object
+                val participant = Participant(
+                    id = user.id,
+                    name = user.name!!,
+                    profile_picture = user.pictureUrl!!,
+                    username = user.username!!,
+                    timestamp = getCurrentUTCTime()
+                )
+
+                // Add the participant data to the subcollection under the activity document
+                val participantsCollectionRef = activitiesRef.document(id).collection("participants")
+                participantsCollectionRef.document(participant.id).set(participant).await()
+
                 val update = activitiesRef.document(id)
                     .update("participants_ids", FieldValue.arrayUnion(user.id)).await()
                 emit(Response.Success(update))
@@ -479,6 +512,11 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun unlikeActivity(id: String, user_id: String): Flow<Response<Void?>> = flow {
         try {
             emit(Response.Loading)
+
+            // Remove the participant from the subcollection under the activity document
+            val participantsCollectionRef = activitiesRef.document(id).collection("participants")
+            participantsCollectionRef.document(user_id).delete().await()
+
             val update = activitiesRef.document(id).update(
                 "participants_profile_pictures" + "." + user_id,
                 FieldValue.delete(),
@@ -487,6 +525,7 @@ class ActivityRepositoryImpl @Inject constructor(
                 "participants_ids",
                 FieldValue.arrayRemove(user_id)
             ).await()
+
             emit(Response.Success(update))
         } catch (e: Exception) {
             emit(Response.Failure(e = SocialException("unlikeActivity exception", Exception())))
@@ -499,6 +538,9 @@ class ActivityRepositoryImpl @Inject constructor(
                 "participants_ids",
                 FieldValue.arrayRemove(user_id)
             ).await()
+            val participantsCollectionRef = activitiesRef.document(id).collection("participants")
+            participantsCollectionRef.document(user_id).delete().await()
+
             emit(Response.Success(update))
         } catch (e: Exception) {
             emit(Response.Failure(e = SocialException("unlikeActivity exception", Exception())))
@@ -704,12 +746,23 @@ class ActivityRepositoryImpl @Inject constructor(
         try {
             emit(Response.Loading)
             val collectionRef = messagessRef.document(id).collection("messages")
+
             val ref = collectionRef.get().addOnSuccessListener { querySnapshot ->
                 for (document in querySnapshot) {
                     document.reference.delete()
                 }
             }
             ref.await()
+
+            val participantsRef = activitiesRef.document(id).collection("participants")
+
+            val ref2 = participantsRef.get().addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
+                    document.reference.delete()
+                }
+            }
+            ref2.await()
+
             val deletion1 = activitiesRef.document(id).delete().await()
             val deletion3 = chatCollectionsRef.document(id).delete().await()
             emit(Response.Success(deletion3))

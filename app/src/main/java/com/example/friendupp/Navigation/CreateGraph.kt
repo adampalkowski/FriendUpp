@@ -24,8 +24,10 @@ import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerSta
 import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Components.connectTimeAndDate
 import com.example.friendupp.Create.*
+import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.Profile.FriendListEvents
 import com.example.friendupp.di.*
 import com.example.friendupp.model.*
 import com.firebase.geofire.GeoFireUtils
@@ -241,7 +243,19 @@ fun NavGraphBuilder.createGraph(
 
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
+            if(UserData
+                    .user!=null){
+                LaunchedEffect(Unit) {
+                    Log.d("FriendsViewModel","Get friends called")
+                    userViewModel.getFriends(UserData
+                        .user!!.id)
+                }
+            }else{
+                navController.popBackStack()
+            }
 
+            var friendList= userViewModel.getFriendsList()
+            var isLoading = userViewModel.friendsLoading.value
             FriendPickerScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
@@ -373,6 +387,13 @@ fun NavGraphBuilder.createGraph(
 
 
                     navController.navigate("Home")
+                },friendList=friendList,isLoading=isLoading,onEvent={
+                    when(it){
+                        is FriendPickerEvents.GetMoreFriends->{
+                            userViewModel.getMoreFriends(UserData.user!!.id)
+
+                        }
+                    }
                 })
         }
 

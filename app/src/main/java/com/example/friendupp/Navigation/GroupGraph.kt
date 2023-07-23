@@ -25,6 +25,7 @@ import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Create.Option
+import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Groups.*
 import com.example.friendupp.di.ActivityViewModel
@@ -127,7 +128,19 @@ fun NavGraphBuilder.groupGraph(
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
             Log.d("CHATDEBUG", "GETFRIENDSCALLED")
+            if(UserData
+                    .user!=null){
+                LaunchedEffect(Unit) {
+                    Log.d("FriendsViewModel","Get friends called")
+                    userViewModel.getFriends(UserData
+                        .user!!.id)
+                }
+            }else{
+                navController.popBackStack()
+            }
 
+            var friendList= userViewModel.getFriendsList()
+            var isLoading = userViewModel.friendsLoading.value
             FriendPickerScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
@@ -181,6 +194,13 @@ fun NavGraphBuilder.groupGraph(
                             if(!UserData.user!!.blocked_ids.contains(id)){
                                 selectedUsers.remove(id)
                             }
+                        }
+                    }
+                },friendList=friendList,isLoading=isLoading,onEvent={
+                    when(it){
+                        is FriendPickerEvents.GetMoreFriends->{
+                            userViewModel.getMoreFriends(UserData.user!!.id)
+
                         }
                     }
                 })
@@ -471,6 +491,19 @@ fun NavGraphBuilder.groupGraph(
         val groupId = backStackEntry.arguments?.getString("groupId")
 
         val context =LocalContext.current
+        if(UserData
+                .user!=null){
+            LaunchedEffect(Unit) {
+                Log.d("FriendsViewModel","Get friends called")
+                userViewModel.getFriends(UserData
+                    .user!!.id)
+            }
+        }else{
+            navController.popBackStack()
+        }
+
+        var friendList= userViewModel.getFriendsList()
+        var isLoading = userViewModel.friendsLoading.value
         val selectedUsers = remember { mutableStateListOf<String>() }
         if(groupId!=null){
             FriendPickerScreen(
@@ -499,6 +532,13 @@ fun NavGraphBuilder.groupGraph(
                             if(!UserData.user!!.blocked_ids.contains(id)){
                                 selectedUsers.remove(id)
                             }
+                        }
+                    }
+                },friendList=friendList,isLoading=isLoading,onEvent={
+                    when(it){
+                        is FriendPickerEvents.GetMoreFriends->{
+                            userViewModel.getMoreFriends(UserData.user!!.id)
+
                         }
                     }
                 })

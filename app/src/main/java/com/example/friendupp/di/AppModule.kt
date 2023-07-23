@@ -5,6 +5,8 @@ import android.content.Context
 import com.example.friendupp.BuildConfig.MAPS_API_KEY
 import com.example.friendupp.Invites.InviteRepository
 import com.example.friendupp.Invites.InviteRepositoryImpl
+import com.example.friendupp.Participants.ParticipantsRepository
+import com.example.friendupp.Participants.ParticipantsRepositoryImpl
 import com.example.friendupp.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -167,6 +169,10 @@ class AppModule {
     fun provideInviteRepository(db: FirebaseFirestore): InviteRepository = InviteRepositoryImpl(
         invitesRef = db.collection("Invites")
         // Add other dependencies as needed for InviteRepositoryImpl
+    )
+    @Provides
+    fun provideParticipantRepository(db: FirebaseFirestore): ParticipantsRepository = ParticipantsRepositoryImpl(
+        activitiesRef = db.collection("Activities")
     )
     @Provides
     fun provideProfileRepository(

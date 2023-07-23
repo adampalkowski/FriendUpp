@@ -16,48 +16,33 @@ import com.example.friendupp.MapEvent
 import com.example.friendupp.Profile.FriendItem
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Participant
 import com.example.friendupp.model.User
 
 sealed class ParticipantsEvents{
     object GoBack:ParticipantsEvents()
     class GoToUserProfile(val id:String):ParticipantsEvents()
+    object GetMoreParticipants:ParticipantsEvents()
 }
 
 
 @Composable
-fun ParticipantsScreen(modifier:Modifier,userViewModel: UserViewModel,onEvent:(ParticipantsEvents)->Unit,activityId:String){
+fun ParticipantsScreen(modifier:Modifier,onEvent:(ParticipantsEvents)->Unit ,participantsList:List<Participant>,isLoading:Boolean){
     BackHandler(true) {
         onEvent(ParticipantsEvents.GoBack)
     }
-    val users = remember { mutableStateListOf<User>() }
-    var gotUsers= remember {
-        mutableStateOf(false)
-    }
-    val moreUsers = remember { mutableStateListOf<User>() }
 
-    loadUsers(userViewModel=userViewModel,users=users,moreUsers=moreUsers,gotUsers=gotUsers)
 
     Column(modifier=modifier) {
         ScreenHeading(title = "Participants", onBack = {onEvent(ParticipantsEvents.GoBack)}, backButton = true) {}
         LazyColumn{
-            items(users){
-                    user ->
+            items(participantsList){
+                    participant ->
                 FriendItem(
-                    username = user.username.toString(),
-                    name = user.name.toString(),
-                    pictureUrl = user.pictureUrl.toString(),
-                    onEvent = { onEvent(ParticipantsEvents.GoToUserProfile(it)) },
-                    user = user
-                )
-            }
-            items(moreUsers){
-                    user ->
-                FriendItem(
-                    username = user.username.toString(),
-                    name = user.name.toString(),
-                    pictureUrl = user.pictureUrl.toString(),
-                    onEvent ={ onEvent(ParticipantsEvents.GoToUserProfile(it)) },
-                    user = user
+                    username = participant.username.toString(),
+                    pictureUrl = participant.profile_picture.toString(),
+                    onEvent = { onEvent(ParticipantsEvents.GoToUserProfile(participant.id)) },
+                    name=participant.name
                 )
             }
             item {
@@ -65,15 +50,13 @@ fun ParticipantsScreen(modifier:Modifier,userViewModel: UserViewModel,onEvent:(P
 
             }
             item {
-                LaunchedEffect(gotUsers){
-                    if(gotUsers.value){
-                        userViewModel.getMoreActivityUsers(activityId)
-                    }
-                }
+                LaunchedEffect(Unit){
+                       onEvent(ParticipantsEvents.GetMoreParticipants)
+               }
+             }
             }
         }
 
-    }
 
 
 

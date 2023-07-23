@@ -67,8 +67,7 @@ fun FriendListScreen(
                         username = user.username.toString(),
                         name = user.name.toString(),
                         pictureUrl = user.pictureUrl.toString(),
-                        onEvent = {onEvent(FriendListEvents.ProfileDisplay(it))},
-                        user = user
+                        onEvent = {onEvent(FriendListEvents.ProfileDisplay(user.id))},
                     )
                 }
                 item{
@@ -154,15 +153,14 @@ fun FriendItem(
     username: String,
     name: String,
     pictureUrl: String,
-    user: User,
-    onEvent: (String) -> Unit,
+    onEvent: () -> Unit,
 ) {
 
     Column() {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier
                 .clickable(
-                    onClick = { onEvent(user.id) },
+                    onClick = { onEvent() },
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(color = Color.Black)
                 )

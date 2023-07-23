@@ -41,7 +41,7 @@ interface ChatRepository {
         message_id: String
     ): Flow<Response<ChatMessage>>
 
-    suspend fun getMessages(chat_collection_id: String,current_time:String): Flow<Response<ArrayList<ChatMessage>>>
+    suspend fun getMessages(chat_collection_id: String,current_time:String): Flow<Response<ChatMessage>>
     suspend fun getMoreMessages(chat_collection_id: String): Flow<Response<ArrayList<ChatMessage>>>
     suspend fun getFirstMessages(chat_collection_id: String,current_time:String): Flow<Response<ArrayList<ChatMessage>>>
     suspend fun getGroups(id: String): Flow<Response<ArrayList<Chat>>>

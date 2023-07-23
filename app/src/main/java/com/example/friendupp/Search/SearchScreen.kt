@@ -65,6 +65,9 @@ sealed class SearchEvents{
     class OnInviteAccepted(invite:Invite) : SearchEvents() {
         val invite = invite
     }
+    class RemoveInvite(invite:Invite) : SearchEvents() {
+        val invite = invite
+    }
 }
 
 @Composable
@@ -127,7 +130,7 @@ fun SearchScreen(modifier:Modifier, onEvent:(SearchEvents)->Unit, invitesViewMod
                     profilePictureUrl = invite.senderProfilePictureUrl,
                     onAccept = {
                         onEvent(SearchEvents.OnInviteAccepted(invite))
-                    },onClick={onEvent(SearchEvents.DisplayUser(invite.senderId))})
+                    },onClick={onEvent(SearchEvents.DisplayUser(invite.senderId))}, onRemove = {onEvent(SearchEvents.RemoveInvite(invite))})
                 Spacer(modifier = Modifier.width(16.dp))
             }
 
@@ -156,6 +159,7 @@ fun InviteItem(
     username: String,
     name: String,
     onAccept: () -> Unit = {},
+    onRemove: () -> Unit = {},
     onClick: () -> Unit
 ) {
 
@@ -231,7 +235,7 @@ fun InviteItem(
                         )
                         .background(SocialTheme.colors.uiBackground)
                         .padding(horizontal = 18.dp, vertical = 8.dp),
-                    discardIcon = R.drawable.ic_delete
+                    discardIcon = R.drawable.ic_delete, onClick = onRemove
                 )
             }
         }

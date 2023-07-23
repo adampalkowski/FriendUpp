@@ -1,23 +1,15 @@
 package com.example.friendupp.Navigation
 
-import android.Manifest
-import android.app.Activity
-import android.content.ContentResolver
-import android.content.res.Resources
 import android.net.Uri
-import android.provider.Settings.Global.getString
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,16 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.ActivityPreview.CreatorSettingsEvent
 import com.example.friendupp.ActivityPreview.CreatorSettingsScreen
-import com.example.friendupp.bottomBar.ActivityUi.ActivityPreview
-import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewEvents
-import com.example.friendupp.Camera.getActivity
 import com.example.friendupp.Components.FriendUppDialog
+import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
@@ -47,11 +38,12 @@ import com.example.friendupp.MapEvent
 import com.example.friendupp.MapScreen
 import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.Participants.ParticipantsScreen
-import com.example.friendupp.Profile.ProfileDisplayEvents
+import com.example.friendupp.ParticipantsViewModel
 import com.example.friendupp.R
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
-import com.example.friendupp.Settings.ChangeEmailDialog
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreview
+import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewEvents
 import com.example.friendupp.bottomBar.ActivityUi.ChangeDescriptionDialog
 import com.example.friendupp.bottomBar.ActivityUi.RemoveUsersDialog
 import com.example.friendupp.di.ActiveUsersViewModel
@@ -67,13 +59,10 @@ import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.common.api.ApiException
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
-import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -137,22 +126,24 @@ fun NavGraphBuilder.mainGraph(
         ) { backStackEntry ->
 
 
+            val participantsViewModel:ParticipantsViewModel= hiltViewModel()
+
             val activityId = backStackEntry.arguments?.getString("activityId")
             var called by remember { mutableStateOf(true) }
 
-
+            val participantsList= participantsViewModel.getParticipantsList()
+            val participantsLoading= participantsViewModel.participantsLoading.value
             if (activityId.isNullOrEmpty()) {
                 navController.popBackStack()
             } else {
                 LaunchedEffect(called) {
                     if (called) {
-                        userViewModel.getActivityUsers(activityId)
+                        participantsViewModel.getParticipants(activityId)
                         called = false
                     }
                 }
                 ParticipantsScreen(
                     modifier = Modifier.safeDrawingPadding(),
-                    userViewModel = userViewModel,
                     onEvent = { event ->
                         when (event) {
                             is ParticipantsEvents.GoBack -> {
@@ -161,9 +152,12 @@ fun NavGraphBuilder.mainGraph(
                             is ParticipantsEvents.GoToUserProfile -> {
                                 navController.navigate("ProfileDisplay/" + event.id)
                             }
+                            is ParticipantsEvents.GetMoreParticipants->{
+                                participantsViewModel.getMoreParticipants(activityId)
+                            }
                         }
                     },
-                    activityId = activityId
+                    participantsList,participantsLoading
                 )
 
             }
@@ -1020,7 +1014,19 @@ fun NavGraphBuilder.mainGraph(
             }
         ) { backStackEntry ->
             val activityId = backStackEntry.arguments?.getString("activityId")
+            if(UserData
+                    .user!=null){
+                LaunchedEffect(Unit) {
+                    Log.d("FriendsViewModel","Get friends called")
+                    userViewModel.getFriends(UserData
+                        .user!!.id)
+                }
+            }else{
+                navController.popBackStack()
+            }
 
+            var friendList= userViewModel.getFriendsList()
+            var isLoading = userViewModel.friendsLoading.value
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
             if (activityId != null) {
@@ -1057,6 +1063,13 @@ fun NavGraphBuilder.mainGraph(
                                 if (!UserData.user!!.blocked_ids.contains(id)) {
                                     selectedUsers.remove(id)
                                 }
+                            }
+                        }
+                    },friendList=friendList,isLoading=isLoading,onEvent={
+                        when(it){
+                            is FriendPickerEvents.GetMoreFriends->{
+                                userViewModel.getMoreFriends(UserData.user!!.id)
+
                             }
                         }
                     })
@@ -1284,6 +1297,10 @@ fun NavGraphBuilder.mainGraph(
                                 user_two_id =event.invite.senderId.toString(),
                             )
                         )
+
+                    }
+                    is SearchEvents.RemoveInvite -> {
+                        invitesViewModel.removeInvite(event.invite)
 
                     }
                 }

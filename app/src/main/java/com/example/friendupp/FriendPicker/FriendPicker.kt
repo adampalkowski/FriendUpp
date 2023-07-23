@@ -40,6 +40,7 @@ import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
 import com.example.friendupp.Groups.SelectedUsersState
+import com.example.friendupp.Profile.FriendListEvents
 import com.example.friendupp.Profile.groupsLoading
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
@@ -47,6 +48,10 @@ import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
+
+sealed class FriendPickerEvents{
+    object GetMoreFriends:FriendPickerEvents()
+}
 
 @Composable
 fun FriendPickerScreen(
@@ -58,21 +63,18 @@ fun FriendPickerScreen(
     onUserSelected: (String) -> Unit,
     onUserDeselected: (String) -> Unit,
     createActivity: () -> Unit,
-    onAllFriends:(Boolean)->Unit
+    onAllFriends:(Boolean)->Unit,
+    friendList:List<User>,
+    isLoading:Boolean,
+    onEvent:(FriendPickerEvents)->Unit
 ) {
-    val friendsList = remember { mutableStateListOf<User>() }
-    val moreFriendsList = remember { mutableStateListOf<User>() }
     val groupList = remember { mutableStateListOf<Chat>() }
     val moreGroupList = remember { mutableStateListOf<Chat>() }
     val selectedList = rememberSaveable(saver = SelectedUsersState.Saver) {
         SelectedUsersState(mutableStateListOf())
     }
     val IconTint = SocialTheme.colors.textPrimary.copy(0.8f)
-   /* friendsLoading(
-        userViewModel = userViewModel,
-        friendsList = friendsList,
-        moreFriendsList = moreFriendsList
-    )*/
+
     groupsLoading(
         chatViewModel = chatViewModel,
         groupList = groupList,
@@ -170,7 +172,7 @@ fun FriendPickerScreen(
 
             }
 
-            items(friendsList) { user ->
+            items(friendList) { user ->
 
                 if(allFriends){
                     var selected by remember { mutableStateOf(true) }
@@ -207,55 +209,16 @@ fun FriendPickerScreen(
                     )
                 }
             }
-            items(moreFriendsList) { user ->
 
-                if(allFriends){
-                    var selected by remember { mutableStateOf(true) }
-                    FriendPickerItem(
-                        id = user.id,
-                        username = user.username ?: "",
-                        onClick = {
-                        },
-                        imageUrl = user.pictureUrl ?: "",
-                        onUserSelected = {
-                        }, onUserDeselected = {
-                           },
-                        addUserName = { selectedList.list.add(it) },
-                        removeUsername = { selectedList.list.remove(it) },
-                        selected =selected
-                    )
-                }else{
-                    var selected by remember { mutableStateOf(selectedList.list.contains(user.username)) }
-
-
-                    FriendPickerItem(
-                        id = user.id, username = user.username ?: "", onClick = {
-                        },
-                        imageUrl = user.pictureUrl ?: "",
-                        onUserSelected = {onUserSelected(it)
-                            selected=true
-
-                        }, onUserDeselected = {
-                            onUserDeselected(it)
-                            selected=false },
-                        addUserName = {
-                            selectedList.list.add(it)
-                        }, removeUsername = { selectedList.list.remove(it) },selected=selected
-                    )
-                }
-
-
-            }
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
             item {
                 if(allFriends){
-
                 }else{
                     LaunchedEffect(true) {
                         if (usersExist.value) {
-                            userViewModel.getMoreFriends(UserData.user!!.id)
+                            onEvent(FriendPickerEvents.GetMoreFriends)
                         }
                     }
                 }

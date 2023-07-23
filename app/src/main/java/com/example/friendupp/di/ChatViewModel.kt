@@ -329,7 +329,6 @@ class ChatViewModel @Inject constructor(
     fun getMessages(id: String,current_time:String) {
         viewModelScope.launch {
             repo.getMessages(id,current_time).collect{response->
-                        _messagesState.value=response
             }
 
         }
