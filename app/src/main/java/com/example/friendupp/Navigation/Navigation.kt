@@ -1,9 +1,6 @@
 package com.example.friendupp.Navigation
 
-import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -20,18 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.friendupp.*
-import com.example.friendupp.bottomBar.ActivityUi.rememberActivityState
 import com.example.friendupp.ChatUi.*
-import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
-import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Create.*
 import com.example.friendupp.Drawer.drawerGraph
 import com.example.friendupp.Groups.rememberGroupState
@@ -39,12 +30,12 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.bottomBar.ActivityUi.rememberActivityState
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
 import com.example.friendupp.di.*
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Chat
-import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -295,7 +286,9 @@ fun NavigationComponent(
                     chatViewModel,
                     homeViewModel = homeViewModel,
                     mapViewModel = mapViewModel,
-                    activeUserViewModel = activeUserViewModel, invitesViewModel = invitesViewModel
+                    activeUserViewModel = activeUserViewModel, invitesViewModel = invitesViewModel,
+                    outputDirectory = outputDirectory,
+                    executor = executor,
                 )
                 chatGraph(
                     navController, chatViewModel, currentChat, outputDirectory = outputDirectory,
@@ -330,7 +323,7 @@ fun NavigationComponent(
                     navController, chatViewModel, groupState, outputDirectory = outputDirectory,
                     executor = executor, userViewModel = userViewModel
                 ,activityViewModel=activityViewModel)
-                cameraGraph(navController, outputDirectory = outputDirectory, executor = executor)
+                cameraGraph(navController, outputDirectory = outputDirectory, executor = executor,chatViewModel=chatViewModel)
             }
 
 

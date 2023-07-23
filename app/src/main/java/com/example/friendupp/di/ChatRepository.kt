@@ -16,6 +16,7 @@ interface ChatRepository {
     suspend fun addGroupHighlight(group_id:String,text_message:String): Flow<Response<Void?>>
     suspend fun removeGroupHighlight(group_id:String): Flow<Response<Void?>>
     suspend fun addImageFromGalleryToStorage(id:String,imageUri: Uri): Flow<Response<String>>
+    suspend fun updateActivityImage(id:String,imageUri: Uri): Flow<Response<String>>
     suspend fun addLoweResImageFromGalleryToStorage(id:String,imageUri: Uri): Flow<Response<String>>
     suspend fun updateChatCollectionRecentMessage(
         id: String,
@@ -48,5 +49,5 @@ interface ChatRepository {
     suspend fun getMoreGroups(id: String): Flow<Response<ArrayList<Chat>>>
     suspend fun getChatCollections(user_id: String): Flow<Response<ArrayList<Chat>>>
     suspend fun addMessage(chat_collection_id: String, message: ChatMessage): Flow<Response<Void?>>
-    suspend fun deleteMessage(chat_collection_id: String,message_id: String): Flow<Response<Void?>>
+    suspend fun deleteMessage(chat_collection_id: String): Flow<Response<Void?>>
 }

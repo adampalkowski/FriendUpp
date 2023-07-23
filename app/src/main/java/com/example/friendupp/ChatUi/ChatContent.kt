@@ -88,6 +88,7 @@ fun createLatLngFromString(coordinates: String): LatLng? {
         null
     }
 }
+
 fun getChatNameAndImage(chat: Chat): Pair<String, String> {
     var chatName = chat.name.toString()
     var chatImage = chat.imageUrl.toString()
@@ -95,7 +96,7 @@ fun getChatNameAndImage(chat: Chat): Pair<String, String> {
     if (chat.type.equals("duo")) {
         if (chat.user_one_username == UserData.user!!.username) {
             chatName = chat.user_two_username.toString()
-            chatImage =chat.user_two_profile_pic.toString()
+            chatImage = chat.user_two_profile_pic.toString()
 
         } else {
             chatName = chat.user_one_username.toString()
@@ -107,6 +108,7 @@ fun getChatNameAndImage(chat: Chat): Pair<String, String> {
 
     return Pair(chatName, chatImage)
 }
+
 @Composable
 fun ChatContent(
     modifier: Modifier,
@@ -114,11 +116,10 @@ fun ChatContent(
     chatViewModel: ChatViewModel,
     displayLocation: (LatLng) -> Unit,
     higlightDialog: (String) -> Unit,
-    chat:Chat,
-    messages:List<ChatMessage>,
+    chat: Chat,
+    messages: List<ChatMessage>,
     valueExist: Boolean,
-    displayImage:(String)->Unit
-
+    displayImage: (String) -> Unit,
     ) {
     DisposableEffect(Unit) {
         onDispose {
@@ -127,7 +128,6 @@ fun ChatContent(
         }
     }
     var highlight_dialog by remember { mutableStateOf(false) }
-
     //HIGHLIGHT
     var highlite_message by remember { mutableStateOf(false) }
     var highlited_message_text by remember { mutableStateOf("") }
@@ -142,72 +142,72 @@ fun ChatContent(
     val permission_flow = chatViewModel.granted_permission.collectAsState()
     val location_flow = chatViewModel.location.collectAsState()
     val isImageAddedToStorage by chatViewModel.isImageAddedToStorageFlow.collectAsState()
-
-
-        val (chat_name, chat_image) =  getChatNameAndImage(chat)
-
-        Box(modifier.fillMaxSize()) {
-
-            if (highlight_dialog) {
-                HighLightDialog(modifier = Modifier.align(Alignment.TopCenter), onEvent = { it ->
-                    when (it) {
-                        is ChatEvents.CloseDialog -> {
-                            chat.highlited_message = null
-                            highlight_dialog = false
-                        }
-                        else -> {}
+    val (chat_name, chat_image) = getChatNameAndImage(chat)
+    Box(modifier.fillMaxSize()) {
+        if (highlight_dialog) {
+            HighLightDialog(modifier = Modifier.align(Alignment.TopCenter), onEvent = { it ->
+                when (it) {
+                    is ChatEvents.CloseDialog -> {
+                        chat.highlited_message = null
+                        highlight_dialog = false
                     }
-                }, highlitedMessage = chat.highlited_message!!)
-            }
-            Column(Modifier.background(SocialTheme.colors.uiBackground)) {
-                TopChatBar(
-                    title = chat_name,
-                    image = chat_image,
-                    chatEvents = onEvent
-                )
-                ChatMessages(
-                    modifier.weight(1f),
-                    onEvent = { event ->
-                        Log.d("CHATDEBUG", "EVENT")
-
-                        when (event) {
-                            is ChatEvents.Reply -> {
-                                Log.d("CHATDEBUG", "REPLY")
-                                replyMessage.value = event.message
-                            }
-                            else -> {
-                                onEvent(event)
-                            }
-                        }
-                    },
-                    messages,
-                    valueExist = valueExist,
-                    chat_id = chat.id.toString(),
-                    highlightMessage = { highlited_message_text = it },
-                    highlight_message = highlite_message, displayLocation = displayLocation,
-                    higlightDialog = {
-                        higlightDialog(it)
-                        highlite_message = false
-                    },
-                    displayImage = displayImage
-                )
-                LoadingImage(showLoading = showLoading)
-                BottomChatBar(modifier = Modifier,
-                    onEvent = onEvent,
-                    replyMessage = replyMessage,
-                    chat.id.toString(),
-                    shareLocation = {
-                        onEvent(ChatEvents.ShareLocation)
-                    },
-                    highlightMessage = {
-                        highlite_message = !highlite_message
-                    },
-                    addImage = { onEvent(ChatEvents.OpenGallery) },
-                    liveActivity = {}, highlite_message = highlite_message
-                )
-            }
-
+                    else -> {}
+                }
+            }, highlitedMessage = chat.highlited_message!!)
         }
+        Column(Modifier.background(SocialTheme.colors.uiBackground)) {
+            TopChatBar(
+                title = chat_name,
+                image = chat_image,
+                chatEvents = onEvent
+            )
+            ChatMessages(
+                modifier.weight(1f),
+                onEvent = { event ->
+                    Log.d("CHATDEBUG", "EVENT")
+
+                    when (event) {
+                        is ChatEvents.Reply -> {
+                            Log.d("CHATDEBUG", "REPLY")
+                            replyMessage.value = event.message
+                        }
+                        is ChatEvents.Delete -> {
+                            onEvent(ChatEvents.Delete(event.id))
+                        }
+                        else -> {
+                            onEvent(event)
+                        }
+                    }
+                },
+                messages,
+                valueExist = valueExist,
+                chat_id = chat.id.toString(),
+                highlightMessage = { highlited_message_text = it },
+                highlight_message = highlite_message, displayLocation = displayLocation,
+                higlightDialog = {
+                    higlightDialog(it)
+                    highlite_message = false
+                },
+                displayImage = displayImage
+            )
+            LoadingImage(showLoading = showLoading)
+            BottomChatBar(
+                modifier = Modifier,
+                onEvent = onEvent,
+                replyMessage = replyMessage,
+                chat.id.toString(),
+                shareLocation = {
+                    onEvent(ChatEvents.ShareLocation)
+                },
+                highlightMessage = {
+                    highlite_message = !highlite_message
+                },
+                addImage = { onEvent(ChatEvents.OpenGallery) },
+                liveActivity = {}, highlite_message = highlite_message
+            )
+        }
+
+    }
 
 
     DisposableEffect(Unit) {
@@ -322,14 +322,14 @@ fun loadChat(
 fun ChatMessages(
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
-    messages:List<ChatMessage>,
+    messages: List<ChatMessage>,
     valueExist: Boolean,
     chat_id: String,
     highlightMessage: (String) -> Unit,
     highlight_message: Boolean,
     displayLocation: (LatLng) -> Unit,
     higlightDialog: (String) -> Unit,
-    displayImage:(String)->Unit
+    displayImage: (String) -> Unit,
 
     ) {
 
@@ -350,8 +350,7 @@ fun ChatMessages(
                 lastMessageSenderID == message.sender_id || lastMessageSenderID == null
             ChatBox(
                 message,
-                onLongPress = {
-                },
+                onLongPress = { },
                 highlite_message = highlight_message,
                 displayPicture = {},
                 highlightMessage = { },
@@ -359,9 +358,8 @@ fun ChatMessages(
                 onEvent = onEvent,
                 shouldGroup = shouldGroup,
                 displayLocation = displayLocation,
-                displayImage=displayImage
+                displayImage = displayImage
             )
-
             lastMessageSenderID = message.sender_id
         }
 
@@ -415,9 +413,9 @@ fun ChatBox(
     highlightMessage: (String) -> Unit,
     shouldGroup: Boolean = false,
     displayLocation: (LatLng) -> Unit,
-    displayImage:(String)->Unit
+    displayImage: (String) -> Unit,
 
-) {
+    ) {
     var padding = if (shouldGroup) {
         0.dp
     } else {
@@ -451,7 +449,7 @@ fun ChatBox(
             displayLocation = displayLocation,
             highlite_message = highlite_message,
             replyTo = chat.replyTo,
-            displayImage=displayImage
+            displayImage = displayImage
         )
     } else {
         Spacer(modifier = Modifier.height(padding))
@@ -478,7 +476,7 @@ fun ChatBox(
             displayLocation = displayLocation,
             highlite_message = highlite_message,
             replyTo = chat.replyTo,
-            displayImage=displayImage
+            displayImage = displayImage
 
         )
 
@@ -728,7 +726,8 @@ fun BottomChatBar(
         mutableStateOf(MessageState())
     }
     Column(modifier.background(color = SocialTheme.colors.uiBackground.copy(0.7f))) {
-        chatButtonsRow(modifier = Modifier,
+        chatButtonsRow(
+            modifier = Modifier,
             shareLocation = {
                 shareLocation()
             },
@@ -810,8 +809,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 displayLocation = {},
                 highlite_message = false,
                 isReply = true,
-                replyTo = null
-            , displayImage = {})
+                replyTo = null, displayImage = {})
 
         } else {
 
@@ -821,8 +819,7 @@ fun ReplyMessage(chat: ChatMessage) {
                 onEvent = {},
                 chat = chat,
                 onClick = {}, displayLocation = {}, highlite_message = false, isReply = true,
-                replyTo = null
-                , displayImage = {})
+                replyTo = null, displayImage = {})
 
         }
     }
@@ -860,7 +857,8 @@ fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(modifier=Modifier.clickable(onClick = {chatEvents(ChatEvents.GoToProfile)}),
+            Text(
+                modifier = Modifier.clickable(onClick = { chatEvents(ChatEvents.GoToProfile) }),
                 text = title,
                 style = TextStyle(
                     fontFamily = Lexend,

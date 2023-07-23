@@ -27,6 +27,7 @@ sealed class CreatorSettingsEvent {
     object RemoveParticipant : CreatorSettingsEvent()
     object ChangeLocation : CreatorSettingsEvent()
     object EditDescription : CreatorSettingsEvent()
+    object ChangeImage : CreatorSettingsEvent()
 }
 
 @Composable
@@ -64,6 +65,9 @@ fun CreatorSettingsScreen(modifier:Modifier,onEvent: (CreatorSettingsEvent) -> U
         }*/
         SettingsItem(label = "Edit description", icon = R.drawable.ic_edit) {
             onEvent(CreatorSettingsEvent.EditDescription)
+        }
+        SettingsItem(label = "Change background image", icon = R.drawable.ic_add_image) {
+            onEvent(CreatorSettingsEvent.ChangeImage)
         }
         SettingsItem(label = "Share", icon = R.drawable.ic_share) {
             onEvent(CreatorSettingsEvent.Share)

@@ -63,9 +63,11 @@ import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.mainGraph(
@@ -76,7 +78,9 @@ fun NavGraphBuilder.mainGraph(
     homeViewModel: HomeViewModel,
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
-    invitesViewModel: InvitesViewModel
+    invitesViewModel: InvitesViewModel,
+    executor:Executor,
+    outputDirectory: File
 ) {
     navigation(startDestination = "Home", route = "Main") {
 
@@ -706,6 +710,10 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
         }
+
+
+
+
         composable(
             "CreatorSettings/{activityId}",
             arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
@@ -823,6 +831,9 @@ fun NavGraphBuilder.mainGraph(
                         }
                         is CreatorSettingsEvent.EditDescription -> {
                             openEditDescription = true
+                        }
+                        is CreatorSettingsEvent.ChangeImage -> {
+                            navController.navigate("Camera/"+activityId!!)
                         }
                         else -> {}
                     }

@@ -480,7 +480,7 @@ fun NavGraphBuilder.createGraph(
                             navController.navigate("CreateSettings")
                         }
                         is CreateEvents.OpenCamera -> {
-                            navController.navigate("Camera")
+                            navController.navigate("Camera/Create")
                         }
                         is CreateEvents.LocationPicker -> {
                             navController.navigate("LocationPicker")
@@ -914,10 +914,7 @@ fun createGroup(
         } else {
             currentActivity.image = picture
             createActivity(currentActivity, activityViewModel, context,disableNotification=disableNotification)
-
         }
-
-
     })
 
 

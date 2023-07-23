@@ -136,6 +136,7 @@ class AppModule {
     ): ChatRepository = ChatRepositoryImpl(
         chatCollectionsRef =db.collection("groups"),
         messagesRef = db.collection("Chats"),
+        activitiesCollectionRef = db.collection("Activities"),
         resStorage=resStorage.reference,
         lowResStorage= lowResStorage.reference
     )

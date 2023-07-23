@@ -227,17 +227,30 @@ class ChatViewModel @Inject constructor(
 
         }
     }
+    fun updateActivityImage(id: String,url:String,onFinished:(String)->Unit={}) {
+        viewModelScope.launch {
+                repo.updateActivityImage(id, url.toUri()).collect{ response ->
+                    when(response){
+                        is Response.Success ->{
 
+                        }
+                        is Response.Loading ->{
+                            _addChatCollectionState.value=Response.Loading
+                        }
+                        is Response.Failure ->{}
+
+                    }
+                }
+
+
+
+        }
+    }
     fun addChatCollection(chatCollection: Chat,url:String?,onFinished:(String)->Unit={}) {
         viewModelScope.launch {
-            val uuid: UUID = UUID.randomUUID()
-            val id:String = uuid.toString()
-            Log.d("Createdebug",id)
-            if (chatCollection.id!!.isEmpty()||chatCollection.id==null){
-                chatCollection.id=id
-            }
+
             if(url!=null && url.isNotEmpty()){
-                repo.addImageFromGalleryToStorage(id, url.toUri()).collect{ response ->
+                repo.addImageFromGalleryToStorage(chatCollection.id!!, url.toUri()).collect{ response ->
                     when(response){
                         is Response.Success ->{
                             chatCollection.create_date= getTime()
@@ -370,7 +383,6 @@ class ChatViewModel @Inject constructor(
         val uuid: UUID = UUID.randomUUID()
         val id:String = uuid.toString()
         message.id=id
-
         message.sent_time= getCurrentUTCTime()
         viewModelScope.launch {
             repo.addMessage(chat_collection_id,message).collect{
@@ -396,10 +408,9 @@ class ChatViewModel @Inject constructor(
     }
     fun deleteMessages(
         chat_collection_id: String,
-        message_id: String
     ) {
         viewModelScope.launch {
-            repo.deleteMessage(chat_collection_id,message_id).collect{
+            repo.deleteMessage(chat_collection_id).collect{
                     response->
                 _deleteMessageState.value=response
             }

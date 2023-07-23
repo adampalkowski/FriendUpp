@@ -26,6 +26,7 @@ import javax.inject.Singleton
 class ChatRepositoryImpl @Inject constructor(
     private val messagesRef: CollectionReference,
     private val chatCollectionsRef: CollectionReference,
+    private val activitiesCollectionRef: CollectionReference,
     private val resStorage: StorageReference,
     private val lowResStorage: StorageReference,
 ) : ChatRepository {
@@ -121,7 +122,44 @@ class ChatRepositoryImpl @Inject constructor(
             }
         }
     }
+    override suspend fun updateActivityImage(
+        id: String,
+        imageUri: Uri
+    ): Flow<Response<String>> = flow {
+        try {
+            if (imageUri != null) {
+                Log.d("Createdebug",id)
 
+                val fileName = id
+                try {
+                    resStorage.child("images/$fileName" + "_1080x1080").delete().await1()
+                } catch (e: StorageException) {
+
+                }
+                val imageRef = resStorage.child("images/$fileName")
+                imageRef.putFile(imageUri).await1()
+                val reference = resStorage.child("images/$fileName" + "_1080x1080")
+                val url = keepTrying(6, reference)
+
+                chatCollectionsRef.document(id).update("imageUrl",url).await()
+                activitiesCollectionRef.document(id).update("image",url).await()
+
+
+                emit(Response.Success(url))
+
+            }
+        } catch (e: Exception) {
+            Log.d("ImagePicker", "try addProfilePictureToStorage EXCEPTION")
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "addProfilePictureToStorage exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
     override suspend fun addImageFromGalleryToStorage(
         id: String,
         imageUri: Uri
@@ -131,6 +169,11 @@ class ChatRepositoryImpl @Inject constructor(
                 Log.d("Createdebug",id)
 
                 val fileName = id
+                try {
+                    resStorage.child("images/$fileName" + "_1080x1080").delete().await1()
+                } catch (e: StorageException) {
+
+                }
                 val imageRef = resStorage.child("images/$fileName")
                 imageRef.putFile(imageUri).await1()
                 val reference = resStorage.child("images/$fileName" + "_1080x1080")
@@ -594,14 +637,17 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun deleteMessage(
         chat_collection_id: String,
-        message_id: String
     ): Flow<Response<Void?>> = flow {
         try {
-
             Log.d("ProfileDisplay","delete messages")
             emit(Response.Loading)
-            val deletion = messagesRef.document(chat_collection_id).delete().await()
-            emit(Response.Success(deletion))
+            val collectionRef = messagesRef.document(chat_collection_id).collection("messages")
+            val ref = collectionRef.get().addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
+                    document.reference.delete()
+                }
+            }
+            ref.await()
         } catch (e: Exception) {
             emit(Response.Failure(e = SocialException("deleteMessage exception", Exception())))
         }

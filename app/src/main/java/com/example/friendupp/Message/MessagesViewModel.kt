@@ -20,24 +20,31 @@ class MessagesViewModel @Inject constructor(
     private val chatRepo: ChatRepository
 ) : ViewModel() {
 
+
+
+    // MutableState holding the list of chat messages
     private val _messagesList = mutableStateOf<List<ChatMessage>>(emptyList())
     val messagesListState: MutableState<List<ChatMessage>> = _messagesList
 
+    // State holding the loading state for messages
     private val _messagesLoading = mutableStateOf(false)
     val messagesLoading: State<Boolean> = _messagesLoading
 
+    // Function to get the current list of chat messages
     fun getMessagesList(): List<ChatMessage> {
         return messagesListState.value
     }
 
     // Function to fetch messages for a chat
-    fun getMessages(chatId: String,current_time:String) {
+    fun getMessages(chatId: String, current_time: String) {
         viewModelScope.launch {
             _messagesLoading.value = true
-            chatRepo.getMessages(chatId, current_time ).collect { response ->
+            // Call the chatRepo's getMessages function that provides a Flow<Response<ArrayList<ChatMessage>>>
+            chatRepo.getMessages(chatId, current_time).collect { response ->
                 when (response) {
                     is Response.Success -> {
                         val newMessage = response.data // Assuming response.data is of type ChatMessage
+                        // Add the new message to the front of the list
                         _messagesList.value = listOf(newMessage) + _messagesList.value
                         Log.d("MessagesViewModel", "Messages fetched successfully for chat: $chatId")
                     }
@@ -55,15 +62,15 @@ class MessagesViewModel @Inject constructor(
         }
     }
 
-    // Other properties and functions remain the same
-
     // Function to fetch the first batch of messages for a chat
     fun getFirstMessages(chatId: String, current_time: String) {
         viewModelScope.launch {
             _messagesLoading.value = true
+            // Call the chatRepo's getFirstMessages function that provides a Flow<Response<ArrayList<ChatMessage>>>
             chatRepo.getFirstMessages(chatId, current_time).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        // Update the list with the new batch of messages
                         _messagesList.value = response.data ?: emptyList()
                         Log.d("MessagesViewModel", "First batch of messages fetched successfully for chat: $chatId")
                     }
@@ -84,6 +91,7 @@ class MessagesViewModel @Inject constructor(
     // Function to fetch more messages for a chat
     fun getMoreMessages(chatId: String) {
         viewModelScope.launch {
+            // Call the chatRepo's getMoreMessages function that provides a Flow<Response<ArrayList<ChatMessage>>>
             chatRepo.getMoreMessages(chatId).collect { response ->
                 when (response) {
                     is Response.Success -> {
@@ -102,12 +110,15 @@ class MessagesViewModel @Inject constructor(
             }
         }
     }
+
     // Function to add a new message to the chat
     fun addMessage(chatId: String, message: ChatMessage) {
         viewModelScope.launch {
+            // Call the chatRepo's addMessage function that provides a Flow<Response<Unit>>
             chatRepo.addMessage(chatId, message).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        // Add the new message to the list
                         _messagesList.value = _messagesList.value + message
                         Log.d("MessagesViewModel", "Message added successfully to chat: $chatId")
                     }
@@ -123,9 +134,11 @@ class MessagesViewModel @Inject constructor(
     // Function to delete a message from the chat
     fun deleteMessage(chatId: String, messageId: String) {
         viewModelScope.launch {
-            chatRepo.deleteMessage(chatId, messageId).collect { response ->
+            // Call the chatRepo's deleteMessage function that provides a Flow<Response<Unit>>
+         /*   chatRepo.deleteMessage(chatId, messageId).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        // Filter out the message with the specified messageId
                         _messagesList.value = _messagesList.value.filterNot { it.id == messageId }
                         Log.d("MessagesViewModel", "Message deleted successfully from chat: $chatId")
                     }
@@ -134,7 +147,7 @@ class MessagesViewModel @Inject constructor(
                     }
                     else -> { /* Handle other response cases if needed */ }
                 }
-            }
+            }*/
         }
     }
 }

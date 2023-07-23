@@ -956,7 +956,7 @@ fun NavGraphBuilder.profileGraph(
                                 if (chat_id != null) {
                                     Log.d("ProfileDisplay","DElete Chat collection")
                                     chatViewModel.deleteChatCollection(chat_id)
-                                    chatViewModel.deleteMessages(chat_id,"123")
+                                    chatViewModel.deleteMessages(chat_id)
                                     Toast.makeText(
                                             context,
                                     "Removed", Toast.LENGTH_LONG

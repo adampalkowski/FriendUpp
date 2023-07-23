@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Create.CreateEvents
+import com.example.friendupp.di.ChatViewModel
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -24,10 +25,12 @@ import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: File,
-                                executor: Executor,) {
+                                executor: Executor,chatViewModel: ChatViewModel
+) {
     navigation(startDestination = "Camera", route = "CameraGraph") {
 
-        composable( "Camera",
+        composable( "Camera/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "Create" ->
@@ -78,13 +81,12 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
                 }
             }
         ) {backStackEntry->
-            val whereFrom =backStackEntry.arguments?.getString("from")
+            val id =backStackEntry.arguments?.getString("id")
             var photoUri by remember {
                 mutableStateOf<Uri?>(null)
             }
 
-            val systemUiController = rememberSystemUiController()
-            val scope = rememberCoroutineScope()
+
             val context = LocalContext.current
             CameraView(modifier=modifier,outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
                 photoUri= uri
@@ -96,18 +98,21 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
                         if(photoUri!=null){
                             photoUri!!.toFile().delete()
                         }
-                            navController.navigate("Home")
+                        navController.popBackStack()
                     }
                     is CameraEvent.AcceptPhoto->{
                         Log.d("CAMERAGRAPHACTIvity","ACASDASDASD")
                         if (photoUri!=null){
-                            val photo:String = photoUri.toString()
-                            when(whereFrom){
-                                "Create"  ->{
-                                    navController.navigate("Create/"+photo)
+                            if(id!=null){
+                                val photo:String = photoUri.toString()
+                                chatViewModel.updateActivityImage(id,photo)
+                                navController.popBackStack()
+                            }else{
+                                navController.popBackStack()
+                                Toast.makeText(context,"Failed to upload image",Toast.LENGTH_SHORT).show()
 
-                                }
                             }
+
 
                             /*todo dooo sth with the final uri */
                         }

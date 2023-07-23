@@ -528,9 +528,7 @@ fun NavGraphBuilder.chatGraph(
 
             val valueExist = rememberSaveable { mutableStateOf(false) }
             var chatFinal = chat.value
-
             var messages =messagesViewModel.getMessagesList()
-
             if (chatFinal != null) {
                 ChatContent(
                     modifier = Modifier.safeDrawingPadding(),
@@ -538,6 +536,9 @@ fun NavGraphBuilder.chatGraph(
                         when (event) {
                             is ChatEvents.GoBack -> {
                                 navController.popBackStack()
+                            }
+                            is ChatEvents.Delete -> {
+                                messagesViewModel.deleteMessage(chatFinal.id!!,event.id)
                             }
                             is ChatEvents.SendImage -> {
 
