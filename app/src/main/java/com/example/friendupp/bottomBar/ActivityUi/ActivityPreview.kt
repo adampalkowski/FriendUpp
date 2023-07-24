@@ -56,6 +56,7 @@ sealed class ActivityPreviewEvents{
     class Join(val id:String,val creator_id:String): ActivityPreviewEvents()
     class UnBookmark(val id:String): ActivityPreviewEvents()
     class GoToActivityParticipants(val id:String): ActivityPreviewEvents()
+    class GoToActivityRequests(val id:String): ActivityPreviewEvents()
     class Bookmark(val id:String): ActivityPreviewEvents()
     class AddUsers(val id:String): ActivityPreviewEvents()
     class CreatorSettings(val id:String): ActivityPreviewEvents()
@@ -159,6 +160,13 @@ fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, 
                         ParticipantsPreview(activity.participants_ids,activity.participants_usernames,activity.participants_profile_pictures,GoToActivityParticipants={onEvent(
                             ActivityPreviewEvents.GoToActivityParticipants(activity.id)
                         )})
+                        if(activity.creator_id==UserData.user!!.id) {
+                            RequestsPreview(activity.requests_ids.size,GoToRequestsPreview={onEvent(
+                                ActivityPreviewEvents.GoToActivityRequests(activity.id)
+                            )})
+                        }
+
+
                        /* ActivityPreviewOption()*/
 
                     }
@@ -217,6 +225,27 @@ fun ParticipantsPreview(participantsIds: ArrayList<String>, participantsUsername
 
         }
         Spacer(modifier = Modifier.weight(1f))
+        Icon(painter = painterResource(id = R.drawable.arrow_right), contentDescription =null , tint = SocialTheme.colors.iconPrimary)
+
+    }
+
+}
+@Composable
+fun RequestsPreview(particirpants:Int, GoToRequestsPreview:()->Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = GoToRequestsPreview)
+            .padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painter = painterResource(id = R.drawable.ic_hand), contentDescription = null,tint=SocialTheme.colors.iconPrimary)
+        Spacer(modifier = Modifier.width(24.dp))
+        Column() {
+            Text(text ="Requests", style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(text =particirpants.toString(), style = TextStyle(fontFamily = Lexend, fontSize = 16.sp, fontWeight = FontWeight.Light),color=SocialTheme.colors.textPrimary)
+
+        Spacer(modifier = Modifier.width(24.dp))
         Icon(painter = painterResource(id = R.drawable.arrow_right), contentDescription =null , tint = SocialTheme.colors.iconPrimary)
 
     }

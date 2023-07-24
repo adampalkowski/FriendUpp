@@ -429,6 +429,18 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun likeActivityOnlyId(id: String, user: User): Flow<Response<Void?>> = flow {
         try {
             emit(Response.Loading)
+            // Create a Participant object
+            val participant = Participant(
+                id = user.id,
+                profile_picture = user.pictureUrl!!,
+                name = user.name!!,
+                username = user.username!!,
+                timestamp = getCurrentUTCTime()
+            )
+
+            // Add the participant data to the subcollection under the activity document
+            val participantsCollectionRef = activitiesRef.document(id).collection("participants")
+            participantsCollectionRef.document(participant.id).set(participant).await()
             val update = activitiesRef.document(id).update(
                 "participants_ids",
                 FieldValue.arrayUnion(user.id)
@@ -762,6 +774,16 @@ class ActivityRepositoryImpl @Inject constructor(
                 }
             }
             ref2.await()
+
+            val requestsRef = activitiesRef.document(id).collection("requests")
+
+            val ref3 = requestsRef.get().addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
+                    document.reference.delete()
+                }
+            }
+            ref3.await()
+
 
             val deletion1 = activitiesRef.document(id).delete().await()
             val deletion3 = chatCollectionsRef.document(id).delete().await()

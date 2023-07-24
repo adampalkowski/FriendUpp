@@ -28,6 +28,7 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
+import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.Settings.ChangeEmailDialog
 import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.di.ActivityViewModel
@@ -79,7 +80,8 @@ fun NavGraphBuilder.profileGraph(
     chatViewModel: ChatViewModel,
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
-    invitesViewModel: InvitesViewModel
+    invitesViewModel: InvitesViewModel,
+    requestViewModel:RequestViewModel
 ) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
@@ -372,7 +374,7 @@ fun NavGraphBuilder.profileGraph(
                             userViewModel = userViewModel,
                             homeViewModel = homeViewModel,
                             navController = navController,
-                            context = context
+                            context = context,requestViewModel=requestViewModel
                         )
                     })
                 var uri by remember { mutableStateOf<Uri?>(null) }
@@ -962,8 +964,8 @@ fun NavGraphBuilder.profileGraph(
                             userViewModel = userViewModel,
                             homeViewModel = homeViewModel,
                             navController = navController,
-                            context = context
-                        )
+                            context = context,
+                                    requestViewModel=requestViewModel)
                     }, user = user, activityViewModel = activityViewModel)
             }
 

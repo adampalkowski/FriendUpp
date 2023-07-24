@@ -31,6 +31,7 @@ import com.example.friendupp.Profile.ProfileInfo
 import com.example.friendupp.R
 import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -43,14 +44,26 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
     Card(
         modifier = Modifier
             .widthIn(min = 150.dp, max = 350.dp)
-            .padding(8.dp).clip( shape = RoundedCornerShape(16.dp))
-            , colors = CardDefaults.cardColors(contentColor = SocialTheme.colors.uiBackground, containerColor = SocialTheme.colors.uiBackground), elevation = CardDefaults.cardElevation(5.dp), shape = RoundedCornerShape(16.dp)
-    , onClick = {}) {
+            .padding(8.dp)
+            .clip(shape = RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(
+            contentColor = SocialTheme.colors.uiBackground,
+            containerColor = SocialTheme.colors.uiBackground
+        ),
+        elevation = CardDefaults.cardElevation(5.dp),
+        shape = RoundedCornerShape(16.dp),
+        onClick = {}) {
         Column() {
             Spacer(modifier = Modifier.height(8.dp))
-            TimeIndicator(time = activity.start_time,tags=activity.tags)
+            TimeIndicator(
+                time = activity.start_time,
+                tags = activity.tags,
+                requests = activity.requests.size,
+                participantConfirmation = activity.participantConfirmation,
+                isCreator = activity.creator_id==UserData.user!!.id
+            )
 
-            if(!activity.image.isNullOrEmpty()){
+            if (!activity.image.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AsyncImage(
@@ -58,7 +71,7 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                             .data(activity.image)
                             .crossfade(true)
                             .build(),
-                        contentDescription =null,
+                        contentDescription = null,
                         contentScale = ContentScale.FillWidth,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -72,18 +85,17 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                 description = activity.description,
                 creatorUsername = activity.creator_username,
                 creatorFullName = activity.creator_name,
-                creatorId=activity.creator_id,
+                creatorId = activity.creator_id,
                 profilePictureUrl = activity.creator_profile_picture,
-                goToProfile = {onEvent(MapEvent.GoToProfile(it))},
-                onExpand= {
+                goToProfile = { onEvent(MapEvent.GoToProfile(it)) },
+                onExpand = {
 
-                    onEvent(MapEvent.PreviewActivity(activity)) }
+                    onEvent(MapEvent.PreviewActivity(activity))
+                }
             )
 
         }
     }
-
-
 
 
 }

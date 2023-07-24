@@ -24,6 +24,7 @@ import com.example.friendupp.Navigation.sendNotification
 import com.example.friendupp.Profile.LocationStateSaver
 import com.example.friendupp.Profile.ProfileEvents
 import com.example.friendupp.R
+import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.Settings.*
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.UserViewModel
@@ -37,6 +38,7 @@ fun NavGraphBuilder.drawerGraph(
     activityViewModel: ActivityViewModel,
     homeViewModel: HomeViewModel,
     userViewModel: UserViewModel,
+    requestViewModel :RequestViewModel
 ) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 
@@ -120,7 +122,8 @@ fun NavGraphBuilder.drawerGraph(
                                 userViewModel = userViewModel,
                                 homeViewModel = homeViewModel,
                                 navController = navController,
-                                context = context
+                                context = context,
+                                requestViewModel = requestViewModel
                             )
 
                         },
@@ -138,7 +141,9 @@ fun NavGraphBuilder.drawerGraph(
                                 userViewModel = userViewModel,
                                 homeViewModel = homeViewModel,
                                 navController = navController,
-                                context = context
+                                context = context,
+                                requestViewModel = requestViewModel
+
 
                             )
 
@@ -167,8 +172,8 @@ fun NavGraphBuilder.drawerGraph(
                             userViewModel = userViewModel,
                             homeViewModel = homeViewModel,
                             navController = navController,
-                            context = context
-                        )
+                            context = context,
+                                    requestViewModel=requestViewModel)
 
                     }, activityViewModel)
                 }

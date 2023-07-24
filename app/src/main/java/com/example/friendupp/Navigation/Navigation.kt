@@ -30,6 +30,7 @@ import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Login.SplashScreen
 import com.example.friendupp.Map.MapViewModel
+import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.bottomBar.ActivityUi.rememberActivityState
 import com.example.friendupp.bottomBar.BottomBar
 import com.example.friendupp.bottomBar.BottomBarOption
@@ -76,7 +77,9 @@ fun NavigationComponent(
     homeViewModel: HomeViewModel,
     activityViewModel: ActivityViewModel,
     activeUserViewModel: ActiveUsersViewModel,
-    invitesViewModel: InvitesViewModel
+    invitesViewModel: InvitesViewModel,
+    requestViewModel:RequestViewModel
+
 ) {
 
     val scaffoldState = rememberScaffoldState()
@@ -288,7 +291,7 @@ fun NavigationComponent(
                     mapViewModel = mapViewModel,
                     activeUserViewModel = activeUserViewModel, invitesViewModel = invitesViewModel,
                     outputDirectory = outputDirectory,
-                    executor = executor,
+                    executor = executor,requestViewModel=requestViewModel
                 )
                 chatGraph(
                     navController, chatViewModel, currentChat, outputDirectory = outputDirectory,
@@ -302,7 +305,7 @@ fun NavigationComponent(
                     chatViewModel = chatViewModel,
                     authViewModel = authViewModel,
                     homeViewModel = homeViewModel,
-                    invitesViewModel=invitesViewModel
+                    invitesViewModel=invitesViewModel,requestViewModel=requestViewModel
                 )
                 createGraph(
                     navController,
@@ -318,7 +321,7 @@ fun NavigationComponent(
                     authViewModel = authViewModel
                 )
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel,userViewModel=userViewModel)
+                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel,userViewModel=userViewModel, requestViewModel = requestViewModel)
                 groupGraph(
                     navController, chatViewModel, groupState, outputDirectory = outputDirectory,
                     executor = executor, userViewModel = userViewModel

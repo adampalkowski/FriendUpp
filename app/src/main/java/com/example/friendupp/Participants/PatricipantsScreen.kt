@@ -62,33 +62,3 @@ fun ParticipantsScreen(modifier:Modifier,onEvent:(ParticipantsEvents)->Unit ,par
 
 }
 
-@Composable
-fun loadUsers(userViewModel: UserViewModel, users:MutableList<User>, moreUsers:MutableList<User>,gotUsers:MutableState<Boolean>){
-
-    userViewModel.activityUsersState.value.let { response->
-        when(response){
-            is com.example.friendupp.model.Response.Loading->{}
-            is com.example.friendupp.model.Response.Success->{
-                users.clear()
-                users.addAll(response.data)
-                userViewModel.clearUsers()
-                gotUsers.value=true
-            }
-            is com.example.friendupp.model.Response.Failure->{}
-            else->{}
-        }
-    }
-    userViewModel.moreActivityUsersState.value.let { response->
-        when(response){
-            is com.example.friendupp.model.Response.Loading->{}
-            is com.example.friendupp.model.Response.Success->{
-                moreUsers.clear()
-                moreUsers.addAll(response.data)
-                userViewModel.clearMoreUsers()
-            }
-            is com.example.friendupp.model.Response.Failure->{}
-            else->{}
-
-        }
-    }
-}

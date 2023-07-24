@@ -6,6 +6,7 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +14,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -107,6 +109,10 @@ class ParticipantsRepositoryImpl @Inject constructor(
     override suspend fun addParticipant(activityId:String,participant: Participant): Flow<Response<Void?>> = flow {
         try {
             val addition = activitiesRef.document(activityId).collection("participants").document(participant.id).set(participant).await1()
+            val update = activitiesRef.document(activityId).update(
+                "participants_ids",
+                FieldValue.arrayUnion(participant.id)
+            ).await()
             emit(Response.Success(addition))
         } catch (e: Exception) {
             // Adding invite failed
@@ -117,6 +123,10 @@ class ParticipantsRepositoryImpl @Inject constructor(
     override suspend fun removeParticipant(activityId:String,participant: Participant) :Flow<Response<Void?>> = flow {
         try {
             val deletion = activitiesRef.document(activityId).collection("participants").document(participant.id).delete().await1()
+            val update = activitiesRef.document(activityId).update(
+                "participants_ids",
+                FieldValue.arrayRemove(participant.id)
+            ).await()
             emit(Response.Success(deletion))
         } catch (e: Exception) {
             // Removing invite failed

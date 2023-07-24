@@ -5,17 +5,23 @@ import android.content.res.Resources
 import android.util.Log
 import androidx.navigation.NavController
 import com.example.friendupp.Home.HomeViewModel
+import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.Navigation.sendNotification
 import com.example.friendupp.R
+import com.example.friendupp.Request.Request
+import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.UserViewModel
+import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 
 
- fun handleActivityEvents(event: ActivityEvents,navController:NavController,activityViewModel:ActivityViewModel
-                        ,userViewModel:UserViewModel,homeViewModel:HomeViewModel,context: Context
- ) {
+fun handleActivityEvents(
+    event: ActivityEvents, navController: NavController, activityViewModel: ActivityViewModel,
+    userViewModel: UserViewModel, homeViewModel: HomeViewModel, context: Context,
+    requestViewModel: RequestViewModel,
+) {
     when (event) {
 
         is ActivityEvents.GoToProfile -> {
@@ -36,7 +42,7 @@ import com.example.friendupp.model.UserData
                         receiver = event.activity.creator_id,
                         picture = UserData.user!!.pictureUrl,
                         message = "${UserData.user?.username} joined your activity",
-                        title =context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
+                        title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
                         username = "",
                         id = event.activity.id
                     )
@@ -86,10 +92,37 @@ import com.example.friendupp.model.UserData
             homeViewModel.setExpandedActivity(event.activity)
             navController.navigate("ActivityPreview")
         }
-        is ActivityEvents.GoBack->{
+        is ActivityEvents.GoBack -> {
             navController.popBackStack()
         }
-        else->{}
+        is ActivityEvents.CreateRequest -> {
+            val user =UserData.user
+            user?.let {
+                val request = Request(
+                    id = user.id,
+                    profile_picture = user.pictureUrl.toString(),
+                    username = user.username.toString(),
+                    name = user.name.toString(),
+                    timestamp = getCurrentUTCTime()
+                )
+                requestViewModel.createRequest(event.activity.id,request)
+            }
+
+        }
+        is ActivityEvents.RemoveRequest -> {
+            val user =UserData.user
+            user?.let {
+                val request = Request(
+                    id = user.id,
+                    profile_picture = user.pictureUrl.toString(),
+                    username = user.username.toString(),
+                    name = user.name.toString(),
+                    timestamp = getCurrentUTCTime()
+                )
+                requestViewModel.removeRequest(event.activity.id,request)
+            }
+        }
+        else -> {}
     }
 }
 

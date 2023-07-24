@@ -5,6 +5,7 @@ import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,6 +13,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -107,6 +109,10 @@ class RequestRepositoryImpl @Inject constructor(
 
             val addition = activitiesRef.document(activityId).collection("requests").document(request.id)
                 .set(request).await1()
+            val update = activitiesRef.document(activityId).update(
+                "requests_ids",
+                FieldValue.arrayUnion(request.id)
+            ).await()
             emit(Response.Success(addition))
         } catch (e: Exception) {
             // Accepting request failed
@@ -119,6 +125,10 @@ class RequestRepositoryImpl @Inject constructor(
         try {
             val deletion =
                 activitiesRef.document(activityId).collection("requests").document(request.id).delete().await1()
+            val update = activitiesRef.document(activityId).update(
+                "requests_ids",
+                FieldValue.arrayRemove(request.id)
+            ).await()
             emit(Response.Success(deletion))
         } catch (e: Exception) {
             // Rejecting request failed

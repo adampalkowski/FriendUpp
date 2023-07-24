@@ -30,6 +30,7 @@ import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
+import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.di.*
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
     private val activeUserViewModel by viewModels<ActiveUsersViewModel>()
     private val invitesViewModel by viewModels<InvitesViewModel>()
     private val activityViewModel by viewModels<ActivityViewModel>()
+    private val requestViewModel by viewModels<RequestViewModel>()
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
     private var notifactionLiskSet : MutableState<Boolean> = mutableStateOf(false)
@@ -151,7 +153,8 @@ class MainActivity : ComponentActivity() {
                     homeViewModel = homeViewModel,
                     activityViewModel = activityViewModel,
                     activeUserViewModel=activeUserViewModel,
-                    invitesViewModel=invitesViewModel
+                    invitesViewModel=invitesViewModel,
+                    requestViewModel=requestViewModel
                 )
             }
 

@@ -41,7 +41,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 sealed class ActivityEvents {
-    object   GoBack: ActivityEvents()
+    object GoBack : ActivityEvents()
     class Expand(val activity: Activity) : ActivityEvents()
     class Join(val activity: Activity) : ActivityEvents()
     class RemoveRequest(val activity: Activity) : ActivityEvents()
@@ -66,10 +66,10 @@ fun activityCard(
     creatorId: String,
     expandButton: Boolean = true,
     onExpand: () -> Unit,
-    OpenSettings: () -> Unit={},
+    OpenSettings: () -> Unit = {},
     goToProfile: (String) -> Unit,
-    confirmParticipation : Boolean = true,
-    ) {
+    confirmParticipation: Boolean = true,
+) {
     Column(Modifier.background(SocialTheme.colors.uiBackground)) {
         Box(
             modifier = Modifier
@@ -121,8 +121,8 @@ fun activityCard(
                             }
                         }
                     }
-                    if(confirmParticipation){
-                        IconButton(onClick = OpenSettings) {
+                    if (confirmParticipation) {
+                        IconButton(onClick = onExpand) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_more),
                                 contentDescription = null,
@@ -130,7 +130,7 @@ fun activityCard(
                             )
 
                         }
-                    }else{
+                    } else {
                         if (expandButton) {
                             IconButton(onClick = onExpand) {
                                 Icon(
@@ -187,7 +187,14 @@ fun activityItem(
             .padding(top = 0.dp)
     ) {
         Column() {
-            TimeIndicator(time = activity.start_time, tags = activity.tags)
+            TimeIndicator(
+                time = activity.start_time,
+                tags = activity.tags,
+                requests = activity.requests_ids.size,
+                participantConfirmation = activity.participantConfirmation,
+                isCreator = activity.creator_id==UserData.user!!.id
+
+            )
 
             if (!activity.image.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(6.dp))
@@ -224,13 +231,17 @@ fun activityItem(
                 },
                 confirmParticipation = activity.participantConfirmation
             )
-            var joined = activity.participants_ids.contains(UserData.user!!.id)
+            var joined =
+                activity.participants_ids.contains(UserData.user!!.id) || activity.requests_ids.contains(
+                    UserData.user!!.id
+                )
             var switch by remember { mutableStateOf(joined) }
             var bookmarked = activity.bookmarked.contains(UserData.user!!.id)
             var bookmark by remember { mutableStateOf(bookmarked) }
 
 
-            buttonsRow(modifier = Modifier,
+            buttonsRow(
+                modifier = Modifier,
                 onEvent = onEvent,
                 id = activity.id,
                 joined = switch,
@@ -327,6 +338,9 @@ fun TimeIndicator(
     tags: ArrayList<String>,
     color: Color = SocialTheme.colors.uiBorder,
     Divider: Boolean = true,
+    participantConfirmation: Boolean,
+    isCreator: Boolean,
+    requests: Int,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (Divider) {
@@ -353,6 +367,31 @@ fun TimeIndicator(
         )
         Spacer(modifier = Modifier.weight(1f))
         TagDivider(tags = tags)
+        if (participantConfirmation) {
+            if (isCreator) {
+                if (requests > 0) {
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(SocialTheme.colors.textInteractive)
+                            .padding(4.dp), contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = requests.toString(),
+                            style = TextStyle(
+                                fontFamily = Lexend,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+
+        }
+
         Spacer(modifier = Modifier.width(12.dp))
     }
 }

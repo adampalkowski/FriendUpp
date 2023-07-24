@@ -53,7 +53,7 @@ class RequestViewModel @Inject constructor(
     }
 
     // Function to fetch more participants for an activity
-    fun getMoreParticipants(activityId: String) {
+    fun getMoreRequests(activityId: String) {
         viewModelScope.launch {
             requestRepo.getMoreRequests(activityId).collect { response ->
                 when (response) {
@@ -73,7 +73,7 @@ class RequestViewModel @Inject constructor(
         }
     }
     // Function to accept a request and add the participant to the activity
-    fun acceptRequest(activityId: String, request: Request) {
+    fun createRequest(activityId: String, request: Request) {
         viewModelScope.launch {
             requestRepo.createRequest(activityId, request).collect { response ->
                 when (response) {
@@ -91,7 +91,7 @@ class RequestViewModel @Inject constructor(
     }
 
     // Function to reject a request
-    fun rejectRequest(activityId: String, request: Request) {
+    fun removeRequest(activityId: String, request: Request) {
         viewModelScope.launch {
             requestRepo.removeRequest(activityId, request).collect { response ->
                 when (response) {

@@ -41,6 +41,9 @@ import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.Participants.ParticipantsScreen
 import com.example.friendupp.ParticipantsViewModel
 import com.example.friendupp.R
+import com.example.friendupp.Request.RequestViewModel
+import com.example.friendupp.Request.RequestsEvents
+import com.example.friendupp.Request.RequestsScreen
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
 import com.example.friendupp.bottomBar.ActivityUi.ActivityPreview
@@ -52,6 +55,7 @@ import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Chat
+import com.example.friendupp.model.Participant
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.SocialTheme
@@ -80,11 +84,108 @@ fun NavGraphBuilder.mainGraph(
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
     invitesViewModel: InvitesViewModel,
-    executor:Executor,
-    outputDirectory: File
+    executor: Executor,
+    outputDirectory: File,
+    requestViewModel: RequestViewModel,
 ) {
     navigation(startDestination = "Home", route = "Main") {
+        composable(
+            "Requests/{activityId}",
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            }
+        ) { backStackEntry ->
 
+
+            val requestViewModel: RequestViewModel = hiltViewModel()
+
+            val participantsViewModel: ParticipantsViewModel = hiltViewModel()
+            val activityId = backStackEntry.arguments?.getString("activityId")
+            var called by remember { mutableStateOf(true) }
+
+            val requestsList = requestViewModel.getRequestsList()
+            val requestsLoading = requestViewModel.requestsLoading.value
+            if (activityId.isNullOrEmpty()) {
+                navController.popBackStack()
+            } else {
+                LaunchedEffect(called) {
+                    if (called) {
+                        requestViewModel.getRequests(activityId)
+                        called = false
+                    }
+                }
+                RequestsScreen(
+                    modifier = Modifier.safeDrawingPadding(),
+                    onEvent = { event ->
+                        when (event) {
+                            is RequestsEvents.GoBack -> {
+                                navController.popBackStack()
+                            }
+                            is RequestsEvents.GoToUserProfile -> {
+                                navController.navigate("ProfileDisplay/" + event.id)
+                            }
+                            is RequestsEvents.GetMoreParticipants -> {
+                                requestViewModel.getMoreRequests(activityId)
+                            }
+                            is RequestsEvents.AcceptRequest -> {
+                                val request = event.request
+                                requestViewModel.removeRequest(activityId, request)
+                                val participant = Participant(
+                                    id = request.id,
+                                    name = request.name,
+                                    username = request.username,
+                                    profile_picture = request.profile_picture,
+                                    timestamp = request.timestamp
+                                )
+                                participantsViewModel.addParticipant(activityId, participant)
+                            }
+                        }
+                    },
+                    requestsList, requestsLoading
+                )
+
+            }
+
+
+        }
         composable(
             "Participants/{activityId}",
             arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
@@ -131,13 +232,13 @@ fun NavGraphBuilder.mainGraph(
         ) { backStackEntry ->
 
 
-            val participantsViewModel:ParticipantsViewModel= hiltViewModel()
+            val participantsViewModel: ParticipantsViewModel = hiltViewModel()
 
             val activityId = backStackEntry.arguments?.getString("activityId")
             var called by remember { mutableStateOf(true) }
 
-            val participantsList= participantsViewModel.getParticipantsList()
-            val participantsLoading= participantsViewModel.participantsLoading.value
+            val participantsList = participantsViewModel.getParticipantsList()
+            val participantsLoading = participantsViewModel.participantsLoading.value
             if (activityId.isNullOrEmpty()) {
                 navController.popBackStack()
             } else {
@@ -157,12 +258,12 @@ fun NavGraphBuilder.mainGraph(
                             is ParticipantsEvents.GoToUserProfile -> {
                                 navController.navigate("ProfileDisplay/" + event.id)
                             }
-                            is ParticipantsEvents.GetMoreParticipants->{
+                            is ParticipantsEvents.GetMoreParticipants -> {
                                 participantsViewModel.getMoreParticipants(activityId)
                             }
                         }
                     },
-                    participantsList,participantsLoading
+                    participantsList, participantsLoading
                 )
 
             }
@@ -381,14 +482,15 @@ fun NavGraphBuilder.mainGraph(
             val context = LocalContext.current
             HomeScreen(
                 modifier = Modifier.safeDrawingPadding(),
-                activityEvents = {event->
+                activityEvents = { event ->
                     handleActivityEvents(
                         event = event,
                         activityViewModel = activityViewModel,
                         userViewModel = userViewModel,
                         homeViewModel = homeViewModel,
                         navController = navController,
-                        context = context
+                        context = context,
+                        requestViewModel = requestViewModel
                     )
                 },
                 onEvent = { event ->
@@ -529,6 +631,9 @@ fun NavGraphBuilder.mainGraph(
                     }
                     is ActivityPreviewEvents.GoToActivityParticipants -> {
                         navController.navigate("Participants/" + event.id)
+                    }
+                    is ActivityPreviewEvents.GoToActivityRequests -> {
+                        navController.navigate("Requests/" + event.id)
                     }
                     is ActivityPreviewEvents.ShareActivityLink -> {
                         //CREATE A DYNAMINC LINK TO DOMAIN
@@ -767,7 +872,7 @@ fun NavGraphBuilder.mainGraph(
                             openEditDescription = true
                         }
                         is CreatorSettingsEvent.ChangeImage -> {
-                            navController.navigate("Camera/"+activityId!!)
+                            navController.navigate("Camera/" + activityId!!)
                         }
                         else -> {}
                     }
@@ -870,8 +975,8 @@ fun NavGraphBuilder.mainGraph(
                                     }
                                     homeViewModel.expandedActivity.value = expandedActivity.copy(
                                         participants_ids = participants_ids,
-                                        participants_usernames=participants_usernames,
-                                        participants_profile_pictures=participants_profile_pictures
+                                        participants_usernames = participants_usernames,
+                                        participants_profile_pictures = participants_profile_pictures
 
                                     )
                                 }
@@ -959,18 +1064,21 @@ fun NavGraphBuilder.mainGraph(
             }
         ) { backStackEntry ->
             val activityId = backStackEntry.arguments?.getString("activityId")
-            if(UserData
-                    .user!=null){
+            if (UserData
+                    .user != null
+            ) {
                 LaunchedEffect(Unit) {
-                    Log.d("FriendsViewModel","Get friends called")
-                    userViewModel.getFriends(UserData
-                        .user!!.id)
+                    Log.d("FriendsViewModel", "Get friends called")
+                    userViewModel.getFriends(
+                        UserData
+                            .user!!.id
+                    )
                 }
-            }else{
+            } else {
                 navController.popBackStack()
             }
 
-            var friendList= userViewModel.getFriendsList()
+            var friendList = userViewModel.getFriendsList()
             var isLoading = userViewModel.friendsLoading.value
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
@@ -1010,9 +1118,9 @@ fun NavGraphBuilder.mainGraph(
                                 }
                             }
                         }
-                    },friendList=friendList,isLoading=isLoading,onEvent={
-                        when(it){
-                            is FriendPickerEvents.GetMoreFriends->{
+                    }, friendList = friendList, isLoading = isLoading, onEvent = {
+                        when (it) {
+                            is FriendPickerEvents.GetMoreFriends -> {
                                 userViewModel.getMoreFriends(UserData.user!!.id)
 
                             }
@@ -1239,7 +1347,7 @@ fun NavGraphBuilder.mainGraph(
                                 reports = 0,
                                 blocked = false,
                                 user_one_id = UserData.user!!.id.toString(),
-                                user_two_id =event.invite.senderId.toString(),
+                                user_two_id = event.invite.senderId.toString(),
                             )
                         )
 
@@ -1262,12 +1370,12 @@ fun NavGraphBuilder.mainGraph(
                             //check if user is me then go to profiel
                             if (it.data.id == UserData.user!!.id) {
                                 navController.navigate("Profile")
-                            }else if(it.data.blocked_ids.contains(UserData.user!!.id)){
+                            } else if (it.data.blocked_ids.contains(UserData.user!!.id)) {
                                 Toast.makeText(
                                     LocalContext.current,
                                     "Failed to find user with given username", Toast.LENGTH_LONG
                                 ).show()
-                            }else{
+                            } else {
                                 navController.navigate("ProfileDisplay/" + it.data.id.toString())
 
                             }
