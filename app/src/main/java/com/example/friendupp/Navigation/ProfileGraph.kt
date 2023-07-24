@@ -1,6 +1,5 @@
 package com.example.friendupp.Navigation
 
-import android.content.res.Resources
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -22,13 +21,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.ActivityPreview.handleActivityEvents
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
-import com.example.friendupp.Search.invitesLoading
 import com.example.friendupp.Settings.ChangeEmailDialog
 import com.example.friendupp.Settings.ChangePasswordDialog
 import com.example.friendupp.di.ActivityViewModel
@@ -39,7 +38,6 @@ import com.example.friendupp.model.*
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
-import com.google.firebase.Timestamp
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
@@ -348,18 +346,7 @@ fun NavGraphBuilder.profileGraph(
 
 
                             }
-                            is ProfileEvents.Bookmark -> {
-                                activityViewModel.bookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
-                            is ProfileEvents.UnBookmark -> {
-                                activityViewModel.unBookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
+
                             is ProfileEvents.OpenCamera -> {
                                 navController.navigate("CameraProfile")
                             }
@@ -371,53 +358,23 @@ fun NavGraphBuilder.profileGraph(
                                 navController.navigate("ChatItem/" + event.id)
 
                             }
-                            is ProfileEvents.JoinActivity -> {
 
-                                if(event.activity.participants_ids.size<6){
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                }else{
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-
-                                }
-                            }
-                            is ProfileEvents.LeaveActivity -> {
-                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivity(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }else{
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }
-
-                            }
-                            is ProfileEvents.ExpandActivity -> {
-                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                                homeViewModel.setExpandedActivity(event.activityData)
-                                navController.navigate("ActivityPreview")
-                            }
                         }
 
                     },
                     onClick = { navController.navigate("EditProfile") },
                     user = user,
                     activityViewModel = activityViewModel
-                )
+                , activityEvents = {event->
+                        handleActivityEvents(
+                            event = event,
+                            activityViewModel = activityViewModel,
+                            userViewModel = userViewModel,
+                            homeViewModel = homeViewModel,
+                            navController = navController,
+                            context = context
+                        )
+                    })
                 var uri by remember { mutableStateOf<Uri?>(null) }
                 val uriFlow = userViewModel.uri.collectAsState()
 
@@ -904,13 +861,7 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileDisplayEvents.GoToSearch -> {
                                 navController.navigate("Search")
                             }
-                            is ProfileDisplayEvents.Bookmark -> {
-                                activityViewModel.bookMarkActivity(event.id,UserData.user!!.id)
-                            }
-                            is ProfileDisplayEvents.UnBookmark -> {
-                              activityViewModel.unBookMarkActivity(event.id,UserData.user!!.id)
 
-                            }
                             is ProfileDisplayEvents.GoToFriendList -> {
                                 navController.navigate("FriendList/"+event.id)
                             }
@@ -993,67 +944,26 @@ fun NavGraphBuilder.profileGraph(
                             is ProfileDisplayEvents.GoToChat -> {
                                 navController.navigate("ChatItem/" + event.chat_id)
                             }
-                            is ProfileDisplayEvents.JoinActivity -> {
 
-                                if(event.activity.participants_ids.size<6){
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
-                                            , title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
-                                    }
-
-                                }else{
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
-                                            , title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-
-                                }
-                            }
-                            is ProfileDisplayEvents.LeaveActivity -> {
-                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivity(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }else{
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }
-
-                            }
                             is ProfileDisplayEvents.OpenChat -> {
                                 navController.navigate("ChatItem/" + event.id)
 
                             }
 
-                            is ProfileDisplayEvents.ExpandActivity -> {
-                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                                homeViewModel.setExpandedActivity(event.activityData)
-                                navController.navigate("ActivityPreview")
-                            }
+
                             is ProfileDisplayEvents.GoToProfile -> {
                                 navController.navigate("ProfileDisplay/" + event.id)
                             }
                         }
+                    }, activityEvents = {event->
+                        handleActivityEvents(
+                            event = event,
+                            activityViewModel = activityViewModel,
+                            userViewModel = userViewModel,
+                            homeViewModel = homeViewModel,
+                            navController = navController,
+                            context = context
+                        )
                     }, user = user, activityViewModel = activityViewModel)
             }
 

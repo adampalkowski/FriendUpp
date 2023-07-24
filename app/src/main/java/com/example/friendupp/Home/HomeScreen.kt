@@ -71,11 +71,6 @@ import java.time.format.DateTimeFormatter
 sealed class HomeEvents {
     object OpenDrawer : HomeEvents()
     object CreateLive : HomeEvents()
-    class ExpandActivity(val activityData: Activity) : HomeEvents()
-    class JoinActivity(val activity: Activity) : HomeEvents()
-    class Bookmark(val id: String) : HomeEvents()
-    class UnBookmark(val id: String) : HomeEvents()
-    class LeaveActivity(val activity: Activity) : HomeEvents()
     class OpenChat(val id: String) : HomeEvents()
     class GoToProfile(val id: String) : HomeEvents()
     class OpenLiveUser(val id: String) : HomeEvents()
@@ -89,6 +84,7 @@ var TAG ="LOADACTIVITIESDEBUG"
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onEvent: (HomeEvents) -> Unit,
+    activityEvents: (ActivityEvents) -> Unit,
     activityViewModel: ActivityViewModel,
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
@@ -284,13 +280,7 @@ fun HomeScreen(
                                 onClick = {
                                     // Handle click event
                                 },
-                                onEvent = { event ->
-                                    handleActivityEvent(event,onEvent=onEvent)
-
-                                },
-                                deleteActivity = {
-                                    Log.d(TAG,"DELETE CAVITIVY")
-                                }
+                                onEvent = activityEvents
                             )
                         }
 
@@ -300,9 +290,8 @@ fun HomeScreen(
                                 onClick = {
                                     // Handle click event
                                 },
-                                onEvent = { event ->
-                                    handleActivityEvent(event,onEvent=onEvent)
-                                }
+                                onEvent = activityEvents
+
                             )
                         }
                         item {
@@ -334,9 +323,7 @@ fun HomeScreen(
                                 onClick = {
                                     // Handle click event
                                 },
-                                onEvent = { event ->
-                                    handleActivityEvent(event,onEvent=onEvent)
-                                }
+                                onEvent = activityEvents
                             )
                         }
 
@@ -346,9 +333,7 @@ fun HomeScreen(
                                 onClick = {
                                     // Handle click event
                                 },
-                                onEvent = { event ->
-                                    handleActivityEvent(event,onEvent=onEvent)
-                                }
+                                onEvent = activityEvents
                             )
                         }
                         item {
@@ -713,7 +698,8 @@ fun buttonsRow(
     profilePictures: HashMap<String, String>,
     bookmarked:Boolean=false,
     bookmarkedChanged:(Boolean)->Unit, activity: Activity,
-    chatDisabled:Boolean
+    chatDisabled:Boolean,
+    confirmParticipation:Boolean
 ) {
 
     val bookmarkColor: Color by animateColorAsState(
@@ -750,18 +736,34 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
-                if (joined) {
-                    onEvent(ActivityEvents.Leave(activity))
-                    joinChanged(false)
+            if(confirmParticipation){
+                eButtonSimple(icon = R.drawable.ic_confirm_participation, onClick = {
+                    if (joined) {
+                        onEvent(ActivityEvents.RemoveRequest(activity))
+                        joinChanged(false)
 
-                } else {
-                    onEvent(ActivityEvents.Join(activity))
-                    joinChanged(true)
+                    } else {
+                        onEvent(ActivityEvents.CreateRequest(activity))
+                        joinChanged(true)
 
-                }
+                    }
 
-            }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_check_filled)
+                }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_confirm_participation)
+            }else{
+                eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
+                    if (joined) {
+                        onEvent(ActivityEvents.Leave(activity))
+                        joinChanged(false)
+
+                    } else {
+                        onEvent(ActivityEvents.Join(activity))
+                        joinChanged(true)
+
+                    }
+
+                }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_check_filled)
+            }
+
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
@@ -771,19 +773,24 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            if(!chatDisabled){
-                eButtonSimple(
-                    icon = R.drawable.ic_chat_300,
-                    onClick = { onEvent(ActivityEvents.OpenChat(id)) })
-                Spacer(
-                    modifier = Modifier
-                        .width(12.dp)
-                        .height(
+            if(confirmParticipation){
 
-                            0.5.dp
-                        )
-                        .background(color = bgColor)
-                )
+            }else{
+                if(!chatDisabled){
+                    eButtonSimple(
+                        icon = R.drawable.ic_chat_300,
+                        onClick = { onEvent(ActivityEvents.OpenChat(id)) })
+                    Spacer(
+                        modifier = Modifier
+                            .width(12.dp)
+                            .height(
+
+                                0.5.dp
+                            )
+                            .background(color = bgColor)
+                    )
+                }
+
             }
 
             eButtonSimple(
@@ -812,23 +819,28 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
-                profilePictures.values.toList().take(4).reversed().forEachIndexed { index, it ->
-                    AsyncImage(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .zIndex(profilePictures.values.toList().size - index.toFloat()),
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(it)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.ic_profile_300),
-                        contentDescription = "participant picture",
-                        contentScale = ContentScale.Crop,
+            if(confirmParticipation){
 
-                        )
+            }else{
+                Row(horizontalArrangement = Arrangement.spacedBy((-10).dp)) {
+                    profilePictures.values.toList().take(4).reversed().forEachIndexed { index, it ->
+                        AsyncImage(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .zIndex(profilePictures.values.toList().size - index.toFloat()),
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(it)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.ic_profile_300),
+                            contentDescription = "participant picture",
+                            contentScale = ContentScale.Crop,
+
+                            )
+                    }
                 }
+
             }
 
 
@@ -968,29 +980,3 @@ fun eButtonSimpleBlue(onClick: () -> Unit, icon: Int, modifier: Modifier = Modif
     }
 }
 
-private fun handleActivityEvent(event: ActivityEvents, onEvent: (HomeEvents) -> Unit) {
-    when (event) {
-        is ActivityEvents.Expand -> {
-            onEvent(HomeEvents.ExpandActivity(event.activity))
-        }
-        is ActivityEvents.Join -> {
-            onEvent(HomeEvents.JoinActivity(event.activity))
-        }
-        is ActivityEvents.Leave -> {
-            onEvent(HomeEvents.LeaveActivity(event.activity))
-        }
-        is ActivityEvents.OpenChat -> {
-            onEvent(HomeEvents.OpenChat(event.id))
-        }
-        is ActivityEvents.GoToProfile->{
-            onEvent(HomeEvents.GoToProfile(event.id))
-        }
-        is ActivityEvents.Bookmark->{
-            onEvent(HomeEvents.Bookmark(event.id))
-        }
-        is ActivityEvents.UnBookmark->{
-            onEvent(HomeEvents.UnBookmark(event.id))
-        }
-
-    }
-}

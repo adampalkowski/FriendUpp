@@ -399,7 +399,7 @@ fun Customize(
 
         CustomizeItem(
             title = "Participant Confirmation",
-            info = "Require confirmation from the activity creator for users who want to join the activity.",
+            info = "Require confirmation from the activity creator for users who want to join the activity. Users who are not confirmed won't be able to see location, chat and other participants.",
             switchValue = participantConfirmation,
             onSwitchValueChanged = onParticipantConfirmationChanged
         )

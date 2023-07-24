@@ -12,13 +12,14 @@ import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Profile.loadActivitiesHistory
 import com.example.friendupp.Profile.loadMoreActivitiesHistory
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 
 @Composable
-fun BookmarkedScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun BookmarkedScreen(modifier: Modifier,onEvent:(ActivityEvents)->Unit,activityViewModel: ActivityViewModel){
     //LOAD IN PROFILE ACTIVITIES
     var bookmarkedActivitiesExist= remember { mutableStateOf(false) }
     val bookmarked = remember { mutableStateListOf<Activity>() }
@@ -29,7 +30,7 @@ fun BookmarkedScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,
 
     Column(modifier=modifier) {
 
-        ScreenHeading(title = "Bookmarked activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
+        ScreenHeading(title = "Bookmarked activities", backButton = true, onBack = {onEvent(ActivityEvents.GoBack)}) {}
         LazyColumn{
             items(bookmarked) { activity ->
                 activityItem(
@@ -37,9 +38,7 @@ fun BookmarkedScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
-                    }
+                    onEvent = onEvent
                 )
             }
 
@@ -49,9 +48,8 @@ fun BookmarkedScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
-                    }
+                    onEvent = onEvent
+
                 )
             }
             item {

@@ -40,14 +40,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-sealed class ActivityEvents{
-    class Expand(val activity:Activity): ActivityEvents()
-    class Join(val activity: Activity ): ActivityEvents()
-    class Leave(val activity: Activity ): ActivityEvents()
-    class Bookmark(val id :String): ActivityEvents()
-    class UnBookmark(val id :String): ActivityEvents()
-    class OpenChat(val id :String): ActivityEvents()
-    class GoToProfile(val id :String): ActivityEvents()
+sealed class ActivityEvents {
+    object   GoBack: ActivityEvents()
+    class Expand(val activity: Activity) : ActivityEvents()
+    class Join(val activity: Activity) : ActivityEvents()
+    class RemoveRequest(val activity: Activity) : ActivityEvents()
+    class CreateRequest(val activity: Activity) : ActivityEvents()
+    class Leave(val activity: Activity) : ActivityEvents()
+    class Bookmark(val id: String) : ActivityEvents()
+    class UnBookmark(val id: String) : ActivityEvents()
+    class OpenChat(val id: String) : ActivityEvents()
+    class GoToProfile(val id: String) : ActivityEvents()
+    class OpenSettings(val id: String) : ActivityEvents()
 }
 
 
@@ -60,91 +64,112 @@ fun activityCard(
     creatorFullName: String,
     profilePictureUrl: String,
     creatorId: String,
-    expandButton:Boolean=true,
-    onExpand:()->Unit,
-    goToProfile:(String)->Unit,
-
-) {
-        Column(Modifier.background(SocialTheme.colors.uiBackground)) {
-            Box(modifier = Modifier
+    expandButton: Boolean = true,
+    onExpand: () -> Unit,
+    OpenSettings: () -> Unit={},
+    goToProfile: (String) -> Unit,
+    confirmParticipation : Boolean = true,
+    ) {
+    Column(Modifier.background(SocialTheme.colors.uiBackground)) {
+        Box(
+            modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp, top = 6.dp)) {
-                Column(modifier = Modifier, horizontalAlignment = Alignment.Start) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier =  Modifier.weight(1f)){
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable(
+                .padding(bottom = 12.dp, top = 6.dp)
+        ) {
+            Column(modifier = Modifier, horizontalAlignment = Alignment.Start) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = rememberRipple(color = Color.White),
-                                onClick ={goToProfile(creatorId.toString()) })) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(profilePictureUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                    placeholder = painterResource(R.drawable.ic_launcher_background),
-                                    contentDescription = "stringResource(R.string.description)",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
+                                onClick = { goToProfile(creatorId.toString()) })
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(profilePictureUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                placeholder = painterResource(R.drawable.ic_launcher_background),
+                                contentDescription = "stringResource(R.string.description)",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column() {
+                                Text(
+                                    text = creatorFullName,
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = Lexend,
+                                        color = SocialTheme.colors.textPrimary
+                                    )
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column() {
-                                    Text(
-                                        text = creatorFullName,
-                                        style = TextStyle(
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            fontFamily = Lexend,
-                                            color = SocialTheme.colors.textPrimary
-                                        )
+                                Text(
+                                    text = creatorUsername,
+                                    style = TextStyle(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.ExtraLight,
+                                        fontFamily = Lexend,
+                                        color = SocialTheme.colors.textSecondary
                                     )
-                                    Text(
-                                        text = creatorUsername,
-                                        style = TextStyle(
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.ExtraLight,
-                                            fontFamily = Lexend,
-                                            color = SocialTheme.colors.textSecondary
-                                        )
-                                    )
-                                }
+                                )
                             }
                         }
+                    }
+                    if(confirmParticipation){
+                        IconButton(onClick = OpenSettings) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_more),
+                                contentDescription = null,
+                                tint = SocialTheme.colors.iconPrimary.copy(0.5f)
+                            )
 
-                        if(expandButton){
+                        }
+                    }else{
+                        if (expandButton) {
                             IconButton(onClick = onExpand) {
-                                Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription =null,tint=SocialTheme.colors.iconPrimary.copy(0.5f))
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_expand),
+                                    contentDescription = null,
+                                    tint = SocialTheme.colors.iconPrimary.copy(0.5f)
+                                )
 
                             }
                         }
-
-                        Spacer(modifier = Modifier.width(24.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = title,
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = Lexend,
-                            color = SocialTheme.colors.textPrimary
-                        )
-                    )
-                    Text(
-                        text = description,
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Light,
-                            fontFamily = Lexend,
-                            color = SocialTheme.colors.textSecondary
-                        )
-                    )
+
+                    Spacer(modifier = Modifier.width(24.dp))
                 }
 
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = Lexend,
+                        color = SocialTheme.colors.textPrimary
+                    )
+                )
+                Text(
+                    text = description,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Light,
+                        fontFamily = Lexend,
+                        color = SocialTheme.colors.textSecondary
+                    )
+                )
             }
+
         }
+    }
 
 }
 
@@ -152,64 +177,77 @@ fun activityCard(
 @Composable
 fun activityItem(
     activity: Activity,
-    onClick:()->Unit,
-    onEvent:(ActivityEvents)->Unit,
-    deleteActivity:()->Unit={}
+    onClick: () -> Unit,
+    onEvent: (ActivityEvents) -> Unit,
 ) {
-        val context = LocalContext.current
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 0.dp)
-        ) {
-            Column() {
-                TimeIndicator(time = activity.start_time,tags=activity.tags)
+    val context = LocalContext.current
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp)
+    ) {
+        Column() {
+            TimeIndicator(time = activity.start_time, tags = activity.tags)
 
-                if(!activity.image.isNullOrEmpty()){
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(activity.image)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription =null,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp))
-                                .heightIn(48.dp, 100.dp)
-                        )
-                    }
+            if (!activity.image.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(activity.image)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(topEnd = 24.dp, topStart = 24.dp))
+                            .heightIn(48.dp, 100.dp)
+                    )
                 }
-                activityCard(
-                    title = activity.title,
-                    description = activity.description,
-                    creatorUsername = activity.creator_username,
-                    creatorFullName = activity.creator_name,
-                    creatorId=activity.creator_id,
-                    profilePictureUrl = activity.creator_profile_picture,
-                    goToProfile = {onEvent(ActivityEvents.GoToProfile(it))},
-                    onExpand= {
-
-                        Log.d("ACTIVITYDEBUG","LAUNCH ")
-                       onEvent( ActivityEvents.Expand(activity)) }
-                )
-                var joined=activity.participants_ids.contains(UserData.user!!.id)
-                var switch by remember { mutableStateOf(joined) }
-                var bookmarked=activity.bookmarked.contains(UserData.user!!.id)
-                var bookmark by remember { mutableStateOf(bookmarked) }
-
-
-                buttonsRow(modifier = Modifier,onEvent=onEvent,id=activity.id,
-                    joined=switch,joinChanged={it->
-                    switch=it
-                },activity.participants_profile_pictures, bookmarked =bookmark, bookmarkedChanged = {bookmark=it},activity=activity,chatDisabled=activity.disableChat)
-
             }
-        }
-}
+            activityCard(
+                title = activity.title,
+                description = activity.description,
+                creatorUsername = activity.creator_username,
+                creatorFullName = activity.creator_name,
+                creatorId = activity.creator_id,
+                profilePictureUrl = activity.creator_profile_picture,
+                goToProfile = { onEvent(ActivityEvents.GoToProfile(it)) },
+                onExpand = {
+                    Log.d("ACTIVITYDEBUG", "LAUNCH ")
+                    onEvent(ActivityEvents.Expand(activity))
+                },
+                OpenSettings = {
 
+                    Log.d("ACTIVITYDEBUG", "LAUNCH ")
+                },
+                confirmParticipation = activity.participantConfirmation
+            )
+            var joined = activity.participants_ids.contains(UserData.user!!.id)
+            var switch by remember { mutableStateOf(joined) }
+            var bookmarked = activity.bookmarked.contains(UserData.user!!.id)
+            var bookmark by remember { mutableStateOf(bookmarked) }
+
+
+            buttonsRow(modifier = Modifier,
+                onEvent = onEvent,
+                id = activity.id,
+                joined = switch,
+                joinChanged = { it ->
+                    switch = it
+                },
+                activity.participants_profile_pictures,
+                bookmarked = bookmark,
+                bookmarkedChanged = { bookmark = it },
+                activity = activity,
+                chatDisabled = activity.disableChat,
+                confirmParticipation = activity.participantConfirmation
+            )
+
+        }
+    }
+}
 
 
 fun convertUTCtoLocal2(utcDate: String, outputFormat: String): String {
@@ -249,12 +287,18 @@ fun convertUTCtoLocal2(utcDate: String, outputFormat: String): String {
 
     // Check if the date is within the same month and year
     if (isSameMonthAndYear(utcCalendar, currentCalendar)) {
-        return SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(utcCalendar.time) // Display day, month, and time
+        return SimpleDateFormat(
+            "d MMM, HH:mm",
+            Locale.getDefault()
+        ).format(utcCalendar.time) // Display day, month, and time
     }
 
     // Check if the date is within the same year
     if (isSameYear(utcCalendar, currentCalendar)) {
-        return SimpleDateFormat("d MMM", Locale.getDefault()).format(utcCalendar.time) // Display day and month
+        return SimpleDateFormat(
+            "d MMM",
+            Locale.getDefault()
+        ).format(utcCalendar.time) // Display day and month
     }
 
     return localDateFormat.format(utcCalendar.time) // Default case: display full date and time
@@ -278,16 +322,21 @@ private fun isSameYear(calendar1: Calendar, calendar2: Calendar): Boolean {
 }
 
 @Composable
-fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialTheme.colors.uiBorder,Divider:Boolean=true) {
+fun TimeIndicator(
+    time: String,
+    tags: ArrayList<String>,
+    color: Color = SocialTheme.colors.uiBorder,
+    Divider: Boolean = true,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        if(Divider) {
+        if (Divider) {
             Box(
                 modifier = Modifier
                     .height(0.5.dp)
                     .width(36.dp)
                     .background(color)
             )
-       }else{
+        } else {
             Spacer(modifier = Modifier.width(16.dp))
 
         }
@@ -303,7 +352,7 @@ fun TimeIndicator(time: String,tags:ArrayList<String>, color: Color = SocialThem
             )
         )
         Spacer(modifier = Modifier.weight(1f))
-        TagDivider(tags=tags)
+        TagDivider(tags = tags)
         Spacer(modifier = Modifier.width(12.dp))
     }
 }

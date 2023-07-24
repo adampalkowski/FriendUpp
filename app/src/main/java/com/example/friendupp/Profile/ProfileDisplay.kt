@@ -1,6 +1,5 @@
 package com.example.friendupp.Profile
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -16,30 +15,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
-import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
 import com.example.friendupp.Components.ScreenHeading
-import com.example.friendupp.Create.Option
-import com.example.friendupp.Drawer.CreatedActivitiesEvents
-import com.example.friendupp.Home.HomeEvents
-import com.example.friendupp.Home.loadMoreFriendsActivities
 import com.example.friendupp.R
+import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
+import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.di.ActivityViewModel
-import com.example.friendupp.di.DEFAULT_PROFILE_PICTURE_URL
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
@@ -63,12 +55,7 @@ sealed class ProfileDisplayEvents {
     class GoToFriendList (val id :String): ProfileDisplayEvents()
     object GetProfileLink : ProfileDisplayEvents()
 
-    class ExpandActivity(val activityData: Activity) : ProfileDisplayEvents()
-    class JoinActivity(val activity: Activity) : ProfileDisplayEvents()
-    class Bookmark(val id: String) : ProfileDisplayEvents()
-    class UnBookmark(val id: String) : ProfileDisplayEvents()
     class GoToProfile(val id: String) : ProfileDisplayEvents()
-    class LeaveActivity(val activity: Activity) : ProfileDisplayEvents()
     class OpenChat(val id: String) : ProfileDisplayEvents()
 }
 
@@ -83,6 +70,7 @@ enum class UserOption {
 fun ProfileDisplayScreen(
     modifier: Modifier,
     onEvent: (ProfileDisplayEvents) -> Unit,
+    activityEvents: (ActivityEvents) -> Unit,
     user: User,
     activityViewModel:ActivityViewModel
 ) {
@@ -223,9 +211,7 @@ fun ProfileDisplayScreen(
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
-                    }
+                    onEvent = activityEvents
                 )
             }
             items(moreJoinedActivities) { activity ->
@@ -234,10 +220,8 @@ fun ProfileDisplayScreen(
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
+                    onEvent = activityEvents
 
-                    }
                 )
             }
             item {
@@ -259,11 +243,8 @@ fun ProfileDisplayScreen(
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
+                    onEvent = activityEvents
 
-                        handleActivityEvent(event,onEvent)
-
-                    }
                 )
             }
 
@@ -273,10 +254,8 @@ fun ProfileDisplayScreen(
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
+                    onEvent = activityEvents
 
-                    }
                 )
             }
             item {
@@ -480,28 +459,3 @@ fun ProfileDisplaySettingsItem(turnOffIcon:Boolean=false,icon:Int=R.drawable.ic_
     }
 }
 
-private fun handleActivityEvent(event: ActivityEvents, onEvent: (ProfileDisplayEvents) -> Unit) {
-    when (event) {
-        is ActivityEvents.Expand -> {
-            onEvent(ProfileDisplayEvents.ExpandActivity(event.activity))
-        }
-        is ActivityEvents.Join -> {
-            onEvent(ProfileDisplayEvents.JoinActivity(event.activity))
-        }
-        is ActivityEvents.Leave -> {
-            onEvent(ProfileDisplayEvents.LeaveActivity(event.activity))
-        }
-        is ActivityEvents.OpenChat -> {
-            onEvent(ProfileDisplayEvents.OpenChat(event.id))
-        }
-        is ActivityEvents.GoToProfile->{
-            onEvent(ProfileDisplayEvents.GoToProfile(event.id))
-        }
-        is ActivityEvents.Bookmark -> {
-            onEvent(ProfileDisplayEvents.Bookmark(event.id))
-        }
-        is ActivityEvents.UnBookmark -> {
-            onEvent(ProfileDisplayEvents.UnBookmark(event.id))
-        }
-    }
-}

@@ -25,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.ActivityPreview.CreatorSettingsEvent
 import com.example.friendupp.ActivityPreview.CreatorSettingsScreen
+import com.example.friendupp.ActivityPreview.handleActivityEvents
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
@@ -380,6 +381,16 @@ fun NavGraphBuilder.mainGraph(
             val context = LocalContext.current
             HomeScreen(
                 modifier = Modifier.safeDrawingPadding(),
+                activityEvents = {event->
+                    handleActivityEvents(
+                        event = event,
+                        activityViewModel = activityViewModel,
+                        userViewModel = userViewModel,
+                        homeViewModel = homeViewModel,
+                        navController = navController,
+                        context = context
+                    )
+                },
                 onEvent = { event ->
                     when (event) {
                         is HomeEvents.OpenDrawer -> {
@@ -393,84 +404,7 @@ fun NavGraphBuilder.mainGraph(
                             navController.navigate("ChatItem/" + event.id)
 
                         }
-                        is HomeEvents.JoinActivity -> {
-                            if (event.activity.participants_ids.size < 6) {
-                                userViewModel.addActivityToUser(event.activity.id, UserData.user!!)
-                                activityViewModel.likeActivity(
-                                    event.activity.id,
-                                    UserData.user!!
-                                )
-                                if (event.activity.creator_id != UserData.user!!.id) {
-                                    sendNotification(
-                                        receiver = event.activity.creator_id,
-                                        picture = UserData.user!!.pictureUrl,
-                                        message = UserData.user?.username + " joined your activity",
-                                        title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
-                                        username = "",
-                                        id = event.activity.id
-                                    )
-                                }
 
-                            } else {
-                                userViewModel.addActivityToUser(event.activity.id, UserData.user!!)
-                                activityViewModel.likeActivityOnlyId(
-                                    event.activity.id,
-                                    UserData.user!!
-                                )
-                                if (event.activity.creator_id != UserData.user!!.id) {
-                                    sendNotification(
-                                        receiver = event.activity.creator_id,
-                                        picture = UserData.user!!.pictureUrl,
-                                        message = UserData.user?.username + " joined your activity",
-                                        title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
-                                        username = "",
-                                        id = event.activity.id
-                                    )
-                                }
-
-                            }
-                        }
-                        is HomeEvents.LeaveActivity -> {
-                            if (event.activity.participants_usernames.containsKey(UserData.user!!.id)) {
-                                userViewModel.removeActivityFromUser(
-                                    id = event.activity.id,
-                                    user_id = UserData.user!!.id
-                                )
-
-                                activityViewModel?.unlikeActivity(
-                                    event.activity.id,
-                                    UserData.user!!.id
-                                )
-                            } else {
-                                userViewModel.removeActivityFromUser(
-                                    id = event.activity.id,
-                                    user_id = UserData.user!!.id
-                                )
-
-                                activityViewModel?.unlikeActivityOnlyId(
-                                    event.activity.id,
-                                    UserData.user!!.id
-                                )
-                            }
-
-                        }
-                        is HomeEvents.UnBookmark -> {
-                            activityViewModel.unBookMarkActivity(
-                                event.id,
-                                UserData.user!!.id
-                            )
-                        }
-                        is HomeEvents.Bookmark -> {
-                            activityViewModel?.bookMarkActivity(
-                                event.id,
-                                UserData.user!!.id
-                            )
-                        }
-                        is HomeEvents.ExpandActivity -> {
-                            Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                            homeViewModel.setExpandedActivity(event.activityData)
-                            navController.navigate("ActivityPreview")
-                        }
                         is HomeEvents.GoToProfile -> {
                             navController.navigate("ProfileDisplay/" + event.id)
                         }

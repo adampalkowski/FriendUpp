@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.ActivityPreview.handleActivityEvents
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Navigation.modifier
 import com.example.friendupp.Navigation.sendNotification
@@ -31,11 +32,16 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 
 @OptIn(ExperimentalAnimationApi::class)
-fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: ActivityViewModel,homeViewModel:HomeViewModel,userViewModel:UserViewModel) {
+fun NavGraphBuilder.drawerGraph(
+    navController: NavController,
+    activityViewModel: ActivityViewModel,
+    homeViewModel: HomeViewModel,
+    userViewModel: UserViewModel,
+) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 
         composable(
-            "Drawer/{type}",    arguments = listOf(navArgument("type") { type = NavType.StringType }),
+            "Drawer/{type}", arguments = listOf(navArgument("type") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "Settings" ->
@@ -76,284 +82,132 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
                     else -> null
                 }
             }
-        ) {backStackEntry ->
+        ) { backStackEntry ->
             BackHandler(true) {
                 navController.navigate("Home")
             }
 
 
-            when(backStackEntry.arguments?.getString("type")){
-                "Inbox"->{
-                    LanguageScreen(modifier=modifier,onEvent = {event->
-                        when(event){
-                            is LanguageEvents.GoBack->{navController.navigate("Settings")}
+            when (backStackEntry.arguments?.getString("type")) {
+                "Inbox" -> {
+                    LanguageScreen(modifier = modifier, onEvent = { event ->
+                        when (event) {
+                            is LanguageEvents.GoBack -> {
+                                navController.navigate("Settings")
+                            }
                         }
                     })
 
                 }
-                "Trending"->{
-                    TrendingActivitiesScreen(onEvent={event->
-                        when(event){
-                            is TrendingActivitiesEvents.GoBack->{navController.popBackStack()}
+                "Trending" -> {
+                    TrendingActivitiesScreen(onEvent = { event ->
+                        when (event) {
+                            is TrendingActivitiesEvents.GoBack -> {
+                                navController.popBackStack()
+                            }
                         }
 
                     })
                 }
-                "Joined"->{
+                "Joined" -> {
                     val context = LocalContext.current
-                    JoinedActivitiesScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
-                        when(event){
-                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
-                            is CreatedActivitiesEvents.GoToProfile->{
-                                navController.navigate("ProfileDisplay/"+event.id)
-                            }
-                            is CreatedActivitiesEvents.JoinActivity -> {
+                    JoinedActivitiesScreen(
+                        modifier = Modifier.safeDrawingPadding(),
+                        onEvent = { event ->
+                            handleActivityEvents(
+                                event = event,
+                                activityViewModel = activityViewModel,
+                                userViewModel = userViewModel,
+                                homeViewModel = homeViewModel,
+                                navController = navController,
+                                context = context
+                            )
 
-                                if(event.activity.participants_ids.size<6){
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity"
-                                            ,title =context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE) ,username = "",id=event.activity.id)
-                                    }
-
-                                }else{
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity",  title =context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-                                }
-                            }
-                            is CreatedActivitiesEvents.LeaveActivity -> {
-                                if(event.activity.participants_usernames.containsKey(UserData.user!!.id)){
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivity(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }else{
-                                    userViewModel.removeActivityFromUser(id=event.activity.id, user_id = UserData.user!!.id)
-
-                                    activityViewModel?.unlikeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!.id
-                                    )
-                                }
-
-                            }
-                            is CreatedActivitiesEvents.Bookmark -> {
-                                activityViewModel.bookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
-                            is CreatedActivitiesEvents.UnBookmark -> {
-                                activityViewModel.unBookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-                            }
-                            is CreatedActivitiesEvents.OpenChat -> {
-                                navController.navigate("ChatItem/" + event.id)
-
-                            }
-
-                            is CreatedActivitiesEvents.ExpandActivity -> {
-                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                                homeViewModel.setExpandedActivity(event.activityData)
-                                navController.navigate("ActivityPreview")
-                            }
-                            else->{}
-
-                        }
-
-                    },activityViewModel)
+                        },
+                        activityViewModel
+                    )
                 }
-                "Created"->{
-                    CreatedActivitiesScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
-                        when(event){
-                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
-                            is CreatedActivitiesEvents.GoToProfile->{
-                                navController.navigate("ProfileDisplay/"+event.id)
-                            }
-                            is CreatedActivitiesEvents.Bookmark -> {
-                                activityViewModel.bookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
+                "Created" -> {
+                    val context= LocalContext.current
+                    CreatedActivitiesScreen(
+                        modifier = Modifier.safeDrawingPadding(),
+                        onEvent = { event ->
+                            handleActivityEvents(
+                                event = event,
+                                activityViewModel = activityViewModel,
+                                userViewModel = userViewModel,
+                                homeViewModel = homeViewModel,
+                                navController = navController,
+                                context = context
 
-                            }
-                            is CreatedActivitiesEvents.UnBookmark -> {
-                                activityViewModel.unBookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
+                            )
 
-                            }
-                            is CreatedActivitiesEvents.JoinActivity -> {
-                                if(event.activity.participants_ids.size<6){
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-                                }else{
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-                                }
-
-                            }
-                            is CreatedActivitiesEvents.OpenChat -> {
-                                navController.navigate("ChatItem/" + event.id)
-
-                            }
-                            is CreatedActivitiesEvents.LeaveActivity -> {
-                                activityViewModel?.unlikeActivity(
-                                    event.activity.id,
-                                    UserData.user!!.id
-                                )
-                            }
-
-                            is CreatedActivitiesEvents.ExpandActivity -> {
-                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                                homeViewModel.setExpandedActivity(event.activityData)
-                                navController.navigate("ActivityPreview")
-                            }
-                        }
-
-                    },activityViewModel)
+                        },
+                        activityViewModel
+                    )
 
                 }
-                "Bookmarked"->{
-                    val call = rememberSaveable{
+                "Bookmarked" -> {
+                    val call = rememberSaveable {
                         mutableStateOf(true)
                     }
-                    LaunchedEffect(call){
-                        if(call.value){
+                    val context= LocalContext.current
+
+                    LaunchedEffect(call) {
+                        if (call.value) {
                             activityViewModel.getBookmarkedActivities(UserData.user!!.id)
-                            call.value=false
-                        }else{}
+                            call.value = false
+                        } else {
+                        }
                     }
-                    BookmarkedScreen(modifier=Modifier.safeDrawingPadding(),onEvent={event->
-                        when(event){
-                            is CreatedActivitiesEvents.GoBack->{navController.popBackStack()}
-                            is CreatedActivitiesEvents.GoToProfile->{
-                                navController.navigate("ProfileDisplay/"+event.id)
-                            }
-                            is CreatedActivitiesEvents.Bookmark -> {
-                                activityViewModel.bookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
+                    BookmarkedScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
+                        handleActivityEvents(
+                            event = event,
+                            activityViewModel = activityViewModel,
+                            userViewModel = userViewModel,
+                            homeViewModel = homeViewModel,
+                            navController = navController,
+                            context = context
+                        )
 
-                            }
-                            is CreatedActivitiesEvents.UnBookmark -> {
-                                activityViewModel.unBookMarkActivity(
-                                    event.id,
-                                    UserData.user!!.id
-                                )
-
-                            }
-                            is CreatedActivitiesEvents.JoinActivity -> {
-                                if(event.activity.participants_ids.size<6){
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-                                }else{
-                                    userViewModel.addActivityToUser(event.activity.id,UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        event.activity.id,
-                                        UserData.user!!
-                                    )
-
-                                    if(event.activity.creator_id!=UserData.user!!.id){
-                                        sendNotification(receiver = event.activity.creator_id,
-                                            picture = UserData.user!!.pictureUrl, message = UserData.user?.username+" joined your activity", title = Resources.getSystem().getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE), username = "",id=event.activity.id)
-                                    }
-
-                                }
-                            }
-                            is CreatedActivitiesEvents.OpenChat -> {
-                                navController.navigate("ChatItem/" + event.id)
-
-                            }
-                            is CreatedActivitiesEvents.LeaveActivity -> {
-                                activityViewModel?.unlikeActivity(
-                                    event.activity.id,
-                                    UserData.user!!.id
-                                )
-                            }
-
-                            is CreatedActivitiesEvents.ExpandActivity -> {
-                                Log.d("ACTIVITYDEBUG", "LAUNCH PREIVEW")
-                                homeViewModel.setExpandedActivity(event.activityData)
-                                navController.navigate("ActivityPreview")
-                            }
-                        }
-
-                    },activityViewModel)
+                    }, activityViewModel)
                 }
-                "ForYou"->{
-                    NotificationScreen(modifier=modifier,onEvent = {event->
-                        when(event){
-                            is NotificationEvents.GoBack->{navController.navigate("Settings")}
+                "ForYou" -> {
+                    NotificationScreen(modifier = modifier, onEvent = { event ->
+                        when (event) {
+                            is NotificationEvents.GoBack -> {
+                                navController.navigate("Settings")
+                            }
                         }
 
                     })
                 }
-                "FAQ"->{
-                    FAQScreen(onEvent = {event->
-                        when(event){
-                            is FAQEvents.GoBack->{navController.navigate("Settings")}
+                "FAQ" -> {
+                    FAQScreen(onEvent = { event ->
+                        when (event) {
+                            is FAQEvents.GoBack -> {
+                                navController.navigate("Settings")
+                            }
                         }
 
                     })
                 }
-                "Groups"->{
-                    SupportScreen(onEvent = {event->
-                        when(event){
-                            is SupportEvents.GoBack->{navController.navigate("Settings")}
+                "Groups" -> {
+                    SupportScreen(onEvent = { event ->
+                        when (event) {
+                            is SupportEvents.GoBack -> {
+                                navController.navigate("Settings")
+                            }
                         }
 
                     })
                 }
-                "Rate"->{
-                    TermsScreen(onEvent = {event->
-                        when(event){
-                            is TermsEvents.GoBack->{navController.navigate("Settings")}
+                "Rate" -> {
+                    TermsScreen(onEvent = { event ->
+                        when (event) {
+                            is TermsEvents.GoBack -> {
+                                navController.navigate("Settings")
+                            }
                         }
 
                     })
@@ -362,4 +216,7 @@ fun NavGraphBuilder.drawerGraph(navController: NavController,activityViewModel: 
 
 
         }
-}}
+    }
+}
+
+

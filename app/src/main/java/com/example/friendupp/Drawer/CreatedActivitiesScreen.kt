@@ -22,19 +22,10 @@ import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
 
 
-sealed class CreatedActivitiesEvents{
-    object GoBack:CreatedActivitiesEvents()
-    class ExpandActivity(val activityData: Activity) : CreatedActivitiesEvents()
-    class JoinActivity(val activity: Activity) : CreatedActivitiesEvents()
-    class UnBookmark(val id: String) : CreatedActivitiesEvents()
-    class Bookmark(val id: String) : CreatedActivitiesEvents()
-    class GoToProfile(val id: String) : CreatedActivitiesEvents()
-    class LeaveActivity(val activity: Activity) : CreatedActivitiesEvents()
-    class OpenChat(val id: String) : CreatedActivitiesEvents()
-}
+
 
 @Composable
-fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(ActivityEvents)->Unit,activityViewModel: ActivityViewModel){
     //LOAD IN PROFILE ACTIVITIES
     var historyActivitiesExist= remember { mutableStateOf(false) }
     val activitiesHistory = remember { mutableStateListOf<Activity>() }
@@ -45,7 +36,7 @@ fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)
 
     Column(modifier=modifier) {
 
-        ScreenHeading(title = "Created activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
+        ScreenHeading(title = "Created activities", backButton = true, onBack = {onEvent(ActivityEvents.GoBack)}) {}
             LazyColumn{
                 items(activitiesHistory) { activity ->
                     activityItem(
@@ -53,10 +44,7 @@ fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-
-                                handleActivityEvent(event,onEvent)
-                        }
+                        onEvent = onEvent
                     )
                 }
 
@@ -66,9 +54,7 @@ fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)
                         onClick = {
                             // Handle click event
                         },
-                        onEvent = { event->
-                            handleActivityEvent(event,onEvent)
-                        }
+                        onEvent = onEvent
                     )
                 }
                 item {
@@ -88,28 +74,3 @@ fun CreatedActivitiesScreen(modifier: Modifier,onEvent:(CreatedActivitiesEvents)
 
 }
 
-fun handleActivityEvent(event: ActivityEvents, onEvent: (CreatedActivitiesEvents) -> Unit) {
-    when (event) {
-        is ActivityEvents.Expand -> {
-            onEvent(CreatedActivitiesEvents.ExpandActivity(event.activity))
-        }
-        is ActivityEvents.Join -> {
-            onEvent(CreatedActivitiesEvents.JoinActivity(event.activity))
-        }
-        is ActivityEvents.Leave -> {
-            onEvent(CreatedActivitiesEvents.LeaveActivity(event.activity))
-        }
-        is ActivityEvents.OpenChat -> {
-            onEvent(CreatedActivitiesEvents.OpenChat(event.id))
-        }
-        is ActivityEvents.GoToProfile->{
-            onEvent(CreatedActivitiesEvents.GoToProfile(event.id))
-        }
-        is ActivityEvents.Bookmark->{
-            onEvent(CreatedActivitiesEvents.Bookmark(event.id))
-        }
-        is ActivityEvents.UnBookmark->{
-            onEvent(CreatedActivitiesEvents.UnBookmark(event.id))
-        }
-    }
-}

@@ -64,19 +64,16 @@ sealed class ProfileEvents {
     object GoToFriendList : ProfileEvents()
     object GetProfileLink : ProfileEvents()
     object OpenCamera : ProfileEvents()
-    class ExpandActivity(val activityData: Activity) : ProfileEvents()
-    class JoinActivity(val activity: Activity) : ProfileEvents()
-    class UnBookmark(val id: String) : ProfileEvents()
-    class Bookmark(val id: String) : ProfileEvents()
+
     class GoToProfile(val id: String) : ProfileEvents()
-    class LeaveActivity(val activity: Activity) : ProfileEvents()
+
     class OpenChat(val id: String) : ProfileEvents()
 }
 
 
 
 @Composable
-fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: User, onClick: () -> Unit,activityViewModel:ActivityViewModel) {
+fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activityEvents: (ActivityEvents) -> Unit,  user: User, onClick: () -> Unit,activityViewModel:ActivityViewModel) {
     val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     //FOR ACTIVITIES DISPLLAY
     var selectedItem by remember { mutableStateOf("Upcoming") }
@@ -180,9 +177,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event, onEvent = onEvent)
-                    }
+                    onEvent = activityEvents
                 )
             }
             items(moreJoinedActivities) { activity ->
@@ -191,9 +186,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event, onEvent = onEvent)
-                    }
+                    onEvent = activityEvents
                 )
             }
             item {
@@ -215,9 +208,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event, onEvent = onEvent)
-                    }
+                    onEvent = activityEvents
                 )
             }
 
@@ -227,9 +218,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, user: Us
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event, onEvent = onEvent)
-                    }
+                    onEvent = activityEvents
                 )
             }
             item {
@@ -502,58 +491,6 @@ fun ProfileOptionItem(icon: Int,label: String,onClick:()->Unit){
 }
 
 @Composable
-fun ProfileDisplayPicker(joinedActivities: MutableList<Activity>,activitiesHistory: MutableList<Activity>) {
-    var selectedItem by remember { mutableStateOf("Upcoming") }
-    var ifCalendar by remember { mutableStateOf(true) }
-    var ifHistory by remember { mutableStateOf(false) }
-
-    Column (Modifier.fillMaxSize()){
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            ProfilePickerItem(
-                label = "Upcoming",
-                icon = R.drawable.ic_calendar_upcoming,
-                selected = selectedItem == "Upcoming",
-                onItemSelected = {
-                    selectedItem = "Upcoming"
-                    ifCalendar = true
-                    ifHistory = false
-                }
-            )
-            ProfilePickerItem(
-                label = "History",
-                icon = R.drawable.ic_history,
-                selected = selectedItem == "History",
-                onItemSelected = {
-                    selectedItem = "History"
-                    ifCalendar = false
-                    ifHistory = true
-                }
-            )
-        }
-        Spacer(modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(SocialTheme.colors.uiBorder))
-
-        AnimatedVisibility(visible = ifCalendar) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                item {
-                    ProfileCalendar(modifier=Modifier.weight(1f),joinedActivities)
-                }
-            }
-
-        }
-        AnimatedVisibility(visible = ifHistory) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                item {
-                    ProfileHistory(modifier=Modifier.weight(1f),activitiesHistory)
-
-                }
-            }
-        }
-    }
-}
-@Composable
 fun ProfilePickerItem(label: String, icon: Int, selected: Boolean, onItemSelected: () -> Unit) {
     var color = if (selected)SocialTheme.colors.textLink else SocialTheme.colors.uiBorder
     Column(
@@ -584,66 +521,6 @@ fun ProfilePickerItem(label: String, icon: Int, selected: Boolean, onItemSelecte
     }
 }
 
-@Composable
-fun ProfileCalendar(modifier:Modifier,joinedActivities:MutableList<Activity>){
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SocialTheme.colors.uiBorder.copy(0.1f))
-    ) {
-        items(joinedActivities) { activity ->
-            activityItem(
-                activity,
-                onClick = {
-                    // Handle click event
-                },
-                onEvent = { event->
-                    handleActivityEvent(event, onEvent = {  })
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun ProfileHistory(modifier:Modifier,activitiesHistory: MutableList<Activity>){
-
-    Column(
-        modifier
-            .fillMaxWidth()
-            .background(SocialTheme.colors.uiBorder.copy(0.2f))
-           ){
 
 
 
-    }
-}
-
-
-
-
-private fun handleActivityEvent(event: ActivityEvents, onEvent: (ProfileEvents) -> Unit) {
-    when (event) {
-        is ActivityEvents.Expand -> {
-            onEvent(ProfileEvents.ExpandActivity(event.activity))
-        }
-        is ActivityEvents.Join -> {
-            onEvent(ProfileEvents.JoinActivity(event.activity))
-        }
-        is ActivityEvents.Leave -> {
-            onEvent(ProfileEvents.LeaveActivity(event.activity))
-        }
-        is ActivityEvents.OpenChat -> {
-            onEvent(ProfileEvents.OpenChat(event.id))
-        }
-        is ActivityEvents.GoToProfile->{
-            onEvent(ProfileEvents.GoToProfile(event.id))
-        }
-        is ActivityEvents.Bookmark->{
-            onEvent(ProfileEvents.Bookmark(event.id))
-        }
-        is ActivityEvents.UnBookmark->{
-            onEvent(ProfileEvents.UnBookmark(event.id))
-        }
-    }
-}

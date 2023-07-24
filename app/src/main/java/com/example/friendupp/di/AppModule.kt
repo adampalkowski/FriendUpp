@@ -8,6 +8,8 @@ import com.example.friendupp.Invites.InviteRepositoryImpl
 import com.example.friendupp.Participants.ParticipantsRepository
 import com.example.friendupp.Participants.ParticipantsRepositoryImpl
 import com.example.friendupp.R
+import com.example.friendupp.Request.RequestRepository
+import com.example.friendupp.Request.RequestRepositoryImpl
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
@@ -170,6 +172,10 @@ class AppModule {
     fun provideInviteRepository(db: FirebaseFirestore): InviteRepository = InviteRepositoryImpl(
         invitesRef = db.collection("Invites")
         // Add other dependencies as needed for InviteRepositoryImpl
+    )
+    @Provides
+    fun provideRequestRepository(db: FirebaseFirestore): RequestRepository = RequestRepositoryImpl(
+        activitiesRef = db.collection("Activities")
     )
     @Provides
     fun provideParticipantRepository(db: FirebaseFirestore): ParticipantsRepository = ParticipantsRepositoryImpl(

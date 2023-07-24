@@ -22,7 +22,7 @@ import com.example.friendupp.model.UserData
 
 
 @Composable
-fun JoinedActivitiesScreen(modifier:Modifier,onEvent:(CreatedActivitiesEvents)->Unit,activityViewModel: ActivityViewModel){
+fun JoinedActivitiesScreen(modifier:Modifier,onEvent:(ActivityEvents)->Unit,activityViewModel: ActivityViewModel){
     val joinedActivities = remember { mutableStateListOf<Activity>() }
 
     var joinedActivitiesExist= remember { mutableStateOf(false) }
@@ -30,7 +30,7 @@ fun JoinedActivitiesScreen(modifier:Modifier,onEvent:(CreatedActivitiesEvents)->
     loadJoinedActivities(activityViewModel = activityViewModel, joinedActivities =joinedActivities,UserData.user!!.id )
     loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
     Column(modifier) {
-        ScreenHeading(title = "Joined activities", backButton = true, onBack = {onEvent(CreatedActivitiesEvents.GoBack)}) {}
+        ScreenHeading(title = "Joined activities", backButton = true, onBack = {onEvent(ActivityEvents.GoBack)}) {}
         LazyColumn{
             items(joinedActivities) { activity ->
                 activityItem(
@@ -38,10 +38,7 @@ fun JoinedActivitiesScreen(modifier:Modifier,onEvent:(CreatedActivitiesEvents)->
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
-
-                    }
+                    onEvent = onEvent
                 )
             }
             items(moreJoinedActivities) { activity ->
@@ -50,9 +47,8 @@ fun JoinedActivitiesScreen(modifier:Modifier,onEvent:(CreatedActivitiesEvents)->
                     onClick = {
                         // Handle click event
                     },
-                    onEvent = { event->
-                        handleActivityEvent(event,onEvent)
-                    }
+                    onEvent = onEvent
+
                 )
             }
             item {
