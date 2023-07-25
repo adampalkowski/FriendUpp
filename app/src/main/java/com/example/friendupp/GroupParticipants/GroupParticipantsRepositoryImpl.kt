@@ -1,5 +1,6 @@
 package com.example.friendupp.GroupParticipants
 
+import android.util.Log
 import com.example.friendupp.await1
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Participant
@@ -10,6 +11,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,8 @@ import javax.inject.Singleton
 class GroupParticipantsRepositoryImpl @Inject constructor(
     private val chatColletionRef: CollectionReference,
     private val messagesRef: CollectionReference,
+    private val resStorage: StorageReference,
+
     // Add other dependencies as needed
 ) : GroupParticipantsRepository {
     private var loaded_participants: ArrayList<Participant> = ArrayList()
@@ -304,4 +308,29 @@ class GroupParticipantsRepositoryImpl @Inject constructor(
             emit(Response.Failure(e = SocialException("removeParticipant exception", e)))
         }
     }
+    override suspend fun removeGroupImage(
+        url: String,
+    ): Flow<Response<Boolean>> = flow {
+        try {
+            Log.d("Group",url)
+            val reference=resStorage.storage.getReferenceFromUrl(url)
+            Log.d("Group",reference.toString())
+
+            reference.delete().await()
+            emit(Response.Success(true))
+
+        } catch (e: Exception) {
+            Log.d("Group", "try addProfilePictureToStorage EXCEPTION"+e.toString())
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "addProfilePictureToStorage exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
+
+
 }

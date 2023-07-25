@@ -49,6 +49,7 @@ import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -392,6 +393,112 @@ fun NavGraphBuilder.groupGraph(
             }, groupState = groupState)
         }
 
+        composable( "GroupCamera/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Create" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Create" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(400)
+                        )
+                    else -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Create" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Create" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(400)
+                        )
+                    else -> slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                }
+            }
+        ) {backStackEntry->
+            val id =backStackEntry.arguments?.getString("id")
+            var photoUri by remember {
+                mutableStateOf<Uri?>(null)
+            }
+
+
+            val context = LocalContext.current
+            CameraView(modifier=modifier,outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
+                photoUri= uri
+                /*todo handle the image uri*/
+            }, onError = {}, onEvent = {event->
+                when(event){
+                    is CameraEvent.GoBack->{
+                        if(photoUri!=null){
+                            photoUri!!.toFile().delete()
+                        }
+                        navController.popBackStack()
+                    }
+                    is CameraEvent.AcceptPhoto->{
+                        Log.d("CAMERAGRAPHACTIvity","ACASDASDASD")
+                        if (photoUri!=null){
+                            if(id!=null){
+                                val photo:String = photoUri.toString()
+                                chatViewModel.updateGroupImage(id,photo)
+                                Toast.makeText(context,"Uploading image..",Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            }else{
+                                navController.popBackStack()
+                                Toast.makeText(context,"Failed to upload image",Toast.LENGTH_SHORT).show()
+
+                            }
+
+
+                            /*todo dooo sth with the final uri */
+                        }
+                    }
+                    is CameraEvent.DeletePhoto -> {
+                        if(photoUri!=null){
+                            photoUri!!.toFile().delete()
+                        }
+                        Log.d("CreateGraphActivity", "dElete photo")
+
+                        photoUri = null
+                    }
+                    is CameraEvent.Download -> {
+                        Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+
+                        photoUri = null
+                    }
+                    else ->{}
+                }
+            },photoUri=photoUri)
+
+        }
         composable(
             "GroupDisplay/{groupId}",
             arguments = listOf(navArgument("groupId") { type = NavType.StringType }),
@@ -426,8 +533,10 @@ fun NavGraphBuilder.groupGraph(
                             navController.popBackStack()
                         }
                         is GroupDisplayEvents.GoToMembers -> {
-
                             navController.navigate("GroupMembers/" +  event.id)
+                        }
+                        is GroupDisplayEvents.ChangeImage -> {
+                            navController.navigate("GroupCamera/" +  event.id)
                         }
                         is GroupDisplayEvents.AddUsers -> {
                             navController.navigate("FriendPickerAddGroupUsers/" + chat.value!!.id)
@@ -542,25 +651,37 @@ fun NavGraphBuilder.groupGraph(
 
 
 
+            val LOADING_TIMEOUT_DURATION = 5000L
 
-            chatFlow.value.let { response ->
+            LaunchedEffect(true) {
+                // Wait for the loading response with a timeout
+                val response = withTimeoutOrNull(LOADING_TIMEOUT_DURATION) {
+                    chatFlow.value
+                }
+
                 when (response) {
                     is Response.Success -> {
-                        Log.d("SEARCHSCREENDEBUG", "saearch sucess")
                         chat.value = response.data
                         chatViewModel.resetChat()
                     }
                     is Response.Failure -> {
-
+                        // Handle the loading failure if needed
                     }
                     is Response.Loading -> {
-                        CircularProgressIndicator()
+                        // Loading is still in progress after the timeout, navigate back
+                        navController.popBackStack()
+                        Toast.makeText(
+                            context,
+                            "Loading timeout. Please try again later.",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                     null -> {
+                        // chatFlow.value is null (not sure if this is a possible case)
                     }
                 }
-
             }
+
         }
     }
     composable(

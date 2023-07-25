@@ -160,6 +160,43 @@ class ChatRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun updateGroupImage(
+        id: String,
+        imageUri: Uri
+    ): Flow<Response<String>> = flow {
+        try {
+            if (imageUri != null) {
+                Log.d("Createdebug",id)
+
+                val fileName = id
+                try {
+                    resStorage.child("images/$fileName" + "_1080x1080").delete().await1()
+                } catch (e: StorageException) {
+
+                }
+                val imageRef = resStorage.child("images/$fileName")
+                imageRef.putFile(imageUri).await1()
+                val reference = resStorage.child("images/$fileName" + "_1080x1080")
+                val url = keepTrying(6, reference)
+
+                chatCollectionsRef.document(id).update("imageUrl",url).await()
+
+
+                emit(Response.Success(url))
+
+            }
+        } catch (e: Exception) {
+            Log.d("ImagePicker", "try addProfilePictureToStorage EXCEPTION")
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "addProfilePictureToStorage exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
     override suspend fun addImageFromGalleryToStorage(
         id: String,
         imageUri: Uri

@@ -206,10 +206,12 @@ class GroupInvitesViewModel @Inject constructor(
     // Function to remove a participant
     fun deleteGroup(chat: Chat) {
         viewModelScope.launch {
+
+
             groupParticipantsRepository.removeGroup(chat.id!!).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        _groupsInvitesList.value = _groupsInvitesList.value - chat
+                        _groupsList.value = _groupsList.value - chat
                         Log.d("GroupInvitesViewModel", "Succesfully deleted group: ${chat.id!!}")
                     }
                     is Response.Failure -> {
@@ -218,6 +220,17 @@ class GroupInvitesViewModel @Inject constructor(
                     else -> { /* Handle other response cases if needed */ }
                 }
             }
+            if(!chat.imageUrl.isNullOrEmpty()){
+                groupParticipantsRepository.removeGroupImage(chat.imageUrl!!).collect(){response->
+                    when(response){
+                        is Response.Success->{
+                            Log.d("GroupInvitesViewModel","removed image")
+                        }
+                        else->{}
+                    }
+                }
+            }
         }
+
     }
 }

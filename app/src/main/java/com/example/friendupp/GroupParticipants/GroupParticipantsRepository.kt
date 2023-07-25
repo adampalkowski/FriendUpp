@@ -17,6 +17,7 @@ interface GroupParticipantsRepository{
 
     suspend fun getGroups(user_id:String): Flow<Response<List<Chat>>>
     suspend fun getMoreGroups(user_id:String): Flow<Response<List<Chat>>>
+    suspend fun removeGroupImage(url: String): Flow<Response<Boolean>>
 
 
     // Add other functions for handling invites, such as creating, deleting, etc.

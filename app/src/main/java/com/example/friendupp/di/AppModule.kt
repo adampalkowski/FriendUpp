@@ -184,10 +184,14 @@ class AppModule {
         activitiesRef = db.collection("Activities")
     )
     @Provides
-    fun provideGroupParticipantsRepository(db: FirebaseFirestore): GroupParticipantsRepository = GroupParticipantsRepositoryImpl(
+    fun provideGroupParticipantsRepository(db: FirebaseFirestore,
+                                           @FirebaseStorageRes resStorage: FirebaseStorage,
+    ): GroupParticipantsRepository = GroupParticipantsRepositoryImpl(
         chatColletionRef = db.collection("groups"),
-        messagesRef=db.collection("Chats")
-    )
+        messagesRef=db.collection("Chats"),
+        resStorage=resStorage.reference,
+
+        )
     @Provides
     fun provideProfileRepository(
         auth: FirebaseAuth,

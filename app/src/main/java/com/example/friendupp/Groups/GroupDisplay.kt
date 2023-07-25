@@ -50,6 +50,7 @@ sealed class GroupDisplayEvents {
     object GoToEditProfile : GroupDisplayEvents()
     object AddUsers : GroupDisplayEvents()
     class ShareGroupLink(val id: String) : GroupDisplayEvents()
+    class ChangeImage(val id: String) : GroupDisplayEvents()
     class LeaveGroup(val id: String) : GroupDisplayEvents()
     class DeleteGroup(val id: String) : GroupDisplayEvents()
     class ChangeGroupName(val id: String) : GroupDisplayEvents()
@@ -86,9 +87,10 @@ fun GroupDisplayScreen(
                     backButton = true,
                     onBack = { onEvent(GroupDisplayEvents.GoBack) }) {
                     Spacer(modifier = Modifier.weight(1f))
+                    /*
                     ButtonAdd(icon = R.drawable.ic_more, onClick = {
                         displaySettings = true
-                    })
+                    })*/
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 GroupInfo(
@@ -105,7 +107,7 @@ fun GroupDisplayScreen(
                 }
 
                 SettingsItem(label = "Change group image", icon = R.drawable.ic_add_image) {
-
+                    onEvent(GroupDisplayEvents.ChangeImage(group.id.toString()))
                 }
                 SettingsItem(label = "Change group name", icon = R.drawable.ic_edit) {
                     onEvent(GroupDisplayEvents.ChangeGroupName(group.id.toString()))

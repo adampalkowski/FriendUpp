@@ -246,6 +246,25 @@ class ChatViewModel @Inject constructor(
 
         }
     }
+    fun updateGroupImage(id: String,url:String,onFinished:(String)->Unit={}) {
+        viewModelScope.launch {
+                repo.updateGroupImage(id, url.toUri()).collect{ response ->
+                    when(response){
+                        is Response.Success ->{
+
+                        }
+                        is Response.Loading ->{
+                            _addChatCollectionState.value=Response.Loading
+                        }
+                        is Response.Failure ->{}
+
+                    }
+                }
+
+
+
+        }
+    }
     fun addChatCollection(chatCollection: Chat,url:String?,onFinished:(String)->Unit={}) {
         viewModelScope.launch {
 
