@@ -27,14 +27,12 @@ import com.example.friendupp.Camera.CameraView
 import com.example.friendupp.Create.Option
 import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
+import com.example.friendupp.GroupParticipants.GroupParticipantsViewModel
 import com.example.friendupp.Groups.*
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
-import com.example.friendupp.model.Chat
-import com.example.friendupp.model.Response
-import com.example.friendupp.model.User
-import com.example.friendupp.model.UserData
+import com.example.friendupp.model.*
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
@@ -56,10 +54,10 @@ fun NavGraphBuilder.groupGraph(
     groupState: GroupState,
     outputDirectory: File,
     executor: Executor,
-    userViewModel:UserViewModel,activityViewModel:ActivityViewModel
+    userViewModel: UserViewModel, activityViewModel: ActivityViewModel,groupInvitesViewModel: GroupInvitesViewModel
 
 
-) {
+    ) {
     navigation(startDestination = "Groups", route = "GroupGraph") {
 
 
@@ -128,24 +126,29 @@ fun NavGraphBuilder.groupGraph(
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
             Log.d("CHATDEBUG", "GETFRIENDSCALLED")
-            if(UserData
-                    .user!=null){
+            if (UserData
+                    .user != null
+            ) {
                 LaunchedEffect(Unit) {
-                    Log.d("FriendsViewModel","Get friends called")
-                    userViewModel.getFriends(UserData
-                        .user!!.id)
+                    Log.d("FriendsViewModel", "Get friends called")
+                    userViewModel.getFriends(
+                        UserData
+                            .user!!.id
+                    )
                 }
-            }else{
+            } else {
                 navController.popBackStack()
             }
 
-            var friendList= userViewModel.getFriendsList()
+            var friendList = userViewModel.getFriendsList()
             var isLoading = userViewModel.friendsLoading.value
+            val groupParticipantsViewModel: GroupParticipantsViewModel = hiltViewModel()
+
             FriendPickerScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
-                chatViewModel=chatViewModel,
+                chatViewModel = chatViewModel,
                 selectedUsers = selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
                 onUserDeselected = { selectedUsers.remove(it) },
@@ -160,16 +163,17 @@ fun NavGraphBuilder.groupGraph(
                         val date = LocalDateTime.now().format(formatterDate)
 
                         createGroupAlone(
-                            create_date=date,
-                            owner_id=UserData.user!!.id,
-                            id=id,
-                            name=groupState.groupName.text,
-                            description=groupState.descriptionState.text,
-                            context=context,
+                            create_date = date,
+                            owner_id = UserData.user!!.id,
+                            id = id,
+                            name = groupState.groupName.text,
+                            description = groupState.descriptionState.text,
+                            context = context,
                             chatViewModel = chatViewModel,
                             image = groupState.imageUrl ?: UserData.user!!.pictureUrl.toString(),
                             invited_users = selectedUsers.toList(),
-                            public = groupState.selectedOptionState.option==Option.PUBLIC
+                            public = groupState.selectedOptionState.option == Option.PUBLIC,
+                            groupParticipantsViewModel = groupParticipantsViewModel
                         )
                     } else {
                         Toast.makeText(
@@ -183,22 +187,22 @@ fun NavGraphBuilder.groupGraph(
                 },
 
                 onAllFriends = {
-                    if(it){
-                        UserData.user!!.friends_ids_list.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    if (it) {
+                        UserData.user!!.friends_ids_list.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.add(id)
                             }
                         }
-                    } else{
-                        UserData.user!!.friends_ids_list.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    } else {
+                        UserData.user!!.friends_ids_list.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.remove(id)
                             }
                         }
                     }
-                },friendList=friendList,isLoading=isLoading,onEvent={
-                    when(it){
-                        is FriendPickerEvents.GetMoreFriends->{
+                }, friendList = friendList, isLoading = isLoading, onEvent = {
+                    when (it) {
+                        is FriendPickerEvents.GetMoreFriends -> {
                             userViewModel.getMoreFriends(UserData.user!!.id)
 
                         }
@@ -207,7 +211,20 @@ fun NavGraphBuilder.groupGraph(
         }
 
         composable("Groups") {
-            GroupsScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
+            var called by remember { mutableStateOf(true) }
+            val groupsList = groupInvitesViewModel.getGroupsList()
+            val groupsInvitesList = groupInvitesViewModel.getGroupInvites()
+            val groupsListLoading = groupInvitesViewModel.groupListLoading.value
+            val groupsListInvitesLoading = groupInvitesViewModel.groupListInvitesLoading.value
+
+            LaunchedEffect(called) {
+                if (called) {
+                    groupInvitesViewModel.getGroups(UserData.user!!.id)
+                    groupInvitesViewModel.getGroupInvites(UserData.user!!.id)
+                    called = false
+                }
+            }
+            GroupsScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                 when (event) {
                     is GroupsEvents.CreateGroup -> {
                         navController.navigate("GroupsCreate")
@@ -215,12 +232,25 @@ fun NavGraphBuilder.groupGraph(
                     is GroupsEvents.GoBack -> {
                         navController.popBackStack()
                     }
+                    is GroupsEvents.AcceptGroupInvite -> {
+                        val participant=Participant(id=UserData.user!!.id, profile_picture = UserData.user!!.pictureUrl!!,name=UserData.user!!.id,username=UserData.user!!.id, timestamp = getCurrentUTCTime())
+                        groupInvitesViewModel.addParticipantToGroup(event.group,participant)
+                    }
+                    is GroupsEvents.RemoveGroupInvite -> {
+                        groupInvitesViewModel.removeInvite(event.group,UserData.user!!.id)
+                    }
                     is GroupsEvents.GoToGroupDisplay -> {
                         navController.navigate("GroupDisplay/" + event.groupId)
                     }
+                    is GroupsEvents.GetMoreGroups -> {
+                        groupInvitesViewModel.getMoreGroups(UserData.user!!.id)
+                    }
+                    is GroupsEvents.GetMoreGroupInvites -> {
+                        groupInvitesViewModel.getMoreGroupsInvites(UserData.user!!.id)
+                    }
                     else -> {}
                 }
-            }, chatViewModel = chatViewModel)
+            }, groups = groupsList, groupsInvites = groupsInvitesList)
         }
         composable("GroupCamera",
             enterTransition = {
@@ -284,7 +314,8 @@ fun NavGraphBuilder.groupGraph(
             }
 
             val context = LocalContext.current
-            CameraView(modifier=modifier,
+            CameraView(
+                modifier = modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -294,7 +325,7 @@ fun NavGraphBuilder.groupGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
 
@@ -318,7 +349,8 @@ fun NavGraphBuilder.groupGraph(
                             photoUri = null
                         }
                         is CameraEvent.Download -> {
-                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Image saved in gallery", Toast.LENGTH_SHORT)
+                                .show()
 
                             Log.d("CreateGraphActivity", "dElete photo")
                             photoUri = null
@@ -335,7 +367,7 @@ fun NavGraphBuilder.groupGraph(
 
         composable("GroupsCreate") {
 
-            GroupsCreateScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
+            GroupsCreateScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                 when (event) {
                     is GroupCreateEvents.GoBack -> {
                         navController.popBackStack()
@@ -357,36 +389,47 @@ fun NavGraphBuilder.groupGraph(
             arguments = listOf(navArgument("groupId") { type = NavType.StringType }),
         ) { backStackEntry ->
 
-            val userViewModel :UserViewModel= hiltViewModel()
+            val userViewModel: UserViewModel = hiltViewModel()
             val groupId = backStackEntry.arguments?.getString("groupId")
-            val activityViewModel:ActivityViewModel= hiltViewModel()
+            val activityViewModel: ActivityViewModel = hiltViewModel()
+            val groupInvitesViewModel: GroupInvitesViewModel = hiltViewModel()
 
 
             if (groupId != null) {
                 LaunchedEffect(key1 = groupId) {
-                    Log.d("SEARCHSCREENDEBUG","get user")
+                    Log.d("SEARCHSCREENDEBUG", "get user")
                     chatViewModel.getChatCollection(groupId)
                 }
             }
-            val localClipboardManager =  LocalClipboardManager.current
+            val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
             val chatFlow = chatViewModel.chatCollectionState.collectAsState()
-            val chat = remember{ mutableStateOf<Chat?>(null) }
-            if(chat.value==null){
+            val chat = remember { mutableStateOf<Chat?>(null) }
+            if (chat.value == null) {
                 CircularProgressIndicator()
-            }else {
+            } else {
                 GroupDisplayScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                     when (event) {
                         is GroupDisplayEvents.GoBack -> {
                             navController.popBackStack()
                         }
                         is GroupDisplayEvents.AddUsers -> {
-                            navController.navigate("FriendPickerAddGroupUsers/"+chat.value!!.id)
+                            navController.navigate("FriendPickerAddGroupUsers/" + chat.value!!.id)
+                        }
+                        is GroupDisplayEvents.LeaveGroup -> {
+
+                            groupInvitesViewModel.removeParticipantFromGroupOnlyId(chat.value!!.id!!,event.id)
+                            Toast.makeText(
+                                context,
+                                "Left group "+chat.value!!.name.toString(),
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                         is GroupDisplayEvents.ShareGroupLink -> {
                             //CREATE A DYNAMINC LINK TO DOMAIN
                             val dynamicLink = Firebase.dynamicLinks.dynamicLink {
-                                link = Uri.parse("https://link.friendup.app/" + "Group" + "/" + event.id)
+                                link =
+                                    Uri.parse("https://link.friendup.app/" + "Group" + "/" + event.id)
                                 domainUriPrefix = "https://link.friendup.app/"
                                 // Open links with this app on Android
                                 androidParameters { }
@@ -394,7 +437,11 @@ fun NavGraphBuilder.groupGraph(
                             val dynamicLinkUri = dynamicLink.uri
                             //COPY LINK AND MAKE A TOAST
                             localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
-                            Toast.makeText(context, "Copied group link to clipboard", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                "Copied group link to clipboard",
+                                Toast.LENGTH_LONG
+                            ).show()
 
                         }
                         else -> {}
@@ -408,8 +455,8 @@ fun NavGraphBuilder.groupGraph(
             chatFlow.value.let { response ->
                 when (response) {
                     is Response.Success -> {
-                        Log.d("SEARCHSCREENDEBUG","saearch sucess")
-                        chat.value=response.data
+                        Log.d("SEARCHSCREENDEBUG", "saearch sucess")
+                        chat.value = response.data
                         chatViewModel.resetChat()
                     }
                     is Response.Failure -> {
@@ -418,7 +465,7 @@ fun NavGraphBuilder.groupGraph(
                     is Response.Loading -> {
                         CircularProgressIndicator()
                     }
-                    null->{
+                    null -> {
                     }
                 }
 
@@ -428,7 +475,7 @@ fun NavGraphBuilder.groupGraph(
 
     composable(
         "FriendPickerAddGroupUsers/{groupId}",
-                arguments = listOf(navArgument("groupId") { type = NavType.StringType }),
+        arguments = listOf(navArgument("groupId") { type = NavType.StringType }),
         enterTransition = {
             when (initialState.destination.route) {
                 "Home" ->
@@ -487,62 +534,68 @@ fun NavGraphBuilder.groupGraph(
                 else -> null
             }
         }
-    ) {backStackEntry->
+    ) { backStackEntry ->
         val groupId = backStackEntry.arguments?.getString("groupId")
 
-        val context =LocalContext.current
-        if(UserData
-                .user!=null){
+        val context = LocalContext.current
+        if (UserData
+                .user != null
+        ) {
             LaunchedEffect(Unit) {
-                Log.d("FriendsViewModel","Get friends called")
-                userViewModel.getFriends(UserData
-                    .user!!.id)
+                Log.d("FriendsViewModel", "Get friends called")
+                userViewModel.getFriends(
+                    UserData
+                        .user!!.id
+                )
             }
-        }else{
+        } else {
             navController.popBackStack()
         }
 
-        var friendList= userViewModel.getFriendsList()
+        var friendList = userViewModel.getFriendsList()
         var isLoading = userViewModel.friendsLoading.value
         val selectedUsers = remember { mutableStateListOf<String>() }
-        if(groupId!=null){
+        if (groupId != null) {
             FriendPickerScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
-                chatViewModel=chatViewModel,
+                chatViewModel = chatViewModel,
                 selectedUsers = selectedUsers,
                 onUserSelected = { selectedUsers.add(it) },
                 onUserDeselected = { selectedUsers.remove(it) },
                 createActivity = {
-                    chatViewModel.updateChatCollectionMembers(selectedUsers.distinct(),id=groupId)
+                    chatViewModel.updateChatCollectionMembers(
+                        selectedUsers.distinct(),
+                        id = groupId
+                    )
                     navController.popBackStack()
 
                 },
 
                 onAllFriends = {
-                    if(it){
-                        UserData.user!!.friends_ids_list.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    if (it) {
+                        UserData.user!!.friends_ids_list.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.add(id)
                             }
                         }
-                    } else{
-                        UserData.user!!.friends_ids_list.forEach{id->
-                            if(!UserData.user!!.blocked_ids.contains(id)){
+                    } else {
+                        UserData.user!!.friends_ids_list.forEach { id ->
+                            if (!UserData.user!!.blocked_ids.contains(id)) {
                                 selectedUsers.remove(id)
                             }
                         }
                     }
-                },friendList=friendList,isLoading=isLoading,onEvent={
-                    when(it){
-                        is FriendPickerEvents.GetMoreFriends->{
+                }, friendList = friendList, isLoading = isLoading, onEvent = {
+                    when (it) {
+                        is FriendPickerEvents.GetMoreFriends -> {
                             userViewModel.getMoreFriends(UserData.user!!.id)
 
                         }
                     }
                 })
-        }else{
+        } else {
             navController.popBackStack()
         }
 

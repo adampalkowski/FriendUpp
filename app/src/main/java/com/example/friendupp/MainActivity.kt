@@ -25,6 +25,7 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.friendupp.Categories.Category
+import com.example.friendupp.Groups.GroupInvitesViewModel
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Map.MapViewModel
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
     private val authViewModel by viewModels<AuthViewModel>()
     private val homeViewModel by viewModels<HomeViewModel>()
     private val activeUserViewModel by viewModels<ActiveUsersViewModel>()
+    private val groupInvitesViewModel by viewModels<GroupInvitesViewModel>()
     private val invitesViewModel by viewModels<InvitesViewModel>()
     private val activityViewModel by viewModels<ActivityViewModel>()
     private val requestViewModel by viewModels<RequestViewModel>()
@@ -154,7 +156,8 @@ class MainActivity : ComponentActivity() {
                     activityViewModel = activityViewModel,
                     activeUserViewModel=activeUserViewModel,
                     invitesViewModel=invitesViewModel,
-                    requestViewModel=requestViewModel
+                    requestViewModel=requestViewModel,
+                    groupInvitesViewModel=groupInvitesViewModel
                 )
             }
 

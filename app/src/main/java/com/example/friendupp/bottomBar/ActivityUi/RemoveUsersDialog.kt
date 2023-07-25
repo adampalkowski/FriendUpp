@@ -29,6 +29,7 @@ import com.example.friendupp.Create.FriendPickerItem
 import com.example.friendupp.Groups.SelectedUsersState
 import com.example.friendupp.Login.textFieldStateSaver
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Participant
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -50,7 +51,8 @@ fun RemoveUsersDialog(
     confirmTextColor: Color = SocialTheme.colors.textInteractive,
     cancelTextColor: Color = SocialTheme.colors.iconPrimary,
     disableConfirmButton: Boolean = false,
-    activity: Activity
+    activity: Activity,
+    participantsList:List<Participant>
 ) {
     val selectedIds= remember{ mutableStateListOf<String>() }
     val focusRequester = remember { FocusRequester() }
@@ -98,29 +100,26 @@ fun RemoveUsersDialog(
                 activity.participants_profile_pictures
 
                 LazyColumn{
-                    items(activity.participants_ids){id->
-                        if(id!=UserData.user!!.id){
-                            val username = activity.participants_usernames[id]
-                            val profilePicture = activity.participants_profile_pictures[id]
+                    items(participantsList){participant->
+
                             var selected by rememberSaveable {
                                 mutableStateOf(false)
                             }
                             FriendPickerItem(
-                                id =id,
-                                username =username?: "",
+                                id =participant.id,
+                                username =participant.username?: "",
                                 onClick = {
                                 },
-                                imageUrl = profilePicture ?: "",
+                                imageUrl = participant.profile_picture ?: "",
                                 onUserSelected = {
                                 }, onUserDeselected = {
                                 },
                                 addUserName = { selected=true
-                                    selectedListIds.list.add(id)},
+                                    selectedListIds.list.add(participant.id)},
                                 removeUsername = {  selected=false
-                                    selectedListIds.list.remove(id)},
+                                    selectedListIds.list.remove(participant.id)},
                                 selected =selected
                             )
-                        }
 
 
                     }

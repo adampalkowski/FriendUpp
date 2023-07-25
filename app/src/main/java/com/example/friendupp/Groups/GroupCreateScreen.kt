@@ -1,6 +1,7 @@
 package com.example.friendupp.Groups
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,6 +35,9 @@ fun GroupsCreateScreen(
 
     var progressBlocked by rememberSaveable {
         mutableStateOf(false)
+    }
+    BackHandler(true) {
+        onEvent(GroupCreateEvents.GoBack)
     }
     progressBlocked = !titleState!!.isValid
     Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {

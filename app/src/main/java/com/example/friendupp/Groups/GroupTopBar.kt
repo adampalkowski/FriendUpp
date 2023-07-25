@@ -80,11 +80,13 @@ fun GroupTopBar(
                 .height(1.dp)
                 .background(dividerColor)
         )
+        /*todo this is unavailable for now*/
+        /*
         ActionButton(
             option = Option.PUBLIC,
             isSelected = selectedOption == Option.PUBLIC,
-            onClick = onPublic
-        )
+            onClick = {  }
+        )*/
         Spacer(
             modifier = Modifier
                 .width(48.dp)

@@ -18,6 +18,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.friendupp.ActivityPreview.handleActivityEvents
+import com.example.friendupp.Groups.GroupInvitesViewModel
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Navigation.modifier
 import com.example.friendupp.Navigation.sendNotification
@@ -38,7 +39,7 @@ fun NavGraphBuilder.drawerGraph(
     activityViewModel: ActivityViewModel,
     homeViewModel: HomeViewModel,
     userViewModel: UserViewModel,
-    requestViewModel :RequestViewModel
+    requestViewModel :RequestViewModel,
 ) {
     navigation(startDestination = "Inbox", route = "DrawerGraph") {
 

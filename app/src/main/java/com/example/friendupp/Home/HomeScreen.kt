@@ -39,13 +39,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.Components.*
 import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.bottomBar.ActivityUi.activityItem
-import com.example.friendupp.Components.ActionButton
-import com.example.friendupp.Components.ActionButtonDefault
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
-import com.example.friendupp.Components.CalendarComponent
-import com.example.friendupp.Components.FilterList
 import com.example.friendupp.Create.Option
 import com.example.friendupp.Create.rememberSelectedOptionState
 import com.example.friendupp.Map.MapViewModel
@@ -88,6 +85,7 @@ fun HomeScreen(
     activityViewModel: ActivityViewModel,
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
+    groupInvitesNumber:Int
 ) {
 
     var calendarView by rememberSaveable {
@@ -216,7 +214,7 @@ fun HomeScreen(
             modifier = Modifier,
             onOptionSelected = { option -> selectedOption.option = option },
             selectedOption = selectedOption.option,
-            openDrawer = { onEvent(HomeEvents.OpenDrawer) })
+            openDrawer = { onEvent(HomeEvents.OpenDrawer) },groupInvitesNumber=groupInvitesNumber)
         Box(Modifier.pullRefresh(pState)) {
             Column() {
                 LazyColumn(
@@ -465,7 +463,7 @@ fun HomeScreen(
 fun TopBar(
     modifier: Modifier,
     selectedOption: Option, onOptionSelected: (Option) -> Unit,
-    openDrawer: () -> Unit,
+    openDrawer: () -> Unit,groupInvitesNumber:Int
 ) {
     Box(
         modifier
@@ -474,10 +472,12 @@ fun TopBar(
             .padding(vertical = 12.dp, horizontal = 24.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+
             ActionButtonDefault(
                 icon = R.drawable.ic_menu_300,
                 isSelected = false,
-                onClick = openDrawer
+                onClick = openDrawer,
+                number =   if(groupInvitesNumber>0){groupInvitesNumber.toString()}else{null}
             )
             /*   SocialButtonNormal(icon = R.drawable.ic_menu_300, onClick = openDrawer)*/
             Spacer(modifier = Modifier.width(24.dp))
@@ -701,6 +701,7 @@ fun buttonsRow(
     chatDisabled:Boolean,
     confirmParticipation:Boolean
 ) {
+    var dialog by rememberSaveable {mutableStateOf(false) }
 
     val bookmarkColor: Color by animateColorAsState(
         if (bookmarked) Color(0xFF00CCDF) else SocialTheme.colors.iconPrimary,
@@ -736,11 +737,14 @@ fun buttonsRow(
                     )
                     .background(color = bgColor)
             )
-            if(confirmParticipation){
-                eButtonSimple(icon = R.drawable.ic_confirm_participation, onClick = {
+
+
+            if(confirmParticipation && !activity.participants_ids.contains(UserData.user!!.id)){
+                com.example.friendupp.ActivityPreview.TextButton(icon = R.drawable.ic_hand, onClick = {
                     if (joined) {
-                        onEvent(ActivityEvents.RemoveRequest(activity))
-                        joinChanged(false)
+
+                        dialog=true
+
 
                     } else {
                         onEvent(ActivityEvents.CreateRequest(activity))
@@ -748,12 +752,11 @@ fun buttonsRow(
 
                     }
 
-                }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_confirm_participation)
+                },selected = joined,  text = "Pending...",textInactive="Send request")
             }else{
-                eButtonSimple(icon = R.drawable.ic_check_300, onClick = {
+                com.example.friendupp.ActivityPreview.TextButton(icon = R.drawable.ic_checkl, onClick = {
                     if (joined) {
-                        onEvent(ActivityEvents.Leave(activity))
-                        joinChanged(false)
+                        dialog=true
 
                     } else {
                         onEvent(ActivityEvents.Join(activity))
@@ -761,9 +764,8 @@ fun buttonsRow(
 
                     }
 
-                }, iconColor = iconColor, selected = joined, iconFilled = R.drawable.ic_check_filled)
+                },  selected = joined, text = "Joined",textInactive="Join")
             }
-
             Spacer(
                 modifier = Modifier
                     .width(12.dp)
@@ -856,11 +858,38 @@ fun buttonsRow(
 
         }
     }
+    if(dialog){
+        if(confirmParticipation){
+            FriendUppDialog(
+                label = "Are you sure you want to leave the activity? You will have to send request again.",
+                icon = R.drawable.ic_logout,
+                onCancel = { dialog = false },
+                onConfirm = {
+                    onEvent(ActivityEvents.RemoveRequest(activity))
+                    joinChanged(false)
+                    dialog=false
+                }, confirmTextColor = SocialTheme.colors.error,
+                confirmLabel = "Leave"
+            )
+        }else{
+            FriendUppDialog(
+                label = "Are you sure you want to leave the activity?",
+                icon = R.drawable.ic_logout,
+                onCancel = { dialog = false },
+                onConfirm = {
+                    onEvent(ActivityEvents.Leave(activity))
+                    joinChanged(false)
+                    dialog=false
+                }, confirmTextColor = SocialTheme.colors.error,
+                confirmLabel = "Leave"
+            )
+        }
+
+    }
 
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun eButtonSimple(
     icon: Int,
@@ -884,30 +913,18 @@ fun eButtonSimple(
     Box(
         modifier = Modifier
             .size(40.dp)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(100.dp))
             .background(backColor)
             .clickable(onClick = onClick), contentAlignment = Alignment.Center
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                tint = iconColor
+            )
 
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            tint = iconColor
-        )
-        /* AnimatedVisibility(visible = selected, enter = scaleIn() , exit = scaleOut()) {
-             Icon(
-                 painter = painterResource(id = iconFilled),
-                 contentDescription = null,
-                 tint = iconColor
-             )
-         }
-         AnimatedVisibility(visible =!selected, enter = scaleIn() , exit = scaleOut()) {
-             Icon(
-                 painter = painterResource(id = icon),
-                 contentDescription = null,
-                 tint = iconColor
-             )
-         }*/
+        }
 
 
     }

@@ -15,26 +15,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
-import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
-import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
-import com.example.friendupp.Components.TimePicker.rememberTimeState
 import com.example.friendupp.Components.connectTimeAndDate
 import com.example.friendupp.Create.*
 import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
+import com.example.friendupp.GroupParticipants.GroupParticipantsViewModel
 import com.example.friendupp.Map.MapViewModel
-import com.example.friendupp.Profile.FriendListEvents
+import com.example.friendupp.bottomBar.ActivityUi.ActivityState
 import com.example.friendupp.di.*
 import com.example.friendupp.model.*
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.GeoPoint
 import java.io.File
@@ -43,7 +39,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executor
-import kotlin.collections.ArrayList
 
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -851,7 +846,7 @@ fun createActivity(
                     }
 
                 }
-
+                activityViewModel.likeActivity(currentActivity.id,UserData.user!!)
 
                 Toast.makeText(context, "Activity created", Toast.LENGTH_SHORT).show()
             }
@@ -893,6 +888,7 @@ fun createGroup(
         recent_message = "say hi!",
         recent_message_time = currentActivity.creation_time,
         type = "activity",
+        invites =  emptyList(),
         members = members,
         user_one_username = null,
         user_two_username = null,
@@ -931,10 +927,14 @@ fun createGroupAlone(
     context: Context,
     chatViewModel: ChatViewModel,
     invited_users: List<String>,
+    groupParticipantsViewModel:GroupParticipantsViewModel
 ) {
+    val invites = arrayListOf<String>()
+    invites.addAll(invited_users)
+
+
     val members = arrayListOf(UserData.user!!.id)
 
-    members.addAll(invited_users)
 
     val chat = Chat(
         create_date = create_date,
@@ -945,7 +945,8 @@ fun createGroupAlone(
         recent_message = "say hi!",
         recent_message_time = create_date,
         type = "group",
-        members = members,
+        invites = invites,
+        members =members,
         user_one_username = null,
         user_two_username = null,
         user_one_profile_pic = null,
@@ -961,6 +962,8 @@ fun createGroupAlone(
         user_two_id = null
 
     )
+    val participant=Participant(id=UserData.user!!.id, username = UserData.user!!.username!!, profile_picture = UserData.user!!.pictureUrl!!, name = UserData.user!!.name!!, timestamp = getCurrentUTCTime())
+    groupParticipantsViewModel.addParticipant(id,participant)
     chatViewModel.addGroupAlone(chat, image, onFinished = { picture ->
         Toast.makeText(context, "Crated group", Toast.LENGTH_SHORT).show()
     })

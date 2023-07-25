@@ -47,6 +47,7 @@ sealed class GroupDisplayEvents {
     object GoToEditProfile : GroupDisplayEvents()
     object AddUsers : GroupDisplayEvents()
     class ShareGroupLink(val id: String) : GroupDisplayEvents()
+    class LeaveGroup(val id: String) : GroupDisplayEvents()
 
     /*todo*/
     object GoToFriendList : GroupDisplayEvents()
@@ -235,7 +236,10 @@ fun GroupDisplayScreen(
             GroupDisplaySettingContent(onCancel = { displaySettings = false }, addUsers = {
                 onEvent(GroupDisplayEvents.AddUsers)
                 displaySettings = false
-            }, leaveGroup = {}, deleteGroup = {}, shareGroup = {
+            }, leaveGroup = {
+                            onEvent(GroupDisplayEvents.LeaveGroup(UserData.user!!.id))
+                displaySettings = false
+            }, deleteGroup = {}, shareGroup = {
                 onEvent(GroupDisplayEvents.ShareGroupLink(group.id.toString()))
                 displaySettings = false
             }

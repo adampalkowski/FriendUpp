@@ -29,6 +29,7 @@ import com.example.friendupp.ActivityPreview.handleActivityEvents
 import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
+import com.example.friendupp.Groups.GroupInvitesViewModel
 import com.example.friendupp.Home.HomeEvents
 import com.example.friendupp.Home.HomeScreen
 import com.example.friendupp.Home.HomeViewModel
@@ -87,6 +88,7 @@ fun NavGraphBuilder.mainGraph(
     executor: Executor,
     outputDirectory: File,
     requestViewModel: RequestViewModel,
+    groupInvitesViewModel: GroupInvitesViewModel
 ) {
     navigation(startDestination = "Home", route = "Main") {
         composable(
@@ -236,7 +238,6 @@ fun NavGraphBuilder.mainGraph(
 
             val activityId = backStackEntry.arguments?.getString("activityId")
             var called by remember { mutableStateOf(true) }
-
             val participantsList = participantsViewModel.getParticipantsList()
             val participantsLoading = participantsViewModel.participantsLoading.value
             if (activityId.isNullOrEmpty()) {
@@ -480,6 +481,7 @@ fun NavGraphBuilder.mainGraph(
 
             }
             val context = LocalContext.current
+            val groupInvitesNumber=groupInvitesViewModel.getGroupInvites().size
             HomeScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 activityEvents = { event ->
@@ -517,7 +519,8 @@ fun NavGraphBuilder.mainGraph(
                 },
                 activityViewModel = activityViewModel,
                 mapViewModel = mapViewModel,
-                activeUserViewModel = activeUserViewModel
+                activeUserViewModel = activeUserViewModel,
+                groupInvitesNumber=groupInvitesNumber
             )
             if (liveUserDialogSettings != null) {
                 val context = LocalContext.current
@@ -653,87 +656,37 @@ fun NavGraphBuilder.mainGraph(
                             Toast.LENGTH_LONG
                         ).show()
                     }
-                    is ActivityPreviewEvents.Join -> {
-                        homeViewModel.expandedActivity.value.let { it ->
-                            if (it != null) {
-                                if (it.participants_ids.size < 6) {
-                                    userViewModel.addActivityToUser(it.id, UserData.user!!)
-                                    activityViewModel.likeActivity(
-                                        it.id,
-                                        UserData.user!!
-                                    )
-                                    if (it.creator_id != UserData.user!!.id) {
-                                        sendNotification(
-                                            receiver = it.creator_id,
-                                            picture = UserData.user!!.pictureUrl,
-                                            message = UserData.user?.username + " joined your activity",
-                                            title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
-                                            username = "",
-                                            id = it.id
-                                        )
-                                    }
 
-                                } else {
-                                    userViewModel.addActivityToUser(it.id, UserData.user!!)
-                                    activityViewModel.likeActivityOnlyId(
-                                        it.id,
-                                        UserData.user!!
-                                    )
-
-                                    if (it.creator_id != UserData.user!!.id) {
-                                        sendNotification(
-                                            receiver = it.creator_id,
-                                            picture = UserData.user!!.pictureUrl,
-                                            message = UserData.user?.username + " joined your activity",
-                                            title = context.getString(R.string.NOTIFICATION_JOINED_ACTIVITY_TITLE),
-                                            username = "",
-                                            id = it.id
-                                        )
-                                    }
-                                }
-                            }
-
-                        }
-
-
-                    }
                     is ActivityPreviewEvents.AddUsers -> {
                         navController.navigate("FriendPickerAddActivityUsers/" + event.id)
                     }
-                    is ActivityPreviewEvents.Bookmark -> {
-                        activityViewModel.bookMarkActivity(
-                            event.id,
-                            UserData.user!!.id
-                        )
 
-                    }
                     is ActivityPreviewEvents.CreatorSettings -> {
                         navController.navigate("CreatorSettings/" + event.id)
-
                     }
-                    is ActivityPreviewEvents.UnBookmark -> {
-                        activityViewModel.unBookMarkActivity(
-                            event.id,
-                            UserData.user!!.id
-                        )
 
-                    }
                     is ActivityPreviewEvents.OpenChat -> {
                         navController.navigate("ChatItem/" + event.id)
 
                     }
                     is ActivityPreviewEvents.ReportActivity -> {
-
                         openReportDialog = event.id
 
                     }
-                    is ActivityPreviewEvents.Leave -> {
-                        activityViewModel?.unlikeActivity(
-                            event.id,
-                            UserData.user!!.id
-                        )
-                    }
+
                 }
+            },activityEvents={event->
+                handleActivityEvents(
+                    event = event,
+                    activityViewModel = activityViewModel,
+                    userViewModel = userViewModel,
+                    homeViewModel = homeViewModel,
+                    navController = navController,
+                    context = context,
+                    requestViewModel = requestViewModel
+                )
+
+
             }, homeViewModel = homeViewModel)
 
             if (openReportDialog != null) {
@@ -950,7 +903,20 @@ fun NavGraphBuilder.mainGraph(
                 )
             }
             if (openRemoveUsers) {
+
+                val participantsViewModel: ParticipantsViewModel = hiltViewModel()
+                var called by remember { mutableStateOf(true) }
+
+                val participantsList = participantsViewModel.getParticipantsList()
+                val participantsLoading = participantsViewModel.participantsLoading.value
+
                 activityData.value?.let {
+                    LaunchedEffect(called) {
+                        if (called) {
+                            participantsViewModel.getParticipants(it.id)
+                            called = false
+                        }
+                    }
                     RemoveUsersDialog(
                         label = "Select users to be removed.",
                         icon = R.drawable.ic_person_remove,
@@ -994,7 +960,8 @@ fun NavGraphBuilder.mainGraph(
                             }
                         },
                         confirmTextColor = SocialTheme.colors.textInteractive,
-                        disableConfirmButton = false, activity = it
+                        disableConfirmButton = false, activity = it,
+                        participantsList = participantsList
                     )
                 }
 
@@ -1335,6 +1302,7 @@ fun NavGraphBuilder.mainGraph(
                                 recent_message_time = current,
                                 type = "duo",
                                 members = arrayListOf(UserData.user!!.id, event.invite.senderId),
+                                invites= emptyList(),
                                 user_one_username = UserData.user!!.username,
                                 user_two_username = event.invite.senderName,
                                 user_one_profile_pic = UserData.user!!.pictureUrl,

@@ -25,6 +25,7 @@ import com.example.friendupp.*
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Create.*
 import com.example.friendupp.Drawer.drawerGraph
+import com.example.friendupp.Groups.GroupInvitesViewModel
 import com.example.friendupp.Groups.rememberGroupState
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Invites.InvitesViewModel
@@ -78,7 +79,8 @@ fun NavigationComponent(
     activityViewModel: ActivityViewModel,
     activeUserViewModel: ActiveUsersViewModel,
     invitesViewModel: InvitesViewModel,
-    requestViewModel:RequestViewModel
+    requestViewModel:RequestViewModel,
+    groupInvitesViewModel: GroupInvitesViewModel
 
 ) {
 
@@ -265,7 +267,6 @@ fun NavigationComponent(
                     mapViewModel.stopLocationUpdates()
                 }
             }
-            val currentChatViewModel: ChatViewModel = hiltViewModel()
             val groupState = rememberGroupState(
                 initialName = "Init",
                 initialOption = Option.PUBLIC,
@@ -276,7 +277,7 @@ fun NavigationComponent(
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
             AnimatedNavHost(navController, startDestination = "Welcome") {
-                loginGraph(navController, userViewModel, authViewModel = authViewModel)
+                loginGraph(navController, userViewModel, authViewModel = authViewModel,groupInvitesViewModel=groupInvitesViewModel)
                 mainGraph(
                     navController,
                     openDrawer = {
@@ -291,7 +292,10 @@ fun NavigationComponent(
                     mapViewModel = mapViewModel,
                     activeUserViewModel = activeUserViewModel, invitesViewModel = invitesViewModel,
                     outputDirectory = outputDirectory,
-                    executor = executor,requestViewModel=requestViewModel
+                    executor = executor,requestViewModel=requestViewModel,
+                    groupInvitesViewModel=    groupInvitesViewModel
+
+
                 )
                 chatGraph(
                     navController, chatViewModel, currentChat, outputDirectory = outputDirectory,
@@ -321,11 +325,12 @@ fun NavigationComponent(
                     authViewModel = authViewModel
                 )
                 settingsGraph(navController, authViewModel, userViewModel)
-                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel,userViewModel=userViewModel, requestViewModel = requestViewModel)
+                drawerGraph(navController, activityViewModel, homeViewModel = homeViewModel
+                    ,userViewModel=userViewModel, requestViewModel = requestViewModel)
                 groupGraph(
                     navController, chatViewModel, groupState, outputDirectory = outputDirectory,
                     executor = executor, userViewModel = userViewModel
-                ,activityViewModel=activityViewModel)
+                ,activityViewModel=activityViewModel,groupInvitesViewModel)
                 cameraGraph(navController, outputDirectory = outputDirectory, executor = executor,chatViewModel=chatViewModel)
             }
 

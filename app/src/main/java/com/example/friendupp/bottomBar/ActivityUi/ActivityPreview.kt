@@ -4,14 +4,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -33,16 +29,18 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ActionButtonDefault
-import com.example.friendupp.R
-import com.example.friendupp.ui.theme.Lexend
-import com.example.friendupp.ui.theme.SocialTheme
+import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Create.CreateHeading
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Profile.ProfileDisplaySettingsItem
 import com.example.friendupp.Profile.ProfilePickerItem
 import com.example.friendupp.Profile.TagDivider
+import com.example.friendupp.R
 import com.example.friendupp.TimeFormat.getFormattedDateNoSeconds
+import com.example.friendupp.model.Activity
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Lexend
+import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -52,12 +50,8 @@ sealed class ActivityPreviewEvents{
     class ShareActivityLink(val link:String): ActivityPreviewEvents()
     class OpenChat(val id:String): ActivityPreviewEvents()
     class ReportActivity(val id:String): ActivityPreviewEvents()
-    class Leave(val id:String): ActivityPreviewEvents()
-    class Join(val id:String,val creator_id:String): ActivityPreviewEvents()
-    class UnBookmark(val id:String): ActivityPreviewEvents()
     class GoToActivityParticipants(val id:String): ActivityPreviewEvents()
     class GoToActivityRequests(val id:String): ActivityPreviewEvents()
-    class Bookmark(val id:String): ActivityPreviewEvents()
     class AddUsers(val id:String): ActivityPreviewEvents()
     class CreatorSettings(val id:String): ActivityPreviewEvents()
 }
@@ -68,7 +62,7 @@ val TAG="ActivityPrewviewDebug"
 *
 * */
 @Composable
-fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, homeViewModel: HomeViewModel){
+fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit,activityEvents:  (ActivityEvents) -> Unit,  homeViewModel: HomeViewModel){
     val activityData=homeViewModel.expandedActivity.collectAsState()
     BackHandler(true) {
         onEvent(ActivityPreviewEvents.GoBack)
@@ -180,12 +174,12 @@ fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, 
             var switch by remember { mutableStateOf(joined) }
             var bookmark by remember { mutableStateOf(bookmarked) }
 
-            ActivityPreviewButtonRow(onEvent = onEvent,modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
+            ActivityPreviewButtonRow(onEvent = activityEvents,modifier=Modifier.align(Alignment.BottomCenter),id=activity.id,
                 joined=switch,joinChanged={it->
                     switch=it
                 }, bookmarkChanged = {bookmark=it}, bookmarked = bookmark,openSettings={displaySettings=true},creator=activity.creator_id==UserData.user!!.id,CreatorSettings={onEvent(
                     ActivityPreviewEvents.CreatorSettings(activity.id)
-                )},creator_id=activity.creator_id,chatDisabled=activity.disableChat)
+                )},creator_id=activity.creator_id,chatDisabled=activity.disableChat,confirmParticipation=activity.participantConfirmation, activity = activity)
         }
     }
     val context = LocalContext.current
@@ -199,7 +193,7 @@ fun ActivityPreview(modifier:Modifier,onEvent: (ActivityPreviewEvents) -> Unit, 
                 },enableActivitySharing=activityData.value!!.enableActivitySharing, addUsers = {
                 displaySettings=false
                 onEvent(ActivityPreviewEvents.AddUsers(activityData.value!!.id))},joined=activityData.value!!.participants_ids.contains(UserData.user!!.id), leaveActivity = {
-                onEvent(ActivityPreviewEvents.Leave(activityData.value!!.id))
+                activityEvents(ActivityEvents.Leave(activityData.value!!))
                 Toast.makeText(context,"Activity left",Toast.LENGTH_SHORT).show()
 
                 displaySettings=false
@@ -459,7 +453,8 @@ fun TransButton(onClick: () -> Unit, icon: Int) {
 
 
 @Composable
-fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)->Unit, id:String,
+fun ActivityPreviewButtonRow(modifier:Modifier,    onEvent: (ActivityEvents) -> Unit,
+                             id:String,
                              joined: Boolean = false,
                              joinChanged: (Boolean) -> Unit,
                              bookmarked: Boolean = false,
@@ -468,10 +463,13 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                              creator: Boolean = false,
                              CreatorSettings: () -> Unit,
                              creator_id:String,
-                             chatDisabled:Boolean
+                             chatDisabled:Boolean,
+                             confirmParticipation:Boolean,
+                             activity: Activity,
 ){
 
 
+    var dialog by rememberSaveable {mutableStateOf(false) }
 
     Column(modifier.background(Color.Transparent)) {
             Row( modifier = Modifier
@@ -486,7 +484,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                     icon = R.drawable.ic_back,
                     isSelected = false,
                     onClick =  {
-                        onEvent(ActivityPreviewEvents.GoBack)
+                        onEvent(ActivityEvents.GoBack)
                     }
                 )
                 Spacer(modifier = Modifier
@@ -498,10 +496,9 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                     isSelected = joined,
                     onClick =  {
                         if (joined) {
-                            onEvent(ActivityPreviewEvents.Leave(id))
-                            joinChanged(false)
+                            dialog=true
                         } else {
-                            onEvent(ActivityPreviewEvents.Join(id,creator_id))
+                            onEvent(ActivityEvents.Join(activity))
                             joinChanged(true)
 
                         }
@@ -516,7 +513,7 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                     ActionButtonDefault(
                         icon = R.drawable.ic_chat_300,
                         isSelected = false,
-                        onClick =  {onEvent(ActivityPreviewEvents.OpenChat(id)) }
+                        onClick =  {onEvent(ActivityEvents.OpenChat(id)) }
                     )
                     /*  ActivityPreviewButtonRowItem(icon=R.drawable.ic_chat_300, onClick = {})*/
                     Spacer(modifier = Modifier
@@ -531,10 +528,10 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
                     isSelected = bookmarked,
                     onClick =  {
                         if (bookmarked) {
-                            onEvent(ActivityPreviewEvents.UnBookmark(id))
+                            onEvent(ActivityEvents.UnBookmark(id))
                             bookmarkChanged(false)
                         } else {
-                            onEvent(ActivityPreviewEvents.Bookmark(id))
+                            onEvent(ActivityEvents.Bookmark(id))
                             bookmarkChanged(true)
 
                         }
@@ -571,7 +568,21 @@ fun ActivityPreviewButtonRow(modifier:Modifier, onEvent:(ActivityPreviewEvents)-
             }
         Spacer(modifier = Modifier.height(24.dp))
     }
+    if(dialog){
 
+            FriendUppDialog(
+                label = "Are you sure you want to leave the activity?",
+                icon = R.drawable.ic_logout,
+                onCancel = { dialog = false },
+                onConfirm = {
+                    onEvent(ActivityEvents.Leave(activity))
+                    joinChanged(false)
+                    dialog=false
+                }, confirmTextColor = SocialTheme.colors.error,
+                confirmLabel = "Leave"
+            )
+
+    }
 }
 
 @Composable

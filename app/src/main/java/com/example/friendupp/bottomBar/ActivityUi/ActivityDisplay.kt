@@ -23,9 +23,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.ChatUi.convertUTCtoLocal
+import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.R
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -229,7 +231,7 @@ fun activityItem(
 
                     Log.d("ACTIVITYDEBUG", "LAUNCH ")
                 },
-                confirmParticipation = activity.participantConfirmation
+                confirmParticipation = activity.participantConfirmation && activity.creator_id != UserData.user!!.id
             )
             var joined =
                 activity.participants_ids.contains(UserData.user!!.id) || activity.requests_ids.contains(
@@ -238,7 +240,11 @@ fun activityItem(
             var switch by remember { mutableStateOf(joined) }
             var bookmarked = activity.bookmarked.contains(UserData.user!!.id)
             var bookmark by remember { mutableStateOf(bookmarked) }
-
+            Log.d("Clickedc",activity.participantConfirmation.toString())
+            Log.d("Clickedc",UserData.user!!.id.toString())
+            Log.d("Clickedc",activity.creator_id)
+            val cgeck=activity.participantConfirmation && activity.creator_id != UserData.user!!.id
+            Log.d("Clickedc",cgeck.toString())
 
             buttonsRow(
                 modifier = Modifier,
@@ -253,7 +259,7 @@ fun activityItem(
                 bookmarkedChanged = { bookmark = it },
                 activity = activity,
                 chatDisabled = activity.disableChat,
-                confirmParticipation = activity.participantConfirmation
+                confirmParticipation = activity.participantConfirmation && activity.creator_id != UserData.user!!.id
             )
 
         }
@@ -362,7 +368,7 @@ fun TimeIndicator(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
-                color = SocialTheme.colors.uiBorder
+                color = SocialTheme.colors.iconPrimary.copy(0.7f)
             )
         )
         Spacer(modifier = Modifier.weight(1f))
