@@ -24,11 +24,13 @@ import javax.inject.Singleton
 @ExperimentalCoroutinesApi
 class GroupParticipantsRepositoryImpl @Inject constructor(
     private val chatColletionRef: CollectionReference,
+    private val messagesRef: CollectionReference,
     // Add other dependencies as needed
 ) : GroupParticipantsRepository {
     private var loaded_participants: ArrayList<Participant> = ArrayList()
     private var loaded_groups: ArrayList<Chat> = ArrayList()
     private var lastVisibleParticipant: DocumentSnapshot? = null
+    private var lastVisibleGroup: DocumentSnapshot? = null
     private var lastVisibleGroupInvite: DocumentSnapshot? = null
 
     // Implement the functions in InviteRepository interface here
@@ -190,7 +192,7 @@ class GroupParticipantsRepositoryImpl @Inject constructor(
                                     newInvites.add(chat)
                                 }
                             }
-                            lastVisibleGroupInvite = documents[documents.size - 1]
+                            lastVisibleGroup = documents[documents.size - 1]
                             trySend(Response.Success(newInvites))
                         } else {
                             // No chats found
@@ -208,7 +210,7 @@ class GroupParticipantsRepositoryImpl @Inject constructor(
         callbackFlow {
             chatColletionRef.whereEqualTo("type","group").whereArrayContains("members",user_id)
                 .orderBy("recent_message_time", Query.Direction.DESCENDING)
-                .startAfter(lastVisibleGroupInvite?.get("recent_message_time")) // Assuming you have a variable to keep track of the last visible chat timestamp
+                .startAfter(lastVisibleGroup?.get("recent_message_time")) // Assuming you have a variable to keep track of the last visible chat timestamp
                 .limit(10)
                 .get()
                 .addOnCompleteListener { task ->
@@ -219,7 +221,7 @@ class GroupParticipantsRepositoryImpl @Inject constructor(
                                 document.toObject<Chat>()
                             }
                             loaded_groups.addAll(newChats)
-                            lastVisibleGroupInvite = documents[documents.size - 1] // Update the last visible chat timestamp for pagination
+                            lastVisibleGroup = documents[documents.size - 1] // Update the last visible chat timestamp for pagination
                             trySend(Response.Success(loaded_groups))
                         } else {
                             // No more chats found
@@ -267,6 +269,35 @@ class GroupParticipantsRepositoryImpl @Inject constructor(
                 "invites",
                 FieldValue.arrayRemove(user_id)
             ).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            // Removing invite failed
+            emit(Response.Failure(e = SocialException("removeParticipant exception", e)))
+        }
+    }
+    override suspend fun removeGroup(groupId:String) :Flow<Response<Void?>> = flow {
+        try {
+            val collectionRef = messagesRef.document(groupId).collection("messages")
+
+            val ref = collectionRef.get().addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
+                    document.reference.delete()
+                }
+            }
+            ref.await()
+
+            val participantsRef = chatColletionRef.document(groupId).collection("participants")
+
+            val ref2 = participantsRef.get().addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
+                    document.reference.delete()
+                }
+            }
+            ref2.await()
+
+
+            val update = chatColletionRef.document(groupId).delete( ).await()
+
             emit(Response.Success(update))
         } catch (e: Exception) {
             // Removing invite failed

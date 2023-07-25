@@ -11,6 +11,7 @@ interface GroupParticipantsRepository{
     suspend fun addParticipant(activityId:String,participant: Participant): Flow<Response<Void?>>
     suspend fun removeParticipant(activityId:String,participant_id: String): Flow<Response<Void?>>
     suspend fun removeInvite(activityId:String, user_id: String): Flow<Response<Void?>>
+    suspend fun removeGroup(group_id:String): Flow<Response<Void?>>
     suspend fun getGroupsInvites(user_id:String): Flow<Response<List<Chat>>>
     suspend fun getMoreGroupsInvites(user_id:String): Flow<Response<List<Chat>>>
 

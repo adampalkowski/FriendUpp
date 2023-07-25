@@ -37,6 +37,7 @@ fun ChangeDescriptionDialog(
     onConfirm: (String) -> Unit,
     confirmLabel: String = "Confirm",
     cancelLabel: String = "Cancel",
+    editTextLabel: String = "Description",
     iconTint: Color = SocialTheme.colors.iconPrimary,
     textColor: Color = SocialTheme.colors.textPrimary,
     backgroundColor: Color = SocialTheme.colors.uiBackground,
@@ -99,7 +100,7 @@ fun ChangeDescriptionDialog(
                     focus = false,
                     onFocusChange = { focusState ->
 
-                    }, label = "Description", textState = descriptionState
+                    }, label = editTextLabel, textState = descriptionState
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Card(

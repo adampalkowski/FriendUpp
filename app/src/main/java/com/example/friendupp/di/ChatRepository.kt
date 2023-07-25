@@ -27,6 +27,10 @@ interface ChatRepository {
         members_list: List<String>,
         id: String
     ): Flow<Response<Void?>>
+    suspend fun updateChatCollectionInvites(
+        members_list: List<String>,
+        id: String
+    ): Flow<Response<Void?>>
 
     suspend fun updateChatCollectionName(
         chatCollectionName: String,

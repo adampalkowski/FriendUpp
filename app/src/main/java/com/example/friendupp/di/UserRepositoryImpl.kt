@@ -525,9 +525,8 @@ class UserRepositoryImpl @Inject constructor(
         callbackFlow {
             Log.d("GEETINGUSERS", "getmorefriends")
 
-            usersRef.whereArrayContains("friends_ids_list", id).orderBy("name")
-                .startAfter(lastVisibleDataFriends).limit(5).get().addOnCompleteListener { task ->
-                    var activitiesList: List<User> = mutableListOf()
+            usersRef.whereArrayContains("friends_ids_list", id).orderBy("accountCreateTime")
+                .startAfter(lastVisibleDataFriends?.get("accountCreateTime")).limit(5).get().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val documents = task.result?.documents
                         if (documents != null && documents.isNotEmpty()) {
@@ -562,9 +561,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getFriends(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
         Log.d("GEETINGUSERS", "GETFRIENDS")
         Log.d("GEETINGUSERS", id)
-        lastVisibleDataFriends = null
-
-        usersRef.whereArrayContains("friends_ids_list", id).orderBy("name").limit(5).get()
+        usersRef.whereArrayContains("friends_ids_list", id).orderBy("accountCreateTime").limit(5).get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val documents = task.result?.documents

@@ -185,7 +185,8 @@ class AppModule {
     )
     @Provides
     fun provideGroupParticipantsRepository(db: FirebaseFirestore): GroupParticipantsRepository = GroupParticipantsRepositoryImpl(
-        chatColletionRef = db.collection("groups")
+        chatColletionRef = db.collection("groups"),
+        messagesRef=db.collection("Chats")
     )
     @Provides
     fun provideProfileRepository(

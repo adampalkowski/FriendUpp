@@ -27,9 +27,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.ChatUi.ButtonAdd
+import com.example.friendupp.ChatUi.ChatSettingsEvents
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.Profile.*
 import com.example.friendupp.R
+import com.example.friendupp.Settings.SettingsItem
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
 import com.example.friendupp.model.Chat
@@ -42,12 +44,16 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 sealed class GroupDisplayEvents {
     object GoToSearch : GroupDisplayEvents()
+    class GoToMembers(val id :String) : GroupDisplayEvents()
     object GoBack : GroupDisplayEvents()
     object GoToSettings : GroupDisplayEvents()
     object GoToEditProfile : GroupDisplayEvents()
     object AddUsers : GroupDisplayEvents()
     class ShareGroupLink(val id: String) : GroupDisplayEvents()
     class LeaveGroup(val id: String) : GroupDisplayEvents()
+    class DeleteGroup(val id: String) : GroupDisplayEvents()
+    class ChangeGroupName(val id: String) : GroupDisplayEvents()
+    class ReportGroup(val id: String) : GroupDisplayEvents()
 
     /*todo*/
     object GoToFriendList : GroupDisplayEvents()
@@ -61,35 +67,9 @@ fun GroupDisplayScreen(
     modifier: Modifier,
     onEvent: (GroupDisplayEvents) -> Unit,
     onClick: () -> Unit = {},
-    activityViewModel: ActivityViewModel,
     group: Chat,
 ) {
-    /*var selectedItem by remember { mutableStateOf("Upcoming") }
-    var ifCalendar by remember { mutableStateOf(true) }
-    var ifHistory by remember { mutableStateOf(false) }
-    var joinedActivitiesExist= remember { mutableStateOf(false) }
-    var historyActivitiesExist= remember { mutableStateOf(false) }
 
-    //LOAD IN PROFILE ACTIVITIES
-
-    val activitiesHistory = remember { mutableStateListOf<Activity>() }
-    val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
-
-
-    val joinedActivities = remember { mutableStateListOf<Activity>() }
-    val moreJoinedActivities = remember { mutableStateListOf<Activity>() }
-
-    if(selectedItem=="Upcoming"){
-
-        loadJoinedActivities(activityViewModel,joinedActivities,chat.id)
-        loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
-
-
-    }else{
-        loadActivitiesHistory(activityViewModel,activitiesHistory,chat.id)
-        loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
-    }
-*/
     var displaySettings by rememberSaveable {
         mutableStateOf(false)
     }
@@ -100,7 +80,7 @@ fun GroupDisplayScreen(
 
     LazyColumn {
         item {
-            Column(modifier) {
+            Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
                 ScreenHeading(
                     title = "Group",
                     backButton = true,
@@ -114,139 +94,57 @@ fun GroupDisplayScreen(
                 GroupInfo(
                     name = group.name ?: "",
                     imageUrl = group.imageUrl ?: "",
-                    description = group.description ?: ""
+                    description = group.description ?: "",
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                GroupStats(
-                    modifier = Modifier.fillMaxWidth(),
-                    group.numberOfUsers,
-                    group.numberOfActivities,
+                SettingsItem(label = group.members.size.toString() +" users", icon = R.drawable.ic_group) {
+                    onEvent(GroupDisplayEvents.GoToMembers(group.id!!))
+                }
+                SettingsItem(label = "Add users", icon = R.drawable.ic_group_add) {
+                    onEvent(GroupDisplayEvents.AddUsers)
+                }
+
+                SettingsItem(label = "Change group image", icon = R.drawable.ic_add_image) {
+
+                }
+                SettingsItem(label = "Change group name", icon = R.drawable.ic_edit) {
+                    onEvent(GroupDisplayEvents.ChangeGroupName(group.id.toString()))
+                }
+
+                SettingsItem(label = "Share group", icon = R.drawable.ic_share) {
+                    onEvent(GroupDisplayEvents.ShareGroupLink(group.id.toString()))
+                }
+
+                if (group.owner_id==UserData.user!!.id) {
+                    SettingsItem(label = "Delete group", icon = R.drawable.ic_logout) {
+                        onEvent(GroupDisplayEvents.DeleteGroup(group.id!!))
+                    }
+                }else{
+                    SettingsItem(label = "Leave group", icon = R.drawable.ic_logout) {
+                        onEvent(GroupDisplayEvents.LeaveGroup(UserData.user!!.id))
+                    }
+                }
+
+                SettingsItem(label = "Report", icon = R.drawable.ic_flag) {
+                    onEvent(GroupDisplayEvents.ReportGroup(UserData.user!!.id))
+
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Created on-"+group.create_date,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.Light
+                    ),
+                    color = SocialTheme.colors.iconPrimary
                 )
-
-            }
-        }
-        /* item {      Column (Modifier.fillMaxSize()){
-             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                 ProfilePickerItem(
-                     label = "Upcoming",
-                     icon = R.drawable.ic_calendar_upcoming,
-                     selected = selectedItem == "Upcoming",
-                     onItemSelected = {
-                         selectedItem = "Upcoming"
-                         ifCalendar = true
-                         ifHistory = false
-                     }
-                 )
-                 ProfilePickerItem(
-                     label = "History",
-                     icon = R.drawable.ic_history,
-                     selected = selectedItem == "History",
-                     onItemSelected = {
-                         selectedItem = "History"
-                         ifCalendar = false
-                         ifHistory = true
-                     }
-                 )
-             }
-             Spacer(modifier = Modifier
-                 .fillMaxWidth()
-                 .height(1.dp)
-                 .background(SocialTheme.colors.uiBorder))
-
-         }
-         }
-         if(ifCalendar){
-             items(joinedActivities) { activity ->
-                 activityItem(
-                     activity,
-                     onClick = {
-                         // Handle click event
-                     },
-                     onEvent = { event->
-                         handleActivityEvent(event, onEvent = onEvent)
-                     }
-                 )
-             }
-             items(moreJoinedActivities) { activity ->
-                 activityItem(
-                     activity,
-                     onClick = {
-                         // Handle click event
-                     },
-                     onEvent = { event->
-                         handleActivityEvent(event, onEvent = onEvent)
-                     }
-                 )
-             }
-             item {
-                 Spacer(modifier = Modifier.height(64.dp))
-
-             }
-             item {
-                 LaunchedEffect(true) {
-                     if (joinedActivitiesExist.value) {
-                         activityViewModel.getMoreJoinedActivities(UserData.user!!.id)
-                     }
-                 }
-             }
-         }
-         if(ifHistory){
-             items(activitiesHistory) { activity ->
-                 activityItem(
-                     activity,
-                     onClick = {
-                         // Handle click event
-                     },
-                     onEvent = { event->
-                         handleActivityEvent(event, onEvent = onEvent)
-                     }
-                 )
-             }
-
-             items(moreHistoryActivities) { activity ->
-                 activityItem(
-                     activity,
-                     onClick = {
-                         // Handle click event
-                     },
-                     onEvent = { event->
-                         handleActivityEvent(event, onEvent = onEvent)
-                     }
-                 )
-             }
-             item {
-                 Spacer(modifier = Modifier.height(64.dp))
-
-             }
-             item {
-                 LaunchedEffect(true) {
-                     if (historyActivitiesExist.value) {
-                         activityViewModel.getMoreUserActivities(UserData.user!!.id)
-                     }
-                 }
-             }
-         }
- */
-
-
-    }
-
-    AnimatedVisibility(visible = displaySettings) {
-        Dialog(onDismissRequest = { displaySettings = false }) {
-            GroupDisplaySettingContent(onCancel = { displaySettings = false }, addUsers = {
-                onEvent(GroupDisplayEvents.AddUsers)
-                displaySettings = false
-            }, leaveGroup = {
-                            onEvent(GroupDisplayEvents.LeaveGroup(UserData.user!!.id))
-                displaySettings = false
-            }, deleteGroup = {}, shareGroup = {
-                onEvent(GroupDisplayEvents.ShareGroupLink(group.id.toString()))
-                displaySettings = false
             }
 
-            )
+
         }
     }
+
 
 }
 
@@ -268,7 +166,8 @@ fun GroupInfo(name: String, imageUrl: String, description: String) {
         if (imageUrl.isNullOrEmpty() ){
             Box(modifier = Modifier
                 .size(90.dp)
-                .clip(CircleShape).background(SocialTheme.colors.textPrimary.copy(0.8f)), contentAlignment = Alignment.Center){
+                .clip(CircleShape)
+                .background(SocialTheme.colors.textPrimary.copy(0.8f)), contentAlignment = Alignment.Center){
 
                 Icon(painter = painterResource(id = R.drawable.ic_add_image), contentDescription =null, tint = SocialTheme.colors.textSecondary )
             }
@@ -310,6 +209,7 @@ fun GroupInfo(name: String, imageUrl: String, description: String) {
             ),
             color = SocialTheme.colors.textPrimary
         )
+
     }
 }
 

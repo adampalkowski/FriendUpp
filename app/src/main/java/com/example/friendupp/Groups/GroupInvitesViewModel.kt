@@ -169,15 +169,16 @@ class GroupInvitesViewModel @Inject constructor(
         }
     }
     // Function to remove a participant
-    fun removeParticipantFromGroupOnlyId(activityId: String, participant_id: String) {
+    fun removeParticipantFromGroupOnlyId(chat: Chat, participant_id: String) {
         viewModelScope.launch {
-            groupParticipantsRepository.removeParticipant(activityId,participant_id).collect { response ->
+            groupParticipantsRepository.removeParticipant(chat.id!!,participant_id).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        Log.d("GroupInvitesViewModel", "Participant removed successfully from activity: $activityId")
+                        _groupsList.value = _groupsList.value - chat
+                        Log.d("GroupInvitesViewModel", "Participant removed successfully from activity: ${chat.id}")
                     }
                     is Response.Failure -> {
-                        Log.d("GroupInvitesViewModel", "Failed to remove participant from activity: $activityId. Error: ${response.e.message}")
+                        Log.d("GroupInvitesViewModel", "Failed to remove participant from activity: ${chat.id}. Error: ${response.e.message}")
                     }
                     else -> { /* Handle other response cases if needed */ }
                 }
@@ -196,6 +197,23 @@ class GroupInvitesViewModel @Inject constructor(
                     }
                     is Response.Failure -> {
                         Log.d("GroupInvitesViewModel", "Failed to remove ivnite from group: ${chat.id!!}. Error: ${response.e.message}")
+                    }
+                    else -> { /* Handle other response cases if needed */ }
+                }
+            }
+        }
+    }
+    // Function to remove a participant
+    fun deleteGroup(chat: Chat) {
+        viewModelScope.launch {
+            groupParticipantsRepository.removeGroup(chat.id!!).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        _groupsInvitesList.value = _groupsInvitesList.value - chat
+                        Log.d("GroupInvitesViewModel", "Succesfully deleted group: ${chat.id!!}")
+                    }
+                    is Response.Failure -> {
+                        Log.d("GroupInvitesViewModel", "Failed to remove  group: ${chat.id!!}. Error: ${response.e.message}")
                     }
                     else -> { /* Handle other response cases if needed */ }
                 }

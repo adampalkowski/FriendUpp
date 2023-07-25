@@ -348,6 +348,27 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateChatCollectionInvites(
+        members_list: List<String>,
+        id: String
+    ): Flow<Response<Void?>> = flow {
+        Log.d("updateChatCollectionMembers",members_list.toString())
+        try {
+            emit(Response.Loading)
+            val membersArray = members_list.toTypedArray() // Convert list to array
+            val update = chatCollectionsRef.document(id).update("invites", FieldValue.arrayUnion(*membersArray)).await()
+            emit(Response.Success(update))
+        } catch (e: Exception) {
+            emit(
+                Response.Failure(
+                    e = SocialException(
+                        "updateChatCollectionMembers exception",
+                        Exception()
+                    )
+                )
+            )
+        }
+    }
     override suspend fun updateChatCollectionName(
         chatCollectionName: String,
         id: String

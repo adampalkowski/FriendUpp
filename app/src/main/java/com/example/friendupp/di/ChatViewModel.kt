@@ -313,6 +313,16 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
+    fun updateChatCollectionInvites(
+        members_list: List<String>,
+        id: String
+    ) {
+        viewModelScope.launch {
+            repo.updateChatCollectionInvites(members_list,id).collect{
+                    response->
+            }
+        }
+    }
 
     fun updateChatCollectionName(
         chatCollectionName: String,
