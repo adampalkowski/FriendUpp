@@ -1,5 +1,6 @@
 package com.example.friendupp.Profile
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -66,6 +67,8 @@ sealed class ProfileEvents {
     object OpenCamera : ProfileEvents()
 
     class GoToProfile(val id: String) : ProfileEvents()
+    class GetMoreJoinedActivities(val id: String) : ProfileEvents()
+    class GetMoreUserActivities(val id: String) : ProfileEvents()
 
     class OpenChat(val id: String) : ProfileEvents()
 }
@@ -73,39 +76,59 @@ sealed class ProfileEvents {
 
 
 @Composable
-fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activityEvents: (ActivityEvents) -> Unit,  user: User, onClick: () -> Unit,activityViewModel:ActivityViewModel) {
-    val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activityEvents: (ActivityEvents) -> Unit, userResponse: Response<User>,
+                   joinedActivitiesResponse: Response<List<Activity>>, context: Context,
+                  createdActivitiesResponse: Response<List<Activity>>) {
+    // Handle null safety and loading state
+    when(userResponse) {
+        is Response.Success->{
+            // The data has been successfully fetched, and group is not null
+            ProfileContent(modifier=modifier,
+                onEvent =onEvent,activityEvents=activityEvents,
+                user=userResponse.data
+                ,joinedActivitiesResponse=joinedActivitiesResponse,createdActivitiesResponse=createdActivitiesResponse)
+        }
+        is Response.Loading->{
+            // Show a loading indicator while data is being fetched
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material.CircularProgressIndicator()
+            }
+        }
+        is Response.Failure->{
+            // Show an error message or navigate back on failure
+            Toast.makeText(
+                context,
+                "Failed to load user profile. Please try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+            // You can also navigate back using the onEvent callback
+            onEvent(ProfileEvents.GoBack)
+        }
+        else->{
+            // Show a loading indicator or some placeholder content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material.CircularProgressIndicator()
+            }
+        }
+
+    }
+}
+@Composable
+fun ProfileContent(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activityEvents: (ActivityEvents) -> Unit,
+                   user: User,   joinedActivitiesResponse: Response<List<Activity>>,
+                   createdActivitiesResponse: Response<List<Activity>>) {
     //FOR ACTIVITIES DISPLLAY
     var selectedItem by remember { mutableStateOf("Upcoming") }
     var ifCalendar by remember { mutableStateOf(true) }
     var ifHistory by remember { mutableStateOf(false) }
     var joinedActivitiesExist= remember { mutableStateOf(false) }
     var historyActivitiesExist= remember { mutableStateOf(false) }
-
-    //LOAD IN PROFILE ACTIVITIES
-
-    val activitiesHistory = remember { mutableStateListOf<Activity>() }
-    val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
-
-
-    val joinedActivities = remember { mutableStateListOf<Activity>() }
-    val moreJoinedActivities = remember { mutableStateListOf<Activity>() }
-
-    if(selectedItem=="Upcoming"){
-
-        loadJoinedActivities(activityViewModel,joinedActivities,user.id)
-        loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
-
-
-    }else{
-        loadActivitiesHistory(activityViewModel,activitiesHistory,user.id)
-        loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
-    }
-
-
-
-
-
 
 
     BackHandler(true) {
@@ -171,55 +194,63 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activity
         }
         }
         if(ifCalendar){
-            items(joinedActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-                )
+            when(joinedActivitiesResponse){
+                is Response.Success->{
+                    items(joinedActivitiesResponse.data) { activity ->
+                        activityItem(
+                            activity,
+                            onClick = {
+                                // Handle click event
+                            },
+                            onEvent = activityEvents
+                        )
+                    }
+                }
+                is Response.Loading->{
+                    item{
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                is Response.Failure->{
+
+                }
+                else->{}
             }
-            items(moreJoinedActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-                )
-            }
+
             item {
                 Spacer(modifier = Modifier.height(64.dp))
-
             }
             item {
                 LaunchedEffect(true) {
                     if (joinedActivitiesExist.value) {
-                        activityViewModel.getMoreJoinedActivities(UserData.user!!.id)
+                        onEvent(ProfileEvents.GetMoreJoinedActivities(UserData.user!!.id))
+
                     }
                 }
             }
         }
         if(ifHistory){
-            items(activitiesHistory) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-                )
-            }
+            when(createdActivitiesResponse){
+                is Response.Success->{
+                    items(createdActivitiesResponse.data) { activity ->
+                        activityItem(
+                            activity,
+                            onClick = {
+                                // Handle click event
+                            },
+                            onEvent = activityEvents
+                        )
+                    }
+                }
+                is Response.Loading->{
+                    item{
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                is Response.Failure->{
 
-            items(moreHistoryActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-                )
+                }
+                else->{}
             }
             item {
                 Spacer(modifier = Modifier.height(64.dp))
@@ -228,7 +259,7 @@ fun ProfileScreen(modifier: Modifier, onEvent: (ProfileEvents) -> Unit, activity
             item {
                 LaunchedEffect(true) {
                     if (historyActivitiesExist.value) {
-                        activityViewModel.getMoreUserActivities(UserData.user!!.id)
+                        onEvent(ProfileEvents.GetMoreUserActivities(UserData.user!!.id))
                     }
                 }
             }
@@ -476,7 +507,7 @@ fun ProfileOptions(onEvent: (ProfileEvents) -> Unit){
 @Composable
 fun ProfileOptionItem(icon: Int,label: String,onClick:()->Unit){
     val color =SocialTheme.colors.textPrimary.copy(0.8f)
-    Card(modifier=Modifier.fillMaxWidth().padding(horizontal = 24.dp),onClick=onClick, shape = RoundedCornerShape(10.dp), elevation = 0.dp, backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.uiBackground) {
+    Card(modifier=Modifier,onClick=onClick, shape = RoundedCornerShape(10.dp), elevation = 0.dp, backgroundColor = SocialTheme.colors.uiBackground, contentColor = SocialTheme.colors.uiBackground) {
             Row(
                 Modifier
                     .background(SocialTheme.colors.uiBorder.copy(0.2f))

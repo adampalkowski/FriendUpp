@@ -39,8 +39,9 @@ class UserViewModel @Inject constructor(
     fun onUriProcessed() {
         _uriReceived.value = false
     }
+
     fun clearInvites() {
-        _invitesStateFlow.value=null
+        _invitesStateFlow.value = null
     }
 
     private val _currentUserState = MutableStateFlow<Response<User?>?>(null)
@@ -60,8 +61,9 @@ class UserViewModel @Inject constructor(
     fun cancelCurrentUserListener() {
         viewModelScope.coroutineContext.cancelChildren()
     }
+
     fun resetMoreFriends() {
-        _friendMoreState.value=null
+        _friendMoreState.value = null
     }
 
     private val _friendMoreState = MutableStateFlow<Response<ArrayList<User>>?>(null)
@@ -165,6 +167,7 @@ class UserViewModel @Inject constructor(
         _uri.value = uri
         _uriReceived.value = true
     }
+
     fun addChatCollectionToUsers(id: String, friend_id: String, chat_id: String) {
         viewModelScope.launch {
             repo.addChatCollectionToUsers(id, friend_id, chat_id).collect { response ->
@@ -184,11 +187,13 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
     fun clearUsers() {
-        _activityUsersState.value=null
+        _activityUsersState.value = null
     }
+
     fun clearMoreUsers() {
-        _moreActivityUsersState.value=null
+        _moreActivityUsersState.value = null
     }
 
     fun getMoreActivityUsers(id: String) {
@@ -198,6 +203,7 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
     fun getFriendsList(): List<User> {
         return friendsList.value
     }
@@ -215,23 +221,28 @@ class UserViewModel @Inject constructor(
 
                         _friendsList.value = response.data ?: emptyList()
                         Log.d("FriendsViewModel", "Friends fetched successfully for user: $id")
-                        _friendsLoading.value=Response.Success(true)
+                        _friendsLoading.value = Response.Success(true)
                     }
                     is Response.Failure -> {
                         // Handle the failure case if needed (e.g., show an error message)
                         // For example:
                         _friendsList.value = emptyList()
                         Log.e("FriendsViewModel", "Failed to fetch friends for user: $id")
-                        _friendsLoading.value=Response.Failure(SocialException(message = response.e.message,e=java.lang.Exception(response.e.message)))
+                        _friendsLoading.value = Response.Failure(
+                            SocialException(
+                                message = response.e.message,
+                                e = java.lang.Exception(response.e.message)
+                            )
+                        )
                     }
                     is Response.Loading -> {
                         Log.d("FriendsViewModel", "Loading friends for user: $id...")
-                        _friendsLoading.value=Response.Loading
+                        _friendsLoading.value = Response.Loading
 
                     }
                     null -> {
                         Log.e("FriendsViewModel", "Null response received for user: $id")
-                        _friendsLoading.value=null
+                        _friendsLoading.value = null
 
                     }
                 }
@@ -300,6 +311,7 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
     private val _profileImageResponse = mutableStateOf<Response<Boolean?>?>(null)
     val profileImageResponse: State<Response<Boolean?>?> get() = _profileImageResponse
     fun changeUserProfilePicture(user_id: String, picture_uri: Uri) {
@@ -331,20 +343,25 @@ class UserViewModel @Inject constructor(
                                         }
 
                                     }
-                                    _profileImageResponse.value =Response.Success(true)
+                                    _profileImageResponse.value = Response.Success(true)
                                 }
                                 is Response.Failure -> {
                                     Log.d("ImagePicker", response.e.message)
-                                    _profileImageResponse.value=Response.Failure(e = SocialException(message = response.e.message, e = java.lang.Exception(response.e.message)))
+                                    _profileImageResponse.value = Response.Failure(
+                                        e = SocialException(
+                                            message = response.e.message,
+                                            e = java.lang.Exception(response.e.message)
+                                        )
+                                    )
 
                                 }
                                 else -> {}
                             }
-                            _profileImageResponse.value =Response.Success(true)
+                            _profileImageResponse.value = Response.Success(true)
                         }
                     }
-                    is Response.Loading->{
-                        _profileImageResponse.value=Response.Loading
+                    is Response.Loading -> {
+                        _profileImageResponse.value = Response.Loading
                     }
                     is Response.Failure -> {
                         Log.d("ImagePicker", response.e.message)
@@ -438,6 +455,7 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
     fun getMoreInvites(id: String) {
         viewModelScope.launch {
             repo.getMoreInvites(id).collect { response ->
@@ -455,9 +473,11 @@ class UserViewModel @Inject constructor(
     fun setCurrentUser(user: User) {
         _currentUserProfile.value = user
     }
+
     fun setUserData(user: User) {
-        UserData.user=user
+        UserData.user = user
     }
+
     fun getUser(id: String) {
         viewModelScope.launch {
             repo.getUser(id).collect { response ->
@@ -465,10 +485,11 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-    private val _user= mutableStateOf<User?> (null)
+
+    private val _user = mutableStateOf<User?>(null)
     val user: MutableState<User?> = _user
-    private  val _userResponse= mutableStateOf<Response<User>?>(Response.Loading)
-    val userResponse:MutableState<Response<User>?> = _userResponse
+    private val _userResponse = mutableStateOf<Response<User>>(Response.Loading)
+    val userResponse: MutableState<Response<User>> = _userResponse
 
     fun getUserProfile(): User? {
         return user.value
@@ -479,25 +500,25 @@ class UserViewModel @Inject constructor(
             repo.getUserListener(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        _userResponse.value=response
+                        _userResponse.value = response
 
                         val user: User = response.data
                         _user.value = user
                         Log.d("UserViewModel", "User data fetched successfully")
                     }
                     is Response.Failure -> {
-                        _userResponse.value=response
+                        _userResponse.value = response
 
                         _user.value = null
                         Log.e("UserViewModel", "Failed to fetch user data: ${response.e.message}")
                     }
                     is Response.Loading -> {
-                        _userResponse.value=response
+                        _userResponse.value = response
 
                         Log.d("UserViewModel", "Loading user data...")
                     }
                     null -> {
-                        _userResponse.value=response
+                        _userResponse.value = response
 
                         _user.value = null
                         Log.e("UserViewModel", "Null response received")
@@ -536,6 +557,7 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
     fun addUsernameToUser(id: String, username: String) {
         viewModelScope.launch {
             repo.getUserByUsername(username).collect { response ->
@@ -561,7 +583,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun checkIfUsernameExists( username: String) {
+    fun checkIfUsernameExists(username: String) {
         viewModelScope.launch {
             repo.getUserByUsername(username).collect { response ->
                 when (response) {
@@ -575,7 +597,7 @@ class UserViewModel @Inject constructor(
                             )
                     }
                     is Response.Failure -> {
-                        _isUsernameAddedFlow.value =Response.Success(null)
+                        _isUsernameAddedFlow.value = Response.Success(null)
                     }
                     else -> {}
                 }
@@ -583,16 +605,20 @@ class UserViewModel @Inject constructor(
 
         }
     }
-     fun updateToken(task: Task<String>,user_id:String) {
-        val reference = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
-         Log.d("TOKEN","UPDATE TOKEN CALLED")
+
+    fun updateToken(task: Task<String>, user_id: String) {
+        val reference =
+            FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("Tokens")
+        Log.d("TOKEN", "UPDATE TOKEN CALLED")
         task.addOnCompleteListener { task ->
             val token1 = Token(task.result)
-            reference.child(user_id).setValue(token1).addOnCompleteListener { task->
-                Log.d("TOKEN",task.toString())
+            reference.child(user_id).setValue(token1).addOnCompleteListener { task ->
+                Log.d("TOKEN", task.toString())
             }
         }
     }
+
     fun validateUser(firebaseUser: FirebaseUser) {
         val id: String = firebaseUser.uid
         viewModelScope.launch {
@@ -605,16 +631,16 @@ class UserViewModel @Inject constructor(
                         // Get token
                         FirebaseMessaging.getInstance().token.addOnCompleteListener(
                             OnCompleteListener { task ->
-                            //On token fetch fail
-                            if (!task.isSuccessful) {
-                                //msg_token_failed
-                                return@OnCompleteListener
-                            }
+                                //On token fetch fail
+                                if (!task.isSuccessful) {
+                                    //msg_token_failed
+                                    return@OnCompleteListener
+                                }
 
-                            // Get new Instance ID token
-                            val newDeviceToken = task.result
+                                // Get new Instance ID token
+                                val newDeviceToken = task.result
                                 MyFirebaseMessaging.getInstance().updateToken(task.result)
-                        })
+                            })
 
 
                         _currentUserState.value = response
@@ -679,18 +705,20 @@ class UserViewModel @Inject constructor(
     fun addActivityToUser(id: String, user: User) {
         viewModelScope.launch {
             repo.addActivityToUser(id, user).collect { response ->
-                _isActivityAddedToUser.value=response
+                _isActivityAddedToUser.value = response
             }
         }
     }
+
     fun removeActivityFromUser(id: String, user_id: String) {
         viewModelScope.launch {
             repo.removeActivityFromUser(id, user_id).collect { response ->
-                _isActivityRemovedFromUser.value=response
+                _isActivityRemovedFromUser.value = response
 
             }
         }
     }
+
     fun resetIsUsernameAdded() {
         _isUsernameAddedFlow.value = Response.Loading
     }

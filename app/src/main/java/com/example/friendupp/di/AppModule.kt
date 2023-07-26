@@ -172,7 +172,8 @@ class AppModule {
 
     @Provides
     fun provideInviteRepository(db: FirebaseFirestore): InviteRepository = InviteRepositoryImpl(
-        invitesRef = db.collection("Invites")
+        invitesRef = db.collection("Invites"),
+        usersRef=db.collection("Users")
         // Add other dependencies as needed for InviteRepositoryImpl
     )
     @Provides

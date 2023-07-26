@@ -4,6 +4,7 @@ import com.example.friendupp.await1
 import com.example.friendupp.model.*
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,6 +20,7 @@ import javax.inject.Singleton
 @ExperimentalCoroutinesApi
 class InviteRepositoryImpl @Inject constructor(
     private val invitesRef: CollectionReference,
+    private val usersRef: CollectionReference,
     // Add other dependencies as needed
 ) : InviteRepository {
     private var loaded_invites: ArrayList<Invite> = ArrayList()
@@ -105,6 +107,7 @@ class InviteRepositoryImpl @Inject constructor(
     override suspend fun addInvite(invite: Invite): Flow<Response<Void?>> = flow {
         try {
             val addition = invitesRef.document(invite.id).set(invite).await1()
+            val update= usersRef.document(invite.senderId).update("invited_ids",FieldValue.arrayUnion(invite.receiverId)).await1()
             emit(Response.Success(addition))
         } catch (e: Exception) {
             // Adding invite failed
@@ -115,6 +118,7 @@ class InviteRepositoryImpl @Inject constructor(
     override suspend fun removeInvite(invite: Invite): Flow<Response<Void?>> = flow {
         try {
             val addition = invitesRef.document(invite.id).delete().await1()
+            val update= usersRef.document(invite.senderId).update("invited_ids",FieldValue.arrayRemove(invite.receiverId)).await1()
             emit(Response.Success(addition))
         } catch (e: Exception) {
             // Removing invite failed

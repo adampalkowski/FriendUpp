@@ -37,7 +37,7 @@ sealed class DrawerEvents{
 }
 
 @Composable
-fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
+fun DrawerContent(onEvent: (DrawerEvents)->Unit,groupInvitesNumber:Int,invitesNumber:Int) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -62,7 +62,7 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         //DRAWER Content
-        SettingsItem(label = "Search", icon = R.drawable.ic_search) {
+        SettingsItem(label = "Search", icon = R.drawable.ic_search, number = if(invitesNumber>0){invitesNumber}else{null}) {
             onEvent(DrawerEvents.GoToSearch)
         }
        /* SettingsItem(label = "Inbox", icon = R.drawable.ic_notify) {
@@ -83,7 +83,7 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit) {
      /*   SettingsItem(label = "For you", icon = R.drawable.ic_recommend) {
             onEvent(DrawerEvents.GoToForYou)
         }*/
-        SettingsItem(label = "Groups", icon = R.drawable.ic_group) {
+        SettingsItem(label = "Groups", icon = R.drawable.ic_group, number = if(groupInvitesNumber>0){groupInvitesNumber}else{null}) {
             onEvent(DrawerEvents.GoToGroups)
         }
     /*    SettingsItem(label = "Rate app", icon = R.drawable.ic_rate) {

@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Groups.GroupInvitesViewModel
+import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Login.*
 import com.example.friendupp.R
 import com.example.friendupp.di.AuthViewModel
@@ -53,7 +54,7 @@ val TAG= "LOGINGRAPHDEBUG"
 
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserViewModel
-                               ,authViewModel: AuthViewModel,    groupInvitesViewModel: GroupInvitesViewModel
+                               ,authViewModel: AuthViewModel,    groupInvitesViewModel: GroupInvitesViewModel,invitesViewModel: InvitesViewModel
 ) {
 
     navigation(startDestination = "Login", route = "Welcome") {
@@ -80,6 +81,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                                         /*succesfully validated*/
                                         if(UserData.user!=null){
                                             groupInvitesViewModel.getGroupInvites(UserData.user!!.id)
+                                            invitesViewModel.getInvites(UserData.user!!.id)
 
                                         }
                                        navController.navigate("Home")

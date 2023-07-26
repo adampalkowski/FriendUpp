@@ -3,6 +3,7 @@ package com.example.friendupp.Navigation
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -212,22 +213,22 @@ fun NavGraphBuilder.profileGraph(
                     "EditProfile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(300)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(300)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -237,22 +238,22 @@ fun NavGraphBuilder.profileGraph(
                     "EditProfile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -262,22 +263,22 @@ fun NavGraphBuilder.profileGraph(
                     "EditProfile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(350)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -287,22 +288,22 @@ fun NavGraphBuilder.profileGraph(
                     "EditProfile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -312,96 +313,117 @@ fun NavGraphBuilder.profileGraph(
             val context = LocalContext.current
             val user = UserData.user
             val activityViewModel: ActivityViewModel = hiltViewModel()
-            if (user == null) {
-                navController.navigate("Welcome")
-            } else {
-                activityViewModel.getJoinedActivities(user.id)
-                activityViewModel.getUserActivities(user.id)
 
-                ProfileScreen(modifier = Modifier
+
+            val joinedActivitiesViewModel: JoinedActivitiesViewModel = hiltViewModel()
+            val joinedActivitiesResponse = joinedActivitiesViewModel.joinedActivitiesResponse.value
+            val createdActivitiesViewModel: CreatedActivitiesViewModel = hiltViewModel()
+            val createdActivitiesResponse =
+                createdActivitiesViewModel.joinedActivitiesResponse.value
+            val userViewModel: UserViewModel = hiltViewModel()
+
+            if (user!!.id != null) {
+                LaunchedEffect(key1 = user.id) {
+                    Log.d("SEARCHSCREENDEBUG", "get user")
+                    joinedActivitiesViewModel.getJoinedActivities(user!!.id)
+                    createdActivitiesViewModel.fetchJoinedActivities(user!!.id)
+                    userViewModel.getUserListener(user!!.id)
+                }
+            }
+            val userResponse = userViewModel.userResponse.value
+
+
+            ProfileScreen(context = context, joinedActivitiesResponse = joinedActivitiesResponse,
+                createdActivitiesResponse = createdActivitiesResponse,
+                modifier = Modifier
                     .fillMaxSize()
                     .safeDrawingPadding(),
-                    onEvent = { event ->
-                        when (event) {
-                            is ProfileEvents.GoBack -> {
-                                navController.popBackStack()
-                            }
-                            is ProfileEvents.GoToEditProfile -> {
-                                navController.navigate("EditProfile")
-                            }
-                            is ProfileEvents.GoToSearch -> {
-                                navController.navigate("Search")
-                            }
-                            is ProfileEvents.GoToFriendList -> {
-                                navController.navigate("FriendList/" + UserData.user!!.id)
-                            }
-                            is ProfileEvents.GoToSettings -> {
-                                navController.navigate("Settings")
-                            }
-                            is ProfileEvents.GetProfileLink -> {
-                                val user = UserData.user
-                                if (user != null) {
-                                    val dynamicLink = Firebase.dynamicLinks.dynamicLink {
-                                        link =
-                                            Uri.parse("https://link.friendup.app/" + "User" + "/" + user.id)
-                                        domainUriPrefix = "https://link.friendup.app/"
-                                        // Open links with this app on Android
-                                        androidParameters { }
-                                    }
-                                    val dynamicLinkUri = dynamicLink.uri
-                                    //COPY LINK AND MAKE A TOAST
-                                    localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
-                                    Toast.makeText(
-                                        context,
-                                        "Copied user link to clipboard",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                onEvent = { event ->
+                    when (event) {
+                        is ProfileEvents.GoBack -> {
+                            navController.popBackStack()
+                        }
+                        is ProfileEvents.GoToEditProfile -> {
+                            navController.navigate("EditProfile")
+                        }
+                        is ProfileEvents.GoToSearch -> {
+                            navController.navigate("Search")
+                        }
+                        is ProfileEvents.GoToFriendList -> {
+                            navController.navigate("FriendList/" + UserData.user!!.id)
+                        }
+                        is ProfileEvents.GoToSettings -> {
+                            navController.navigate("Settings")
+                        }
+                        is ProfileEvents.GetMoreUserActivities -> {
+                            createdActivitiesViewModel.fetchMoreJoinedActivities(event.id)
+                        }
+                        is ProfileEvents.GetMoreJoinedActivities -> {
+                            joinedActivitiesViewModel.getMoreJoinedActivities(event.id)
+
+                        }
+                        is ProfileEvents.GetProfileLink -> {
+                            val user = UserData.user
+                            if (user != null) {
+                                val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                    link =
+                                        Uri.parse("https://link.friendup.app/" + "User" + "/" + user.id)
+                                    domainUriPrefix = "https://link.friendup.app/"
+                                    // Open links with this app on Android
+                                    androidParameters { }
                                 }
-
-
+                                val dynamicLinkUri = dynamicLink.uri
+                                //COPY LINK AND MAKE A TOAST
+                                localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                                Toast.makeText(
+                                    context,
+                                    "Copied user link to clipboard",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
 
-                            is ProfileEvents.OpenCamera -> {
-                                navController.navigate("CameraProfile")
-                            }
-                            is ProfileEvents.GoToProfile -> {
-                                navController.navigate("ProfileDisplay/" + event.id)
-                            }
-
-                            is ProfileEvents.OpenChat -> {
-                                navController.navigate("ChatItem/" + event.id)
-
-                            }
 
                         }
 
-                    },
-                    onClick = { navController.navigate("EditProfile") },
-                    user = user,
-                    activityViewModel = activityViewModel, activityEvents = { event ->
-                        handleActivityEvents(
-                            event = event,
-                            activityViewModel = activityViewModel,
-                            userViewModel = userViewModel,
-                            homeViewModel = homeViewModel,
-                            navController = navController,
-                            context = context, requestViewModel = requestViewModel
-                        )
-                    })
-                var uri by remember { mutableStateOf<Uri?>(null) }
-                val uriFlow = userViewModel.uri.collectAsState()
+                        is ProfileEvents.OpenCamera -> {
+                            navController.navigate("CameraProfile")
+                        }
+                        is ProfileEvents.GoToProfile -> {
+                            navController.navigate("ProfileDisplay/" + event.id)
+                        }
 
-                LaunchedEffect(uriFlow.value) {
-                    val newUri = uriFlow.value
-                    if (newUri != null) {
-                        uri = newUri
-                        userViewModel.changeUserProfilePicture(
-                            UserData.user!!.id,
-                            uri!!
-                        )
-                        userViewModel.onUriProcessed()
-                        userViewModel.onUriReceived(null)
+                        is ProfileEvents.OpenChat -> {
+                            navController.navigate("ChatItem/" + event.id)
+
+                        }
+
                     }
+
+                },
+                userResponse = userResponse,
+                activityEvents = { event ->
+                    handleActivityEvents(
+                        event = event,
+                        activityViewModel = activityViewModel,
+                        userViewModel = userViewModel,
+                        homeViewModel = homeViewModel,
+                        navController = navController,
+                        context = context, requestViewModel = requestViewModel
+                    )
+                })
+            var uri by remember { mutableStateOf<Uri?>(null) }
+            val uriFlow = userViewModel.uri.collectAsState()
+
+            LaunchedEffect(uriFlow.value) {
+                val newUri = uriFlow.value
+                if (newUri != null) {
+                    uri = newUri
+                    userViewModel.changeUserProfilePicture(
+                        UserData.user!!.id,
+                        uri!!
+                    )
+                    userViewModel.onUriProcessed()
+                    userViewModel.onUriReceived(null)
                 }
             }
 
@@ -713,7 +735,9 @@ fun NavGraphBuilder.profileGraph(
             }
 
             var friendList = userViewModel.getFriendsList()
-
+            BackHandler(true) {
+                navController.popBackStack()
+            }
 
             FriendListScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                 when (event) {
@@ -840,25 +864,31 @@ fun NavGraphBuilder.profileGraph(
             val userViewModel: UserViewModel = hiltViewModel()
             val userID = backStackEntry.arguments?.getString("userID")
             val activityViewModel: ActivityViewModel = hiltViewModel()
+
             val joinedActivitiesViewModel: JoinedActivitiesViewModel = hiltViewModel()
-            val joinedActivitiesResponse=joinedActivitiesViewModel.joinedActivitiesResponse.value
+            val joinedActivitiesResponse = joinedActivitiesViewModel.joinedActivitiesResponse.value
             val createdActivitiesViewModel: CreatedActivitiesViewModel = hiltViewModel()
-            val createdActivitiesResponse=createdActivitiesViewModel.joinedActivitiesResponse.value
+            val createdActivitiesResponse =
+                createdActivitiesViewModel.joinedActivitiesResponse.value
 
             if (userID != null) {
                 LaunchedEffect(key1 = userID) {
                     Log.d("SEARCHSCREENDEBUG", "get user")
                     joinedActivitiesViewModel.getJoinedActivities(userID)
+                    createdActivitiesViewModel.fetchJoinedActivities(userID)
                     userViewModel.getUserListener(userID)
                 }
             }
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
             val userResponse = userViewModel.userResponse.value
-
-            ProfileDisplayScreen(modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding(),
+            BackHandler(true) {
+                navController.popBackStack()
+            }
+            ProfileDisplayScreen(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                 onEvent = { event ->
                     when (event) {
                         is ProfileDisplayEvents.GoBack -> {
@@ -982,8 +1012,12 @@ fun NavGraphBuilder.profileGraph(
                             )
 
                             // create invite and add it to invites repo
-                            invitesViewModel.addInvite(newInvite)
 
+                            invitesViewModel.addInvite(newInvite)
+                            /*update current user invites to make the invited button appear*/
+                            val invites=UserData.user!!.invited_ids
+                            invites.add(newInvite.receiverId)
+                            UserData.user=UserData.user!!.copy(invited_ids =invites )
                             /*handle notification*/
                             sendNotification(
                                 receiver = event.user_id,
@@ -1012,7 +1046,11 @@ fun NavGraphBuilder.profileGraph(
 
                         }
                         is ProfileDisplayEvents.GetMoreJoinedActivities -> {
-                            activityViewModel.getMoreJoinedActivities(event.user_id)
+                            joinedActivitiesViewModel.getMoreJoinedActivities(event.user_id)
+                        }
+
+                        is ProfileDisplayEvents.GetMoreUserActivities -> {
+                            createdActivitiesViewModel.fetchMoreJoinedActivities(event.user_id)
                         }
 
 
@@ -1033,10 +1071,9 @@ fun NavGraphBuilder.profileGraph(
                     )
                 },
                 userResponse = userResponse,
-                activityViewModel = activityViewModel,
                 context = context,
-                joinedActivitiesResponse=joinedActivitiesResponse,
-                        createdActivitiesResponse=createdActivitiesResponse
+                joinedActivitiesResponse = joinedActivitiesResponse,
+                createdActivitiesResponse = createdActivitiesResponse
             )
 
         }

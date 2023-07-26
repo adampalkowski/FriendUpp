@@ -47,6 +47,7 @@ sealed class ProfileDisplayEvents {
     object GoToSearch : ProfileDisplayEvents()
     class InviteUser(val user_id :String): ProfileDisplayEvents()
     object MainProfile: ProfileDisplayEvents()
+    class GetMoreUserActivities(val user_id :String): ProfileDisplayEvents()
     class GetMoreJoinedActivities(val user_id :String): ProfileDisplayEvents()
     class BlockUser(val user_id :String): ProfileDisplayEvents()
     class UnBlock(val user_id :String): ProfileDisplayEvents()
@@ -69,7 +70,8 @@ enum class UserOption {
     FRIEND,
     INVITED,
     BLOCKED,
-    UNKNOWN
+    UNKNOWN,
+    REQUEST
 }
 
 
@@ -79,7 +81,6 @@ fun ProfileDisplayScreen(
     onEvent: (ProfileDisplayEvents) -> Unit,
     activityEvents: (ActivityEvents) -> Unit,
     userResponse: Response<User>?,
-    activityViewModel:ActivityViewModel,
     context:Context,
     joinedActivitiesResponse: Response<List<Activity>>,
     createdActivitiesResponse: Response<List<Activity>>
@@ -97,7 +98,7 @@ fun ProfileDisplayScreen(
             // The data has been successfully fetched, and group is not null
             ProfileDisplayContent(modifier=modifier,
                 onEvent =onEvent,activityEvents=activityEvents,
-                user=userResponse.data, activityViewModel=activityViewModel
+                user=userResponse.data
             ,joinedActivitiesResponse=joinedActivitiesResponse,createdActivitiesResponse=createdActivitiesResponse)
         }
         is Response.Loading->{
@@ -137,7 +138,6 @@ fun ProfileDisplayContent(
     onEvent: (ProfileDisplayEvents) -> Unit,
     activityEvents: (ActivityEvents) -> Unit,
     user: User,
-    activityViewModel:ActivityViewModel,
     joinedActivitiesResponse: Response<List<Activity>>,
     createdActivitiesResponse: Response<List<Activity>>,
 ) {
@@ -152,21 +152,11 @@ fun ProfileDisplayContent(
     var ifCalendar by remember { mutableStateOf(true) }
     var ifHistory by remember { mutableStateOf(false) }
 
-    val activitiesHistory = remember { mutableStateListOf<Activity>() }
-    val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
 
 
     var joinedActivitiesExist= remember { mutableStateOf(false) }
     var historyActivitiesExist= remember { mutableStateOf(false) }
 
-
-    if(selectedItem=="Upcoming"){
-
-
-    }else{
-        loadActivitiesHistory(activityViewModel,activitiesHistory,user.id)
-        loadMoreActivitiesHistory(activityViewModel,moreHistoryActivities)
-    }
 
 
 
@@ -176,6 +166,8 @@ fun ProfileDisplayContent(
     var userOption = if(user.friends_ids.containsKey(UserData.user!!.id)){UserOption.FRIEND}
     else if(UserData.user!!.invited_ids.contains(user.id)){
         UserOption.INVITED
+    } else if(user.invited_ids.contains((UserData.user!!.id))){
+        UserOption.REQUEST
     }
     else{
         UserOption.UNKNOWN
@@ -222,7 +214,7 @@ fun ProfileDisplayContent(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                     ProfileDisplayOptions(userOption,
-                        onEvent=onEvent, user_id = user.id)
+                        onEvent=onEvent, user_id = user.id, InviteCall = {userOption=UserOption.INVITED})
 
 
 
@@ -330,7 +322,7 @@ fun ProfileDisplayContent(
             item {
                 LaunchedEffect(true) {
                     if (historyActivitiesExist.value) {
-                        activityViewModel.getMoreUserActivities(UserData.user!!.id)
+                        onEvent(ProfileDisplayEvents.GetMoreUserActivities(UserData.user!!.id))
                     }
                 }
             }
@@ -362,10 +354,13 @@ fun ProfileDisplayContent(
 }
 
 @Composable
-fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents) -> Unit,user_id:String) {
+fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents) -> Unit,InviteCall: () -> Unit,user_id:String) {
     when(userOption){
         UserOption.UNKNOWN->{
-            ProfileOptionItem(R.drawable.ic_add,"Invite user", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+            ProfileOptionItem(R.drawable.ic_add,"Invite user", onClick = {
+                InviteCall()
+                onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))
+            })
 
         }
         UserOption.FRIEND->{
@@ -384,7 +379,10 @@ fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents)
 
         }
         UserOption.INVITED->{
-            ProfileOptionItem(R.drawable.ic_delete,"Remove invite", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+            ProfileOptionItem(R.drawable.ic_add,"Pending invite...", onClick = {onEvent(ProfileDisplayEvents.InviteUser(user_id=user_id))})
+        }
+        UserOption.REQUEST->{
+            ProfileOptionItem(R.drawable.ic_add,"Accept invite", onClick = {})
         }
 
     }

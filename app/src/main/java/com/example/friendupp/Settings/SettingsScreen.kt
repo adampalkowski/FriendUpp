@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
@@ -389,7 +390,7 @@ fun BottomSheetContent(
 }
 
 @Composable
-fun SettingsItem(label: String, icon: Int, disabled: Boolean = false, onClick: () -> Unit,) {
+fun SettingsItem(label: String, icon: Int, disabled: Boolean = false,number:Int?=null, onClick: () -> Unit) {
 
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -417,7 +418,11 @@ fun SettingsItem(label: String, icon: Int, disabled: Boolean = false, onClick: (
             tint = SocialTheme.colors.iconPrimary
         )
         Spacer(modifier = Modifier.width(16.dp))
+        Row() {
+
+
         Column(horizontalAlignment = Alignment.Start) {
+
             Text(
                 modifier = Modifier.padding(bottom = 4.dp), text = label,
                 color =if(disabled){SocialTheme.colors.textPrimary.copy(0.4f)}else{SocialTheme.colors.textPrimary.copy(0.8f)} , style = TextStyle(
@@ -426,6 +431,7 @@ fun SettingsItem(label: String, icon: Int, disabled: Boolean = false, onClick: (
                     fontWeight = FontWeight.Normal
                 )
             )
+
             if(disabled){
                 Text(
                     modifier = Modifier.padding(bottom = 4.dp), text = "Coming soon",
@@ -438,7 +444,16 @@ fun SettingsItem(label: String, icon: Int, disabled: Boolean = false, onClick: (
             }
 
         }
-
+            if(number!=null){
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(modifier = Modifier
+                    .clip(CircleShape)
+                    .background(SocialTheme.colors.textInteractive)
+                    .padding(4.dp)){
+                    Text(text = number.toString(), style = TextStyle(fontFamily = Lexend, fontSize = 10.sp), color = Color.White)
+                }
+            }
+        }
     }
 
 }

@@ -165,7 +165,7 @@ fun NavigationComponent(
                         }
                     }
                 }
-            })
+            },groupInvitesViewModel.getGroupInvites().size,invitesNumber=invitesViewModel.getCurrentInvitesList().size)
         }, floatingActionButton = {
             /*
             if (currentBackStackEntry != null && bottomDestinations.contains(navController.currentDestination?.route)) {
@@ -277,7 +277,7 @@ fun NavigationComponent(
             //get the front page activities for user ->friends activities ?? if not exist then public
             //called on each homescreen recompose
             AnimatedNavHost(navController, startDestination = "Welcome") {
-                loginGraph(navController, userViewModel, authViewModel = authViewModel,groupInvitesViewModel=groupInvitesViewModel)
+                loginGraph(navController, userViewModel, authViewModel = authViewModel,groupInvitesViewModel=groupInvitesViewModel,invitesViewModel=invitesViewModel)
                 mainGraph(
                     navController,
                     openDrawer = {

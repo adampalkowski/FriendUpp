@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -743,7 +744,9 @@ fun NavGraphBuilder.createGraph(
             val timeEndState = activityState.timeEndState
             val startDateState = activityState.startDateState
             val endDateState = activityState.endDateState
-
+            BackHandler(true) {
+                navController.popBackStack()
+            }
             LiveScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is LiveScreenEvents.GoBack -> {

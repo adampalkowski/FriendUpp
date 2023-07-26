@@ -74,7 +74,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executor
-
+const val NAVIGATION_SCREEN_TIME_ANIMATION_DURATION=300
 @OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.mainGraph(
     navController: NavController,
@@ -278,17 +278,17 @@ fun NavGraphBuilder.mainGraph(
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
 
                     else -> null
@@ -299,17 +299,17 @@ fun NavGraphBuilder.mainGraph(
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
 
                     else -> null
@@ -320,17 +320,17 @@ fun NavGraphBuilder.mainGraph(
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
 
                     else -> null
@@ -341,17 +341,17 @@ fun NavGraphBuilder.mainGraph(
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
 
                     else -> null
@@ -481,7 +481,8 @@ fun NavGraphBuilder.mainGraph(
 
             }
             val context = LocalContext.current
-            val groupInvitesNumber=groupInvitesViewModel.getGroupInvites().size
+            var groupInvitesNumber=groupInvitesViewModel.getGroupInvites().size
+            groupInvitesNumber+=invitesViewModel.getCurrentInvitesList().size
             HomeScreen(
                 modifier = Modifier.safeDrawingPadding(),
                 activityEvents = { event ->
@@ -1105,17 +1106,17 @@ fun NavGraphBuilder.mainGraph(
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -1125,17 +1126,17 @@ fun NavGraphBuilder.mainGraph(
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -1145,17 +1146,17 @@ fun NavGraphBuilder.mainGraph(
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -1165,17 +1166,17 @@ fun NavGraphBuilder.mainGraph(
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Chat" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }

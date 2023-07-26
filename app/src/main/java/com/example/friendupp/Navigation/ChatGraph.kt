@@ -77,17 +77,17 @@ fun NavGraphBuilder.chatGraph(
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
 
                     else -> null
@@ -99,17 +99,17 @@ fun NavGraphBuilder.chatGraph(
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -120,17 +120,17 @@ fun NavGraphBuilder.chatGraph(
                     "Home" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideIntoContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
@@ -141,17 +141,17 @@ fun NavGraphBuilder.chatGraph(
                     "Home" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Map" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     "Profile" ->
                         slideOutOfContainer(
                             AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
+                            animationSpec = tween(NAVIGATION_SCREEN_TIME_ANIMATION_DURATION)
                         )
                     else -> null
                 }
