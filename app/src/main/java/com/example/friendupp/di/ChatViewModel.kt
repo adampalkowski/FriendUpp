@@ -2,6 +2,7 @@ package com.example.friendupp.di
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
@@ -10,10 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.Navigation.getCurrentUTCTime
-import com.example.friendupp.model.Chat
-import com.example.friendupp.model.ChatMessage
-import com.example.friendupp.model.Response
-import com.example.friendupp.model.User
+import com.example.friendupp.model.*
 import com.example.friendupp.util.getTime
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,8 +29,7 @@ class ChatViewModel @Inject constructor(
 
     val _chatCollectionStateFlow = MutableStateFlow<Chat>(Chat())
 
-    private val _chatCollectionState = MutableStateFlow<Response<Chat>?>(null)
-    val chatCollectionState: StateFlow<Response<Chat>?> = _chatCollectionState
+
 
     private val _uri = MutableStateFlow<Uri?>(null)
     val uri: MutableStateFlow<Uri?> = _uri
@@ -159,10 +156,41 @@ class ChatViewModel @Inject constructor(
         _uriReceived.value = false
         _uri.value=null
     }
+
+    private val _chatCollectionState = MutableStateFlow<Response<Chat>?>(null)
+    val chatCollectionState: StateFlow<Response<Chat>?> = _chatCollectionState
+
+
+    private val _chatState = mutableStateOf<Chat?>(null)
+    val chatState: MutableState<Chat?> = _chatState
+    private val _chatLoading = mutableStateOf<Response<Chat>?>(Response.Loading)
+    val chatLoading: MutableState<Response<Chat>?> = _chatLoading
+    fun getChat():Chat? {
+        return chatState.value
+    }
+
     fun getChatCollection(id: String) {
         viewModelScope.launch {
             repo.getChatCollection(id).collect{ response->
-                        _chatCollectionState.value=response
+                when(response){
+                    is Response.Success->{
+                        _chatLoading.value=response
+                        _chatState.value=response.data
+                        Log.d("ChatViewModel","Succesfully got chat "+response.data.toString())
+                    }
+                    is Response.Loading->{
+                        _chatLoading.value=response
+
+                        Log.d("ChatViewModel","Loading chat data ")
+
+                    }
+                    is Response.Failure->{
+                        _chatLoading.value=response
+                        Log.d("ChatViewModel","Failed to load in chat "+response.e.message)
+
+                    }
+                }
+
             }
         }
     }

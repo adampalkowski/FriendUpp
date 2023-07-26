@@ -837,6 +837,16 @@ class ActivityRepositoryImpl @Inject constructor(
                             lastVisibleUserData = documents[documents.size - 1]
                             trySend(Response.Success(newActivities))
 
+                        } else {
+                            // Send a failure response indicating that no activities are found
+                            trySend(
+                                Response.Failure(
+                                    e = SocialException(
+                                        message = "No activities found.",
+                                        e = Exception()
+                                    )
+                                )
+                            )
                         }
                     } else {
                         // There are no more messages to load
@@ -850,6 +860,16 @@ class ActivityRepositoryImpl @Inject constructor(
                         )
                     }
 
+                }.addOnFailureListener {
+                    // There was an exception in the operation
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = it.message.toString(),
+                                e = it
+                            )
+                        )
+                    )
                 }
             awaitClose {
 
@@ -860,6 +880,7 @@ class ActivityRepositoryImpl @Inject constructor(
     override suspend fun getJoinedActivities(id: String): Flow<Response<List<Activity>>> =
         callbackFlow {
             Log.d("GETJOINEDACTIVITIES", "CALL")
+            trySend(Response.Loading)
             val snapshotListener = activitiesRef.whereArrayContains("participants_ids", id)
                 .orderBy("creation_time", Query.Direction.DESCENDING).limit(5).get()
                 .addOnCompleteListener { task ->
@@ -870,34 +891,50 @@ class ActivityRepositoryImpl @Inject constructor(
                             for (document in documents) {
                                 val activity = document.toObject<Activity>()
                                 Log.d("GETJOINEDACTIVITIES", activity.toString())
-
-
                                 if (activity != null) {
                                     newActivities.add(activity)
                                 }
                             }
                             lastVisibleJoinedData = documents[documents.size - 1]
                             trySend(Response.Success(newActivities))
-
+                        } else {
+                            // Send a failure response indicating that no activities are found
+                            trySend(
+                                Response.Failure(
+                                    e = SocialException(
+                                        message = "No activities found.",
+                                        e = Exception()
+                                    )
+                                )
+                            )
                         }
                     } else {
-                        // There are no more messages to load
+                        // There was an error while retrieving activities
                         trySend(
                             Response.Failure(
                                 e = SocialException(
-                                    message = "failed to get activities",
+                                    message = "Failed to get activities.",
                                     e = Exception()
                                 )
                             )
                         )
                     }
-
+                }.addOnFailureListener {
+                    // There was an exception in the operation
+                    trySend(
+                        Response.Failure(
+                            e = SocialException(
+                                message = it.message.toString(),
+                                e = it
+                            )
+                        )
+                    )
                 }
             awaitClose {
-
+                // Remove the snapshot listener if needed
             }
-
         }
+
 
     override suspend fun getMoreUserActivities(id: String): Flow<Response<List<Activity>>> =
         callbackFlow {

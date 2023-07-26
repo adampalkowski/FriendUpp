@@ -250,8 +250,7 @@ fun NavGraphBuilder.createGraph(
             }
 
             var friendList= userViewModel.getFriendsList()
-            var isLoading = userViewModel.friendsLoading.value
-            FriendPickerScreen(
+            FriendPickerScreen(friendListResponse=userViewModel.friendsLoading.value,
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
@@ -382,7 +381,7 @@ fun NavGraphBuilder.createGraph(
 
 
                     navController.navigate("Home")
-                },friendList=friendList,isLoading=isLoading,onEvent={
+                },friendList=friendList,onEvent={
                     when(it){
                         is FriendPickerEvents.GetMoreFriends->{
                             userViewModel.getMoreFriends(UserData.user!!.id)
@@ -626,7 +625,7 @@ fun NavGraphBuilder.createGraph(
                 }
             }
         ) {
-            CreateSettings(onEvent = { event ->
+            CreateSettings(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
                 when (event) {
                     is CreateSettingsEvents.GoBack -> {
                         val location = event.location

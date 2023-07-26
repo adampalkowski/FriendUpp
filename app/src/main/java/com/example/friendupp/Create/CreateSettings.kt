@@ -66,7 +66,7 @@ sealed class CreateSettingsEvents {
 }
 
 @Composable
-fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,activityState: ActivityState) {
+fun CreateSettings(modifier: Modifier,onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,activityState: ActivityState) {
     val focusRequester = remember { FocusRequester() }
     var locationState by remember {
         mutableStateOf<LatLng?>(null)
@@ -93,7 +93,7 @@ fun CreateSettings(onEvent: (CreateSettingsEvents) -> Unit, activity: Activity,a
     if (maxParticipantsState.text.isNotEmpty()){
         maxUserCount=maxParticipantsState.text.toInt()
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         BackHandler(true) {
             onEvent(
                 CreateSettingsEvents.GoBack(

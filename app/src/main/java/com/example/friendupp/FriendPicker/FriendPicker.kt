@@ -1,6 +1,6 @@
 package com.example.friendupp.FriendPicker
 
-import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -30,24 +30,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
-import com.example.friendupp.R
-import com.example.friendupp.ui.theme.Lexend
-import com.example.friendupp.ui.theme.SocialTheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.example.friendupp.Categories.Category
-import com.example.friendupp.ChatUi.ButtonAdd
-import com.example.friendupp.Create.CreateButton
 import com.example.friendupp.Create.FriendPickerItem
 import com.example.friendupp.Groups.SelectedUsersState
-import com.example.friendupp.Profile.FriendListEvents
 import com.example.friendupp.Profile.groupsLoading
+import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Lexend
+import com.example.friendupp.ui.theme.SocialTheme
 
 sealed class FriendPickerEvents{
     object GetMoreFriends:FriendPickerEvents()
@@ -65,7 +59,7 @@ fun FriendPickerScreen(
     createActivity: () -> Unit,
     onAllFriends:(Boolean)->Unit,
     friendList:List<User>,
-    isLoading:Boolean,
+    friendListResponse:Response<Boolean?>?,
     onEvent:(FriendPickerEvents)->Unit
 ) {
     val groupList = remember { mutableStateListOf<Chat>() }
@@ -234,7 +228,19 @@ fun FriendPickerScreen(
                 Create={       createActivity()}
             )
         }
-
+        val context= LocalContext.current
+        when(friendListResponse){
+            is Response.Success->{
+            }
+            is Response.Loading->{
+                CircularProgressIndicator()
+            }
+            is Response.Failure->{
+                Toast.makeText(context,"Failed to load in users",Toast.LENGTH_SHORT).show()
+                goBack()
+            }
+            null->{}
+        }
 
     }
 

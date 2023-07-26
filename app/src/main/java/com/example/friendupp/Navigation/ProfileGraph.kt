@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.Activities.CreatedActivitiesViewModel
+import com.example.friendupp.Activities.JoinedActivitiesViewModel
 import com.example.friendupp.ActivityPreview.handleActivityEvents
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
@@ -70,9 +72,10 @@ fun loadUser(userViewModel: UserViewModel, currentUser: MutableState<User?>) {
 }
 
 
-val modifier= Modifier
+val modifier = Modifier
     .fillMaxSize()
     .safeDrawingPadding()
+
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.profileGraph(
     navController: NavController, outputDirectory: File,
@@ -81,7 +84,7 @@ fun NavGraphBuilder.profileGraph(
     authViewModel: AuthViewModel,
     homeViewModel: HomeViewModel,
     invitesViewModel: InvitesViewModel,
-    requestViewModel:RequestViewModel
+    requestViewModel: RequestViewModel,
 ) {
     navigation(startDestination = "FriendList", route = "ProfileGraph") {
 
@@ -139,9 +142,10 @@ fun NavGraphBuilder.profileGraph(
             var photoUri by remember {
                 mutableStateOf<Uri?>(null)
             }
-            val context= LocalContext.current
+            val context = LocalContext.current
 
-            CameraView(modifier=modifier,
+            CameraView(
+                modifier = modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -152,7 +156,7 @@ fun NavGraphBuilder.profileGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
 
@@ -163,9 +167,17 @@ fun NavGraphBuilder.profileGraph(
                             if (photoUri != null) {
                                 if (photoUri != null) {
                                     userViewModel.onUriReceived(photoUri!!)
-                                    Toast.makeText(context,"Uploading image ,hol up..",Toast.LENGTH_LONG).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Uploading image ,hol up..",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 } else {
-                                    Toast.makeText(context,"Failed to upload image",Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to upload image",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
 
                                 }
                                 navController.popBackStack()
@@ -174,7 +186,7 @@ fun NavGraphBuilder.profileGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
                             Log.d("CreateGraphActivity", "dElete photo")
@@ -182,7 +194,8 @@ fun NavGraphBuilder.profileGraph(
                             photoUri = null
                         }
                         is CameraEvent.Download -> {
-                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Image saved in gallery", Toast.LENGTH_SHORT)
+                                .show()
                             photoUri = null
                         }
                         else -> {}
@@ -300,7 +313,6 @@ fun NavGraphBuilder.profileGraph(
             val user = UserData.user
             val activityViewModel: ActivityViewModel = hiltViewModel()
             if (user == null) {
-
                 navController.navigate("Welcome")
             } else {
                 activityViewModel.getJoinedActivities(user.id)
@@ -321,7 +333,7 @@ fun NavGraphBuilder.profileGraph(
                                 navController.navigate("Search")
                             }
                             is ProfileEvents.GoToFriendList -> {
-                                navController.navigate("FriendList/"+UserData.user!!.id)
+                                navController.navigate("FriendList/" + UserData.user!!.id)
                             }
                             is ProfileEvents.GoToSettings -> {
                                 navController.navigate("Settings")
@@ -366,15 +378,14 @@ fun NavGraphBuilder.profileGraph(
                     },
                     onClick = { navController.navigate("EditProfile") },
                     user = user,
-                    activityViewModel = activityViewModel
-                , activityEvents = {event->
+                    activityViewModel = activityViewModel, activityEvents = { event ->
                         handleActivityEvents(
                             event = event,
                             activityViewModel = activityViewModel,
                             userViewModel = userViewModel,
                             homeViewModel = homeViewModel,
                             navController = navController,
-                            context = context,requestViewModel=requestViewModel
+                            context = context, requestViewModel = requestViewModel
                         )
                     })
                 var uri by remember { mutableStateOf<Uri?>(null) }
@@ -465,7 +476,13 @@ fun NavGraphBuilder.profileGraph(
             }
             Log.d("EDITPROFILEDEBUG", currentUser.value.toString())
             if (currentUser.value != null) {
-                val userState =   rememberUserState(initialName =currentUser.value?.name!!, initialUsername =currentUser.value?.username!!, initialBio =currentUser.value?.biography!!, initialTags =currentUser.value?.tags!!, initialImageUrl = currentUser.value?.pictureUrl!!)
+                val userState = rememberUserState(
+                    initialName = currentUser.value?.name!!,
+                    initialUsername = currentUser.value?.username!!,
+                    initialBio = currentUser.value?.biography!!,
+                    initialTags = currentUser.value?.tags!!,
+                    initialImageUrl = currentUser.value?.pictureUrl!!
+                )
                 val usernameFlow = userViewModel.isUsernameAddedFlow?.collectAsState()
 
                 EditProfile(
@@ -482,40 +499,61 @@ fun NavGraphBuilder.profileGraph(
                             is EditProfileEvents.ConfirmChanges -> {
 
                                 currentUser.value.let {
-                                    if(it!=null){
-                                        Log.d("EDITPROFILEDEBUG",currentUser.value!!.username!!)
-                                        Log.d("EDITPROFILEDEBUG",userState.usernameState.text)
+                                    if (it != null) {
+                                        Log.d("EDITPROFILEDEBUG", currentUser.value!!.username!!)
+                                        Log.d("EDITPROFILEDEBUG", userState.usernameState.text)
 
-                                        if(currentUser.value!!.username!!.trim()!=userState.usernameState.text.trim()){
+                                        if (currentUser.value!!.username!!.trim() != userState.usernameState.text.trim()) {
 
                                             userViewModel.checkIfUsernameExists(userState.usernameState.text.trim())
-                                            usernameFlow?.value.let {
-                                                response->
-                                                when(response){
-                                                    is Response.Success->{
-                                                        currentUser.value=it.copy(tags = userState.tags, biography = userState.bioState
-                                                            .text.trim(), username = userState.usernameState.text.trim(), name = userState.nameState
-                                                            .text.trim())
+                                            usernameFlow?.value.let { response ->
+                                                when (response) {
+                                                    is Response.Success -> {
+                                                        currentUser.value = it.copy(
+                                                            tags = userState.tags,
+                                                            biography = userState.bioState
+                                                                .text.trim(),
+                                                            username = userState.usernameState.text.trim(),
+                                                            name = userState.nameState
+                                                                .text.trim()
+                                                        )
                                                         userViewModel.addUser(currentUser.value!!)
-                                                        Toast.makeText(context,"Profile edited",Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Profile edited",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
                                                         userViewModel.setCurrentUser(currentUser.value!!)
                                                         userViewModel.setUserData(currentUser.value!!)
                                                         navController.navigate("Profile")
                                                     }
-                                                    is Response.Failure->{
-                                                        Toast.makeText(context,"Username already taken",Toast.LENGTH_SHORT).show()
+                                                    is Response.Failure -> {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Username already taken",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
 
                                                     }
-                                                    else->{}
+                                                    else -> {}
                                                 }
                                             }
 
-                                        }else{
-                                            currentUser.value=it.copy(tags = userState.tags, biography = userState.bioState
-                                                .text, username = userState.usernameState.text, name = userState.nameState
-                                                .text)
+                                        } else {
+                                            currentUser.value = it.copy(
+                                                tags = userState.tags,
+                                                biography = userState.bioState
+                                                    .text,
+                                                username = userState.usernameState.text,
+                                                name = userState.nameState
+                                                    .text
+                                            )
                                             userViewModel.addUser(currentUser.value!!)
-                                            Toast.makeText(context,"Profile edited",Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Profile edited",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             userViewModel.setCurrentUser(currentUser.value!!)
                                             userViewModel.setUserData(currentUser.value!!)
                                             navController.navigate("Profile")
@@ -523,8 +561,6 @@ fun NavGraphBuilder.profileGraph(
 
                                     }
                                 }
-
-
 
 
                             }
@@ -546,10 +582,11 @@ fun NavGraphBuilder.profileGraph(
                 var uri by remember { mutableStateOf<Uri?>(null) }
                 val uriFlow = userViewModel.uri.collectAsState()
 
+
                 LaunchedEffect(uriFlow.value) {
                     val newUri = uriFlow.value
                     if (newUri != null) {
-                        userState.imageUrl=newUri.toString()
+                        userState.imageUrl = newUri.toString()
                         uri = newUri
                         userViewModel.changeUserProfilePicture(
                             UserData.user!!.id,
@@ -560,7 +597,19 @@ fun NavGraphBuilder.profileGraph(
                     }
                 }
             } else {
-                navController.popBackStack()
+            }
+
+            when (userViewModel.profileImageResponse.value) {
+                is Response.Success -> {}
+                is Response.Failure -> {
+                    Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
+                }
+                is Response.Loading -> {
+                    CircularProgressIndicator()
+
+                }
+                else -> {}
+
             }
             if (openChangePasswordDialog) {
                 ChangePasswordDialog(
@@ -606,7 +655,8 @@ fun NavGraphBuilder.profileGraph(
         }
 
         composable(
-            "FriendList/{userID}",    arguments = listOf(navArgument("userID") { type = NavType.StringType }),
+            "FriendList/{userID}",
+            arguments = listOf(navArgument("userID") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "EditProfile" ->
@@ -653,19 +703,19 @@ fun NavGraphBuilder.profileGraph(
             }
         ) { backStackEntry ->
             val userID = backStackEntry.arguments?.getString("userID")
-            if(userID!=null){
+            if (userID != null) {
                 LaunchedEffect(Unit) {
-                    Log.d("FriendsViewModel","Get friends called")
-                        userViewModel.getFriends(userID)
+                    Log.d("FriendsViewModel", "Get friends called")
+                    userViewModel.getFriends(userID)
                 }
-            }else{
+            } else {
                 navController.popBackStack()
             }
 
-            var friendList= userViewModel.getFriendsList()
-            var isLoading = userViewModel.friendsLoading.value
+            var friendList = userViewModel.getFriendsList()
 
-            FriendListScreen(modifier=Modifier.safeDrawingPadding(),onEvent = { event ->
+
+            FriendListScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
                 when (event) {
                     is FriendListEvents.GoBack -> {
                         navController.navigate("Profile")
@@ -681,7 +731,7 @@ fun NavGraphBuilder.profileGraph(
                     }
                     else -> {}
                 }
-            },friendList=friendList,isLoading)
+            }, friendList = friendList)
         }
         composable(
             "ProfileDisplay/{userID}",
@@ -790,194 +840,206 @@ fun NavGraphBuilder.profileGraph(
             val userViewModel: UserViewModel = hiltViewModel()
             val userID = backStackEntry.arguments?.getString("userID")
             val activityViewModel: ActivityViewModel = hiltViewModel()
+            val joinedActivitiesViewModel: JoinedActivitiesViewModel = hiltViewModel()
+            val joinedActivitiesResponse=joinedActivitiesViewModel.joinedActivitiesResponse.value
+            val createdActivitiesViewModel: CreatedActivitiesViewModel = hiltViewModel()
+            val createdActivitiesResponse=createdActivitiesViewModel.joinedActivitiesResponse.value
 
             if (userID != null) {
                 LaunchedEffect(key1 = userID) {
                     Log.d("SEARCHSCREENDEBUG", "get user")
+                    joinedActivitiesViewModel.getJoinedActivities(userID)
                     userViewModel.getUserListener(userID)
                 }
             }
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
+            val userResponse = userViewModel.userResponse.value
 
-            val user =userViewModel.getUserProfile()
-            if (user == null) {
-                CircularProgressIndicator()
-            } else {
-                //check if user is me then go to profiel
-                if (user.id == UserData.user!!.id) {
-                    navController.navigate("Profile")
-                }else if(user.blocked_ids.contains(UserData.user!!.id)){
-                    navController.popBackStack()
-                }
-                ProfileDisplayScreen(modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
-                    onEvent = { event ->
-                        when (event) {
-                            is ProfileDisplayEvents.GoBack -> {
-                                navController.popBackStack()
-                                userViewModel.resetUserValue()
-                            }
-                            is ProfileDisplayEvents.GoToEditProfile -> {
-                                navController.navigate("EditProfile")
-                            }
-                            is ProfileDisplayEvents.BlockUser -> {
-
-                                //UPDATE DATA
-                                userViewModel.addBlockedIdToUser(UserData.user!!.id, event.user_id)
-                                userViewModel.removeFriendFromBothUsers(UserData.user!!.id, event.user_id)
-
-                                //to update the user data ??
-                                val currentUser = authViewModel.currentUser
-                                if (currentUser != null) {
-                                    userViewModel.validateUser(currentUser)
-                                }
-
-                                navController.popBackStack()
-                                Toast.makeText(
-                                    context,
-                                    "User blocked ", Toast.LENGTH_LONG
-                                ).show()
-                            }
-
-                            is ProfileDisplayEvents.UnBlock -> {
-                                userViewModel.removeBlockedIdFromUser(
-                                    UserData.user!!.id,
-                                    event.user_id
-                                )
-
-                                //to update the user data ??
-                                val currentUser = authViewModel.currentUser
-                                if (currentUser != null) {
-                                    userViewModel.validateUser(currentUser)
-                                }
-                                navController.popBackStack()
-
-
-                                Toast.makeText(
-                                    context,
-                                    "User " + event.user_id + " invited ", Toast.LENGTH_LONG
-                                ).show()
-                            }
-                            is ProfileDisplayEvents.GoToSearch -> {
-                                navController.navigate("Search")
-                            }
-
-                            is ProfileDisplayEvents.GoToFriendList -> {
-                                navController.navigate("FriendList/"+event.id)
-                            }
-                            is ProfileDisplayEvents.GoToSettings -> {
-                                navController.navigate("Settings")
-                            }
-                            is ProfileDisplayEvents.ShareProfileLink -> {
-
-                                //CREATE A DYNAMINC LINK TO DOMAIN
-                                val dynamicLink = Firebase.dynamicLinks.dynamicLink {
-                                    link =
-                                        Uri.parse("https://link.friendup.app/" + "User" + "/" + event.user_id)
-                                    domainUriPrefix = "https://link.friendup.app/"
-                                    // Open links with this app on Android
-                                    androidParameters { }
-                                }
-                                val dynamicLinkUri = dynamicLink.uri
-                                //COPY LINK AND MAKE A TOAST
-                                localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
-                                Toast.makeText(
-                                    context,
-                                    "Copied user link to clipboard",
-                                    Toast.LENGTH_LONG
-                                ).show()
-
-                            }
-                            is ProfileDisplayEvents.GetProfileLink -> {}
-                            is ProfileDisplayEvents.RemoveFriend -> {
-
-                                userViewModel.removeInvitedIdFromUser(
-                                    UserData.user!!.id,
-                                    event.user_id
-                                )
-                                userViewModel.removeFriendFromBothUsers(
-                                    UserData.user!!.id,
-                                    event.user_id
-                                )
-
-
-                                val chat_id = UserData.user!!.friends_ids.get(event.user_id)
-
-                                // REMOVE CHAT BETWEEN USERS ????/
-                                if (chat_id != null) {
-                                    Log.d("ProfileDisplay","DElete Chat collection")
-                                    chatViewModel.deleteChatCollection(chat_id)
-                                    chatViewModel.deleteMessages(chat_id)
-                                    Toast.makeText(
-                                            context,
-                                    "Removed", Toast.LENGTH_LONG
-                                    ).show()
-
-                                }
-
-                            }
-
-                            is ProfileDisplayEvents.InviteUser -> {
-                                /*add inivte to both users*/
-                                val timestamp = getCurrentUTCTime() // Using the provided Timestamp class or any other suitable timestamp representation
-                                val newInvite = Invite(
-                                    id = UserData.user!!.id+event.user_id, // You need to generate a unique inviteId, it could be a random string or a combination of IDs and timestamp.
-                                    senderId = UserData.user!!.id,
-                                    receiverId = event.user_id,
-                                    timestamp = timestamp,
-                                    senderName = UserData.user?.username!!,
-                                    senderProfilePictureUrl = UserData.user!!.pictureUrl!!
-                                )
-
-                                // create invite and add it to invites repo
-                                invitesViewModel.addInvite(newInvite)
-
-                                /*handle notification*/
-                                sendNotification(receiver = event.user_id, message = " sent you a friend request",
-                                    title = "New friend request", username = UserData.user?.username!!, picture = UserData.user!!.pictureUrl,
-                                type="friendRequest",id=UserData.user!!.id)
-                                Toast.makeText(
-                                    context,
-                                    "User " + event.user_id + " invited ", Toast.LENGTH_LONG
-                                ).show()
-                            }
-                            is ProfileDisplayEvents.GoToChat -> {
-                                navController.navigate("ChatItem/" + event.chat_id)
-                            }
-
-                            is ProfileDisplayEvents.OpenChat -> {
-                                navController.navigate("ChatItem/" + event.id)
-
-                            }
-
-
-                            is ProfileDisplayEvents.GoToProfile -> {
-                                navController.navigate("ProfileDisplay/" + event.id)
-                            }
+            ProfileDisplayScreen(modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
+                onEvent = { event ->
+                    when (event) {
+                        is ProfileDisplayEvents.GoBack -> {
+                            navController.popBackStack()
+                            userViewModel.resetUserValue()
                         }
-                    }, activityEvents = {event->
-                        handleActivityEvents(
-                            event = event,
-                            activityViewModel = activityViewModel,
-                            userViewModel = userViewModel,
-                            homeViewModel = homeViewModel,
-                            navController = navController,
-                            context = context,
-                                    requestViewModel=requestViewModel)
-                    }, user = user, activityViewModel = activityViewModel)
-            }
+                        is ProfileDisplayEvents.GoToEditProfile -> {
+                            navController.navigate("EditProfile")
+                        }
+                        is ProfileDisplayEvents.BlockUser -> {
+
+                            //UPDATE DATA
+                            userViewModel.addBlockedIdToUser(UserData.user!!.id, event.user_id)
+                            userViewModel.removeFriendFromBothUsers(
+                                UserData.user!!.id,
+                                event.user_id
+                            )
+
+                            //to update the user data ??
+                            val currentUser = authViewModel.currentUser
+                            if (currentUser != null) {
+                                userViewModel.validateUser(currentUser)
+                            }
+
+                            navController.popBackStack()
+                            Toast.makeText(
+                                context,
+                                "User blocked ", Toast.LENGTH_LONG
+                            ).show()
+                        }
+
+                        is ProfileDisplayEvents.UnBlock -> {
+                            userViewModel.removeBlockedIdFromUser(
+                                UserData.user!!.id,
+                                event.user_id
+                            )
+
+                            //to update the user data ??
+                            val currentUser = authViewModel.currentUser
+                            if (currentUser != null) {
+                                userViewModel.validateUser(currentUser)
+                            }
+                            navController.popBackStack()
 
 
+                            Toast.makeText(
+                                context,
+                                "User " + event.user_id + " invited ", Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is ProfileDisplayEvents.GoToSearch -> {
+                            navController.navigate("Search")
+                        }
 
+                        is ProfileDisplayEvents.GoToFriendList -> {
+                            navController.navigate("FriendList/" + event.id)
+                        }
+                        is ProfileDisplayEvents.GoToSettings -> {
+                            navController.navigate("Settings")
+                        }
+                        is ProfileDisplayEvents.ShareProfileLink -> {
+
+                            //CREATE A DYNAMINC LINK TO DOMAIN
+                            val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                                link =
+                                    Uri.parse("https://link.friendup.app/" + "User" + "/" + event.user_id)
+                                domainUriPrefix = "https://link.friendup.app/"
+                                // Open links with this app on Android
+                                androidParameters { }
+                            }
+                            val dynamicLinkUri = dynamicLink.uri
+                            //COPY LINK AND MAKE A TOAST
+                            localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                            Toast.makeText(
+                                context,
+                                "Copied user link to clipboard",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                        }
+                        is ProfileDisplayEvents.GetProfileLink -> {}
+                        is ProfileDisplayEvents.RemoveFriend -> {
+
+                            userViewModel.removeInvitedIdFromUser(
+                                UserData.user!!.id,
+                                event.user_id
+                            )
+                            userViewModel.removeFriendFromBothUsers(
+                                UserData.user!!.id,
+                                event.user_id
+                            )
+
+
+                            val chat_id = UserData.user!!.friends_ids.get(event.user_id)
+
+                            // REMOVE CHAT BETWEEN USERS ????/
+                            if (chat_id != null) {
+                                Log.d("ProfileDisplay", "DElete Chat collection")
+                                chatViewModel.deleteChatCollection(chat_id)
+                                chatViewModel.deleteMessages(chat_id)
+                                Toast.makeText(
+                                    context,
+                                    "Removed", Toast.LENGTH_LONG
+                                ).show()
+
+                            }
+
+                        }
+
+                        is ProfileDisplayEvents.InviteUser -> {
+                            /*add inivte to both users*/
+                            val timestamp =
+                                getCurrentUTCTime() // Using the provided Timestamp class or any other suitable timestamp representation
+                            val newInvite = Invite(
+                                id = UserData.user!!.id + event.user_id, // You need to generate a unique inviteId, it could be a random string or a combination of IDs and timestamp.
+                                senderId = UserData.user!!.id,
+                                receiverId = event.user_id,
+                                timestamp = timestamp,
+                                senderName = UserData.user?.username!!,
+                                senderProfilePictureUrl = UserData.user!!.pictureUrl!!
+                            )
+
+                            // create invite and add it to invites repo
+                            invitesViewModel.addInvite(newInvite)
+
+                            /*handle notification*/
+                            sendNotification(
+                                receiver = event.user_id,
+                                message = " sent you a friend request",
+                                title = "New friend request",
+                                username = UserData.user?.username!!,
+                                picture = UserData.user!!.pictureUrl,
+                                type = "friendRequest",
+                                id = UserData.user!!.id
+                            )
+                            Toast.makeText(
+                                context,
+                                "User " + event.user_id + " invited ", Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is ProfileDisplayEvents.GoToChat -> {
+                            navController.navigate("ChatItem/" + event.chat_id)
+                        }
+
+                        is ProfileDisplayEvents.OpenChat -> {
+                            navController.navigate("ChatItem/" + event.id)
+
+                        }
+                        is ProfileDisplayEvents.MainProfile -> {
+                            navController.navigate("Profile")
+
+                        }
+                        is ProfileDisplayEvents.GetMoreJoinedActivities -> {
+                            activityViewModel.getMoreJoinedActivities(event.user_id)
+                        }
+
+
+                        is ProfileDisplayEvents.GoToProfile -> {
+                            navController.navigate("ProfileDisplay/" + event.id)
+                        }
+                    }
+                },
+                activityEvents = { event ->
+                    handleActivityEvents(
+                        event = event,
+                        activityViewModel = activityViewModel,
+                        userViewModel = userViewModel,
+                        homeViewModel = homeViewModel,
+                        navController = navController,
+                        context = context,
+                        requestViewModel = requestViewModel
+                    )
+                },
+                userResponse = userResponse,
+                activityViewModel = activityViewModel,
+                context = context,
+                joinedActivitiesResponse=joinedActivitiesResponse,
+                        createdActivitiesResponse=createdActivitiesResponse
+            )
 
         }
     }
 }
 
-
-
-fun generateInviteId(): String {
-    return UUID.randomUUID().toString()
-}

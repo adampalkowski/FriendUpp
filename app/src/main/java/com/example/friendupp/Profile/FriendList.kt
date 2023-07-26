@@ -49,7 +49,6 @@ fun FriendListScreen(
     modifier: Modifier = Modifier,
     onEvent: (FriendListEvents) -> Unit,
     friendList:List<User>,
-    isLoading:Boolean
 ) {
     Column(modifier = modifier) {
         ScreenHeading(
@@ -58,9 +57,7 @@ fun FriendListScreen(
             onBack = { onEvent(FriendListEvents.GoBack) })
         {}
         Modifier.height(32.dp)
-        if(isLoading){
-            CircularProgressIndicator()
-        }else{
+
             LazyColumn {
                 items(friendList) { user ->
                     FriendItem(
@@ -78,7 +75,6 @@ fun FriendListScreen(
                 }
             }
 
-        }
 
     }
 

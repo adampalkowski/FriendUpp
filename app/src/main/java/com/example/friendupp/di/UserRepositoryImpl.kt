@@ -559,8 +559,7 @@ class UserRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getFriends(id: String): Flow<Response<ArrayList<User>>> = callbackFlow {
-        Log.d("GEETINGUSERS", "GETFRIENDS")
-        Log.d("GEETINGUSERS", id)
+        trySend(Response.Loading)
         usersRef.whereArrayContains("friends_ids_list", id).orderBy("accountCreateTime").limit(5).get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

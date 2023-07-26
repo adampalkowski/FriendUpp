@@ -1,5 +1,7 @@
 package com.example.friendupp.Profile
 
+import android.content.Context
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -9,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -33,6 +36,7 @@ import com.example.friendupp.bottomBar.ActivityUi.ActivityEvents
 import com.example.friendupp.bottomBar.ActivityUi.activityItem
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
@@ -42,6 +46,8 @@ import com.example.friendupp.ui.theme.SocialTheme
 sealed class ProfileDisplayEvents {
     object GoToSearch : ProfileDisplayEvents()
     class InviteUser(val user_id :String): ProfileDisplayEvents()
+    object MainProfile: ProfileDisplayEvents()
+    class GetMoreJoinedActivities(val user_id :String): ProfileDisplayEvents()
     class BlockUser(val user_id :String): ProfileDisplayEvents()
     class UnBlock(val user_id :String): ProfileDisplayEvents()
     class ShareProfileLink(val user_id :String): ProfileDisplayEvents()
@@ -66,25 +72,81 @@ enum class UserOption {
     UNKNOWN
 }
 
+
 @Composable
 fun ProfileDisplayScreen(
     modifier: Modifier,
     onEvent: (ProfileDisplayEvents) -> Unit,
     activityEvents: (ActivityEvents) -> Unit,
-    user: User,
-    activityViewModel:ActivityViewModel
+    userResponse: Response<User>?,
+    activityViewModel:ActivityViewModel,
+    context:Context,
+    joinedActivitiesResponse: Response<List<Activity>>,
+    createdActivitiesResponse: Response<List<Activity>>
 ) {
+    // Handle null safety and loading state
+    when(userResponse) {
+        is Response.Success->{
+            //check if user is me then go to profiel
+            if (userResponse.data.id == UserData.user!!.id) {
+                onEvent(ProfileDisplayEvents.MainProfile)
+            } else if (userResponse.data.blocked_ids.contains(UserData.user!!.id)) {
+                onEvent(ProfileDisplayEvents.GoBack)
 
-    var joinedActivitiesExist= remember { mutableStateOf(false) }
-    var historyActivitiesExist= remember { mutableStateOf(false) }
+            }
+            // The data has been successfully fetched, and group is not null
+            ProfileDisplayContent(modifier=modifier,
+                onEvent =onEvent,activityEvents=activityEvents,
+                user=userResponse.data, activityViewModel=activityViewModel
+            ,joinedActivitiesResponse=joinedActivitiesResponse,createdActivitiesResponse=createdActivitiesResponse)
+        }
+        is Response.Loading->{
+            // Show a loading indicator while data is being fetched
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is Response.Failure->{
+            // Show an error message or navigate back on failure
+            Toast.makeText(
+                context,
+                "Failed to load user profile. Please try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+            // You can also navigate back using the onEvent callback
+            onEvent(ProfileDisplayEvents.GoBack)
+        }
+        else->{
+            // Show a loading indicator or some placeholder content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
 
+    }
+}
+@Composable
+fun ProfileDisplayContent(
+    modifier: Modifier,
+    onEvent: (ProfileDisplayEvents) -> Unit,
+    activityEvents: (ActivityEvents) -> Unit,
+    user: User,
+    activityViewModel:ActivityViewModel,
+    joinedActivitiesResponse: Response<List<Activity>>,
+    createdActivitiesResponse: Response<List<Activity>>,
+) {
 
     var displaySettings by remember {
         mutableStateOf(false)
     }
 
     //LOAD IN PROFILE ACTIVITIES
-
 
     var selectedItem by remember { mutableStateOf("Upcoming") }
     var ifCalendar by remember { mutableStateOf(true) }
@@ -94,13 +156,11 @@ fun ProfileDisplayScreen(
     val moreHistoryActivities = remember { mutableStateListOf<Activity>() }
 
 
-    val joinedActivities = remember { mutableStateListOf<Activity>() }
-    val moreJoinedActivities = remember { mutableStateListOf<Activity>() }
+    var joinedActivitiesExist= remember { mutableStateOf(false) }
+    var historyActivitiesExist= remember { mutableStateOf(false) }
+
 
     if(selectedItem=="Upcoming"){
-
-        loadJoinedActivities(activityViewModel,joinedActivities,user.id)
-        loadMoreJoinedActivities(activityViewModel,moreJoinedActivities)
 
 
     }else{
@@ -205,58 +265,63 @@ fun ProfileDisplayScreen(
         if(userOption==UserOption.FRIEND){
 
         if(ifCalendar){
-            items(joinedActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-                )
-            }
-            items(moreJoinedActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
+            when(joinedActivitiesResponse){
+                is Response.Success->{
+                    items(joinedActivitiesResponse.data) { activity ->
+                        activityItem(
+                            activity,
+                            onClick = {
+                                // Handle click event
+                            },
+                            onEvent = activityEvents
+                        )
+                    }
+                }
+                is Response.Loading->{
+                    item{
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                is Response.Failure->{
 
-                )
+                }
+                else->{}
             }
+
             item {
                 Spacer(modifier = Modifier.height(64.dp))
-
             }
             item {
                 LaunchedEffect(true) {
                     if (joinedActivitiesExist.value) {
-                        activityViewModel.getMoreJoinedActivities(UserData.user!!.id)
+                        onEvent(ProfileDisplayEvents.GetMoreJoinedActivities(UserData.user!!.id))
+
                     }
                 }
             }
         }
         if(ifHistory){
-            items(activitiesHistory) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
+            when(createdActivitiesResponse){
+                is Response.Success->{
+                    items(createdActivitiesResponse.data) { activity ->
+                        activityItem(
+                            activity,
+                            onClick = {
+                                // Handle click event
+                            },
+                            onEvent = activityEvents
+                        )
+                    }
+                }
+                is Response.Loading->{
+                    item{
+                        androidx.compose.material3.CircularProgressIndicator()
+                    }
+                }
+                is Response.Failure->{
 
-                )
-            }
-
-            items(moreHistoryActivities) { activity ->
-                activityItem(
-                    activity,
-                    onClick = {
-                        // Handle click event
-                    },
-                    onEvent = activityEvents
-
-                )
+                }
+                else->{}
             }
             item {
                 Spacer(modifier = Modifier.height(64.dp))

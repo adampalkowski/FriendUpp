@@ -1,17 +1,16 @@
 package com.example.friendupp.Groups
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,21 +21,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.friendupp.bottomBar.ActivityUi.activityItem
-import com.example.friendupp.ChatUi.ButtonAdd
-import com.example.friendupp.ChatUi.ChatSettingsEvents
+import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.Components.ScreenHeading
-import com.example.friendupp.Profile.*
+import com.example.friendupp.Profile.ProfileDisplaySettingsItem
+import com.example.friendupp.Profile.Stat
 import com.example.friendupp.R
 import com.example.friendupp.Settings.SettingsItem
-import com.example.friendupp.di.ActivityViewModel
-import com.example.friendupp.model.Activity
+import com.example.friendupp.bottomBar.ActivityUi.ChangeDescriptionDialog
 import com.example.friendupp.model.Chat
-
-import com.example.friendupp.model.User
+import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
@@ -48,13 +43,13 @@ sealed class GroupDisplayEvents {
     object GoBack : GroupDisplayEvents()
     object GoToSettings : GroupDisplayEvents()
     object GoToEditProfile : GroupDisplayEvents()
-    object AddUsers : GroupDisplayEvents()
+    class AddUsers(val id: String): GroupDisplayEvents()
     class ShareGroupLink(val id: String) : GroupDisplayEvents()
     class ChangeImage(val id: String) : GroupDisplayEvents()
-    class LeaveGroup(val id: String) : GroupDisplayEvents()
-    class DeleteGroup(val id: String) : GroupDisplayEvents()
-    class ChangeGroupName(val id: String) : GroupDisplayEvents()
-    class ReportGroup(val id: String) : GroupDisplayEvents()
+    class LeaveGroup(val chat: Chat) : GroupDisplayEvents()
+    class DeleteGroup(val chat: Chat) : GroupDisplayEvents()
+    class ChangeGroupName(val chat: Chat,val name:String) : GroupDisplayEvents()
+    class ReportGroup(val chat: Chat) : GroupDisplayEvents()
 
     /*todo*/
     object GoToFriendList : GroupDisplayEvents()
@@ -62,23 +57,63 @@ sealed class GroupDisplayEvents {
     object GetProfileLink : GroupDisplayEvents()
 }
 
-
 @Composable
 fun GroupDisplayScreen(
+    modifier: Modifier = Modifier,
+    onEvent: (GroupDisplayEvents) -> Unit,
+    chatResponse:Response<Chat>?,
+    context: Context
+) {
+
+    // Handle null safety and loading state
+    when(chatResponse) {
+        is Response.Success->{
+
+            // The data has been successfully fetched, and group is not null
+            GroupDisplayContent(modifier=modifier,group = chatResponse.data, onEvent = onEvent)
+        }
+        is Response.Loading->{
+            // Show a loading indicator while data is being fetched
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is Response.Failure->{
+            // Show an error message or navigate back on failure
+            Toast.makeText(
+                context,
+                "Failed to load chat. Please try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+            // You can also navigate back using the onEvent callback
+            onEvent(GroupDisplayEvents.GoBack)
+        }
+        else->{
+            // Show a loading indicator or some placeholder content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+    }
+}
+@Composable
+fun GroupDisplayContent(
     modifier: Modifier,
     onEvent: (GroupDisplayEvents) -> Unit,
-    onClick: () -> Unit = {},
     group: Chat,
 ) {
 
-    var displaySettings by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    BackHandler(true) {
-        onEvent(GroupDisplayEvents.GoBack)
-    }
-
+    var openReportDialog by remember { mutableStateOf(false) }
+    var openLeaveDialog by remember { mutableStateOf(false) }
+    var openDeleteDialog by remember { mutableStateOf(false) }
+    var openChangeNameDialog by remember { mutableStateOf(false) }
     LazyColumn {
         item {
             Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -103,14 +138,15 @@ fun GroupDisplayScreen(
                     onEvent(GroupDisplayEvents.GoToMembers(group.id!!))
                 }
                 SettingsItem(label = "Add users", icon = R.drawable.ic_group_add) {
-                    onEvent(GroupDisplayEvents.AddUsers)
+                    onEvent(GroupDisplayEvents.AddUsers(group.id.toString()))
                 }
 
                 SettingsItem(label = "Change group image", icon = R.drawable.ic_add_image) {
                     onEvent(GroupDisplayEvents.ChangeImage(group.id.toString()))
                 }
                 SettingsItem(label = "Change group name", icon = R.drawable.ic_edit) {
-                    onEvent(GroupDisplayEvents.ChangeGroupName(group.id.toString()))
+                    openChangeNameDialog = true
+
                 }
 
                 SettingsItem(label = "Share group", icon = R.drawable.ic_share) {
@@ -118,17 +154,17 @@ fun GroupDisplayScreen(
                 }
 
                 if (group.owner_id==UserData.user!!.id) {
-                    SettingsItem(label = "Delete group", icon = R.drawable.ic_logout) {
-                        onEvent(GroupDisplayEvents.DeleteGroup(group.id!!))
+                    SettingsItem(label = "Delete group", icon = R.drawable.ic_delete) {
+                        openLeaveDialog = true
+
                     }
                 }else{
                     SettingsItem(label = "Leave group", icon = R.drawable.ic_logout) {
-                        onEvent(GroupDisplayEvents.LeaveGroup(UserData.user!!.id))
                     }
                 }
 
                 SettingsItem(label = "Report", icon = R.drawable.ic_flag) {
-                    onEvent(GroupDisplayEvents.ReportGroup(UserData.user!!.id))
+                    openReportDialog = true
 
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -147,7 +183,56 @@ fun GroupDisplayScreen(
         }
     }
 
+    if (openDeleteDialog) {
+        FriendUppDialog(
+            label = "Delete the group? Group chat will also be deleted. This action is irreversible and will lose all the group information. ",
+            icon = R.drawable.ic_delete,
+            onCancel = { openDeleteDialog = false },
+            onConfirm = {
+                onEvent(GroupDisplayEvents.DeleteGroup(group))
+                openDeleteDialog=false
+            }, confirmLabel = "Delete"
+        )
+    }
+    if (openChangeNameDialog) {
+        ChangeDescriptionDialog(
+            label = "Change group name.",
+            icon = R.drawable.ic_edit,
+            onCancel = { openChangeNameDialog = false },
+            onConfirm = { name ->
+                onEvent(GroupDisplayEvents.ChangeGroupName(group,name))
+                openChangeNameDialog=false
 
+            },
+            confirmTextColor = SocialTheme.colors.textInteractive,
+            disableConfirmButton = false, editTextLabel = "Group name"
+        )
+    }
+    if (openReportDialog) {
+        FriendUppDialog(
+            label = "If the group contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
+            icon = R.drawable.ic_flag,
+            onCancel = { openReportDialog = false },
+            onConfirm = {
+                onEvent(GroupDisplayEvents.ReportGroup(group))
+                openReportDialog=false
+
+            }, confirmLabel = "Report"
+        )
+    }
+    if (openLeaveDialog) {
+        FriendUppDialog(
+            label = "Leave group? You will be able to rejoin it if somone invites you again.",
+            icon = R.drawable.ic_logout,
+            onCancel = { openDeleteDialog = false },
+            onConfirm = {
+                onEvent(GroupDisplayEvents.LeaveGroup(chat = group))
+
+                openLeaveDialog=false
+
+            }, confirmLabel = "Leave group", confirmTextColor = SocialTheme.colors.error
+        )
+    }
 }
 
 @Composable

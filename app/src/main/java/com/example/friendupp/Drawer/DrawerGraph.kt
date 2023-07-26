@@ -1,7 +1,5 @@
 package com.example.friendupp.Drawer
 
-import android.content.res.Resources
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,22 +7,19 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.Activities.CreatedActivitiesViewModel
+import com.example.friendupp.Activities.JoinedActivitiesViewModel
 import com.example.friendupp.ActivityPreview.handleActivityEvents
-import com.example.friendupp.Groups.GroupInvitesViewModel
 import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Navigation.modifier
-import com.example.friendupp.Navigation.sendNotification
-import com.example.friendupp.Profile.LocationStateSaver
-import com.example.friendupp.Profile.ProfileEvents
-import com.example.friendupp.R
 import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.Settings.*
 import com.example.friendupp.di.ActivityViewModel
@@ -114,9 +109,13 @@ fun NavGraphBuilder.drawerGraph(
                 }
                 "Joined" -> {
                     val context = LocalContext.current
+                    val joinedActivitiesViewModel:JoinedActivitiesViewModel= hiltViewModel()
+                    LaunchedEffect(true ){
+                        joinedActivitiesViewModel.getJoinedActivities(UserData.user!!.id)
+                    }
                     JoinedActivitiesScreen(
                         modifier = Modifier.safeDrawingPadding(),
-                        onEvent = { event ->
+                        activitiesEvents = {event->
                             handleActivityEvents(
                                 event = event,
                                 activityViewModel = activityViewModel,
@@ -126,16 +125,28 @@ fun NavGraphBuilder.drawerGraph(
                                 context = context,
                                 requestViewModel = requestViewModel
                             )
+                        },
+                        onEvent = { event ->
+                            when(event){
+                                is JoinedActivitiesScreenEvents.GetMoreJoinedActivities->{
+                                    joinedActivitiesViewModel.getMoreJoinedActivities(event.id)
+                                }
+                            }
+
 
                         },
-                        activityViewModel
+                        joinedActivitiesResponse = joinedActivitiesViewModel.joinedActivitiesResponse.value
                     )
                 }
                 "Created" -> {
-                    val context= LocalContext.current
+                    val context = LocalContext.current
+                    val createdActivitiesViewModel: CreatedActivitiesViewModel = hiltViewModel()
+                    LaunchedEffect(true ){
+                        createdActivitiesViewModel.fetchJoinedActivities(UserData.user!!.id)
+                    }
                     CreatedActivitiesScreen(
                         modifier = Modifier.safeDrawingPadding(),
-                        onEvent = { event ->
+                        activitiesEvents = { event ->
                             handleActivityEvents(
                                 event = event,
                                 activityViewModel = activityViewModel,
@@ -145,11 +156,19 @@ fun NavGraphBuilder.drawerGraph(
                                 context = context,
                                 requestViewModel = requestViewModel
 
-
                             )
 
+                        },onEvent={event->
+                            when(event){
+                                is CreatedActivitiesScreenEvents.GoBack->{
+                                    navController.popBackStack()
+                                }
+                                is CreatedActivitiesScreenEvents.GetMoreCreatedActivities->{
+                                    createdActivitiesViewModel.fetchMoreJoinedActivities(event.id)
+                                }
+                            }
                         },
-                        activityViewModel
+                        createdActivitiesResponse = createdActivitiesViewModel.joinedActivitiesResponse.value
                     )
 
                 }

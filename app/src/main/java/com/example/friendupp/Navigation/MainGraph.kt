@@ -1046,7 +1046,7 @@ fun NavGraphBuilder.mainGraph(
             }
 
             var friendList = userViewModel.getFriendsList()
-            var isLoading = userViewModel.friendsLoading.value
+
             val selectedUsers = remember { mutableStateListOf<String>() }
             val context = LocalContext.current
             if (activityId != null) {
@@ -1085,14 +1085,14 @@ fun NavGraphBuilder.mainGraph(
                                 }
                             }
                         }
-                    }, friendList = friendList, isLoading = isLoading, onEvent = {
+                    }, friendList = friendList, onEvent = {
                         when (it) {
                             is FriendPickerEvents.GetMoreFriends -> {
                                 userViewModel.getMoreFriends(UserData.user!!.id)
 
                             }
                         }
-                    })
+                    },friendListResponse=userViewModel.friendsLoading.value)
             } else {
                 navController.popBackStack()
             }

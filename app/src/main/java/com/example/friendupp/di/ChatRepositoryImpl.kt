@@ -36,6 +36,7 @@ class ChatRepositoryImpl @Inject constructor(
     private  var loaded_messages: ArrayList<ChatMessage> = ArrayList()
     override suspend fun getChatCollection(id: String): Flow<Response<Chat>> = flow {
         try {
+            emit(  Response.Loading)
             val documentSnapshot = chatCollectionsRef.document(id).get().await()
             val response = if (documentSnapshot != null && documentSnapshot.exists()) {
                 val activity = documentSnapshot.toObject<Chat>()

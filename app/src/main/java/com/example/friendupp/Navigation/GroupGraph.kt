@@ -3,6 +3,7 @@ package com.example.friendupp.Navigation
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -63,7 +64,9 @@ fun NavGraphBuilder.groupGraph(
     groupState: GroupState,
     outputDirectory: File,
     executor: Executor,
-    userViewModel: UserViewModel, activityViewModel: ActivityViewModel,groupInvitesViewModel: GroupInvitesViewModel
+    userViewModel: UserViewModel,
+    activityViewModel: ActivityViewModel,
+    groupInvitesViewModel: GroupInvitesViewModel,
 
 
     ) {
@@ -150,10 +153,9 @@ fun NavGraphBuilder.groupGraph(
             }
 
             var friendList = userViewModel.getFriendsList()
-            var isLoading = userViewModel.friendsLoading.value
             val groupParticipantsViewModel: GroupParticipantsViewModel = hiltViewModel()
 
-            FriendPickerScreen(
+            FriendPickerScreen(friendListResponse = userViewModel.friendsLoading.value,
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
@@ -209,7 +211,7 @@ fun NavGraphBuilder.groupGraph(
                             }
                         }
                     }
-                }, friendList = friendList, isLoading = isLoading, onEvent = {
+                }, friendList = friendList, onEvent = {
                     when (it) {
                         is FriendPickerEvents.GetMoreFriends -> {
                             userViewModel.getMoreFriends(UserData.user!!.id)
@@ -242,11 +244,17 @@ fun NavGraphBuilder.groupGraph(
                         navController.popBackStack()
                     }
                     is GroupsEvents.AcceptGroupInvite -> {
-                        val participant=Participant(id=UserData.user!!.id, profile_picture = UserData.user!!.pictureUrl!!,name=UserData.user!!.name!!,username=UserData.user!!.username!!, timestamp = getCurrentUTCTime())
-                        groupInvitesViewModel.addParticipantToGroup(event.group,participant)
+                        val participant = Participant(
+                            id = UserData.user!!.id,
+                            profile_picture = UserData.user!!.pictureUrl!!,
+                            name = UserData.user!!.name!!,
+                            username = UserData.user!!.username!!,
+                            timestamp = getCurrentUTCTime()
+                        )
+                        groupInvitesViewModel.addParticipantToGroup(event.group, participant)
                     }
                     is GroupsEvents.RemoveGroupInvite -> {
-                        groupInvitesViewModel.removeInvite(event.group,UserData.user!!.id)
+                        groupInvitesViewModel.removeInvite(event.group, UserData.user!!.id)
                     }
                     is GroupsEvents.GoToGroupDisplay -> {
                         navController.navigate("GroupDisplay/" + event.groupId)
@@ -393,7 +401,7 @@ fun NavGraphBuilder.groupGraph(
             }, groupState = groupState)
         }
 
-        composable( "GroupCamera/{id}",
+        composable("GroupCamera/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
@@ -444,59 +452,73 @@ fun NavGraphBuilder.groupGraph(
                     )
                 }
             }
-        ) {backStackEntry->
-            val id =backStackEntry.arguments?.getString("id")
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")
             var photoUri by remember {
                 mutableStateOf<Uri?>(null)
             }
 
 
             val context = LocalContext.current
-            CameraView(modifier=modifier,outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
-                photoUri= uri
-                /*todo handle the image uri*/
-            }, onError = {}, onEvent = {event->
-                when(event){
-                    is CameraEvent.GoBack->{
-                        if(photoUri!=null){
-                            photoUri!!.toFile().delete()
-                        }
-                        navController.popBackStack()
-                    }
-                    is CameraEvent.AcceptPhoto->{
-                        Log.d("CAMERAGRAPHACTIvity","ACASDASDASD")
-                        if (photoUri!=null){
-                            if(id!=null){
-                                val photo:String = photoUri.toString()
-                                chatViewModel.updateGroupImage(id,photo)
-                                Toast.makeText(context,"Uploading image..",Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
-                            }else{
-                                navController.popBackStack()
-                                Toast.makeText(context,"Failed to upload image",Toast.LENGTH_SHORT).show()
-
+            CameraView(
+                modifier = modifier,
+                outputDirectory = outputDirectory,
+                executor = executor,
+                onImageCaptured = { uri ->
+                    photoUri = uri
+                    /*todo handle the image uri*/
+                },
+                onError = {},
+                onEvent = { event ->
+                    when (event) {
+                        is CameraEvent.GoBack -> {
+                            if (photoUri != null) {
+                                photoUri!!.toFile().delete()
                             }
-
-
-                            /*todo dooo sth with the final uri */
+                            navController.popBackStack()
                         }
-                    }
-                    is CameraEvent.DeletePhoto -> {
-                        if(photoUri!=null){
-                            photoUri!!.toFile().delete()
+                        is CameraEvent.AcceptPhoto -> {
+                            Log.d("CAMERAGRAPHACTIvity", "ACASDASDASD")
+                            if (photoUri != null) {
+                                if (id != null) {
+                                    val photo: String = photoUri.toString()
+                                    chatViewModel.updateGroupImage(id, photo)
+                                    Toast.makeText(context, "Uploading image..", Toast.LENGTH_SHORT)
+                                        .show()
+                                    navController.popBackStack()
+                                } else {
+                                    navController.popBackStack()
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to upload image",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                }
+
+
+                                /*todo dooo sth with the final uri */
+                            }
                         }
-                        Log.d("CreateGraphActivity", "dElete photo")
+                        is CameraEvent.DeletePhoto -> {
+                            if (photoUri != null) {
+                                photoUri!!.toFile().delete()
+                            }
+                            Log.d("CreateGraphActivity", "dElete photo")
 
-                        photoUri = null
-                    }
-                    is CameraEvent.Download -> {
-                        Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            photoUri = null
+                        }
+                        is CameraEvent.Download -> {
+                            Toast.makeText(context, "Image saved in gallery", Toast.LENGTH_SHORT)
+                                .show()
 
-                        photoUri = null
+                            photoUri = null
+                        }
+                        else -> {}
                     }
-                    else ->{}
-                }
-            },photoUri=photoUri)
+                },
+                photoUri = photoUri
+            )
 
         }
         composable(
@@ -504,15 +526,10 @@ fun NavGraphBuilder.groupGraph(
             arguments = listOf(navArgument("groupId") { type = NavType.StringType }),
         ) { backStackEntry ->
 
-            val userViewModel: UserViewModel = hiltViewModel()
             val groupId = backStackEntry.arguments?.getString("groupId")
-            val activityViewModel: ActivityViewModel = hiltViewModel()
             val groupInvitesViewModel: GroupInvitesViewModel = hiltViewModel()
+            val chatViewModel: ChatViewModel = hiltViewModel()
 
-            var openReportDialog by remember{mutableStateOf(false)}
-            var openLeaveDialog by remember{mutableStateOf(false)}
-            var openDeleteDialog by remember{mutableStateOf(false)}
-            var openChangeNameDialog by remember{mutableStateOf(false)}
 
             if (groupId != null) {
                 LaunchedEffect(key1 = groupId) {
@@ -522,88 +539,44 @@ fun NavGraphBuilder.groupGraph(
             }
             val localClipboardManager = LocalClipboardManager.current
             val context = LocalContext.current
-            val chatFlow = chatViewModel.chatCollectionState.collectAsState()
-            val chat = remember { mutableStateOf<Chat?>(null) }
-            if (chat.value == null) {
-                CircularProgressIndicator()
-            } else {
-                GroupDisplayScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
-                    when (event) {
-                        is GroupDisplayEvents.GoBack -> {
-                            navController.popBackStack()
-                        }
-                        is GroupDisplayEvents.GoToMembers -> {
-                            navController.navigate("GroupMembers/" +  event.id)
-                        }
-                        is GroupDisplayEvents.ChangeImage -> {
-                            navController.navigate("GroupCamera/" +  event.id)
-                        }
-                        is GroupDisplayEvents.AddUsers -> {
-                            navController.navigate("FriendPickerAddGroupUsers/" + chat.value!!.id)
-                        }
-                        is GroupDisplayEvents.LeaveGroup -> {
-                            openLeaveDialog=true
-
-                        }
-                        is GroupDisplayEvents.ChangeGroupName -> {
-                            openChangeNameDialog=true
-                        }
-                        is GroupDisplayEvents.DeleteGroup -> {
-                            openDeleteDialog=true
-
-                        }
-                        is GroupDisplayEvents.ReportGroup -> {
-                            openReportDialog=true
-
-                        }
-                        is GroupDisplayEvents.ShareGroupLink -> {
-                            //CREATE A DYNAMINC LINK TO DOMAIN
-                            val dynamicLink = Firebase.dynamicLinks.dynamicLink {
-                                link =
-                                    Uri.parse("https://link.friendup.app/" + "Group" + "/" + event.id)
-                                domainUriPrefix = "https://link.friendup.app/"
-                                // Open links with this app on Android
-                                androidParameters { }
-                            }
-                            val dynamicLinkUri = dynamicLink.uri
-                            //COPY LINK AND MAKE A TOAST
-                            localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
-                            Toast.makeText(
-                                context,
-                                "Copied group link to clipboard",
-                                Toast.LENGTH_LONG
-                            ).show()
-
-                        }
-                        else -> {}
+            val chatResponse = chatViewModel.chatLoading.value
+            BackHandler(true) {
+                navController.popBackStack()
+            }
+            GroupDisplayScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
+                when (event) {
+                    is GroupDisplayEvents.GoBack -> {
+                        navController.popBackStack()
                     }
+                    is GroupDisplayEvents.GoToMembers -> {
+                        navController.navigate("GroupMembers/" + event.id)
+                    }
+                    is GroupDisplayEvents.ChangeImage -> {
+                        navController.navigate("GroupCamera/" + event.id)
+                    }
+                    is GroupDisplayEvents.AddUsers -> {
+                        navController.navigate("FriendPickerAddGroupU sers/" + event.id)
+                    }
+                    is GroupDisplayEvents.LeaveGroup -> {
+                        groupInvitesViewModel.removeParticipantFromGroupOnlyId(
+                            event.chat,
+                            UserData.user!!.id
+                        )
+                        Toast.makeText(
+                            context,
+                            "Left group " + event.chat.name.toString(),
+                            Toast.LENGTH_LONG
+                        ).show()
 
-                },group = chat.value!!)
-            }
+                        navController.popBackStack()
+                    }
+                    is GroupDisplayEvents.ChangeGroupName -> {
+                        if (!event.chat.id.isNullOrEmpty()) {
+                            chatViewModel.updateChatCollectionName(event.name, event.chat.id!!)
+                            event.chat.let { it ->
+                                chatViewModel.chatState.value=it.copy(name=event.name)
 
-            if(openDeleteDialog){
-                FriendUppDialog(
-                    label = "Delete the group? Group chat will also be deleted. This action is irreversible and will lose all the group information. ",
-                    icon = R.drawable.ic_delete,
-                    onCancel = { openDeleteDialog=false },
-                    onConfirm = {
-                        groupInvitesViewModel.deleteGroup(chat.value!!)
-                        Toast.makeText(context,"Group deleted",Toast.LENGTH_SHORT).show()
-                        openDeleteDialog=false
-                                navController.popBackStack()}, confirmLabel = "Delete")
-            }
-            if(openChangeNameDialog){
-                ChangeDescriptionDialog(
-                    label = "Change group name.",
-                    icon = R.drawable.ic_edit,
-                    onCancel = { openChangeNameDialog = false },
-                    onConfirm = { name ->
-                        if (!chat.value!!.id.isNullOrEmpty()) {
-                            chatViewModel.updateChatCollectionName(name,chat.value!!.id!! )
-                            chat.value?.let { it->
-                                chat.value=it.copy(name=name)
                             }
-                            openChangeNameDialog = false
                             Toast.makeText(
                                 context,
                                 "Group name updated.",
@@ -616,71 +589,43 @@ fun NavGraphBuilder.groupGraph(
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
-
-                    },
-                    confirmTextColor = SocialTheme.colors.textInteractive,
-                    disableConfirmButton = false,editTextLabel="Group name"
-                )
-            }
-            if(openReportDialog){
-                FriendUppDialog(
-                    label = "If the group contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
-                    icon = R.drawable.ic_flag,
-                    onCancel = { openReportDialog=false },
-                    onConfirm = {
-                        chatViewModel.reportChat(chat.value!!.id.toString())
-                        Toast.makeText(context,"Group reported",Toast.LENGTH_SHORT).show()
-                        openReportDialog=false}, confirmLabel = "Report")
-            }
-            if(openLeaveDialog){
-                FriendUppDialog(
-                    label = "Leave group? You will be able to rejoin it if somone invites you again.",
-                    icon = R.drawable.ic_logout,
-                    onCancel = { openDeleteDialog=false },
-                    onConfirm = {
-                        groupInvitesViewModel.removeParticipantFromGroupOnlyId(chat.value!!,UserData.user!!.id)
-                        Toast.makeText(
-                            context,
-                            "Left group "+chat.value!!.name.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        openDeleteDialog=false
-                        navController.popBackStack()}, confirmLabel = "Leave group", confirmTextColor = SocialTheme.colors.error)
-            }
-
-
-
-
-            val LOADING_TIMEOUT_DURATION = 5000L
-
-            LaunchedEffect(true) {
-                // Wait for the loading response with a timeout
-                val response = withTimeoutOrNull(LOADING_TIMEOUT_DURATION) {
-                    chatFlow.value
-                }
-
-                when (response) {
-                    is Response.Success -> {
-                        chat.value = response.data
-                        chatViewModel.resetChat()
                     }
-                    is Response.Failure -> {
-                        // Handle the loading failure if needed
-                    }
-                    is Response.Loading -> {
-                        // Loading is still in progress after the timeout, navigate back
+                    is GroupDisplayEvents.DeleteGroup -> {
+                        groupInvitesViewModel.deleteGroup(event.chat)
+                        Toast.makeText(context, "Group deleted", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
+                    }
+                    is GroupDisplayEvents.ReportGroup -> {
+
+                        chatViewModel.reportChat(event.chat.id.toString())
+                        Toast.makeText(context, "Group reported", Toast.LENGTH_SHORT).show()
+
+                    }
+                    is GroupDisplayEvents.ShareGroupLink -> {
+                        //CREATE A DYNAMINC LINK TO DOMAIN
+                        val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                            link =
+                                Uri.parse("https://link.friendup.app/" + "Group" + "/" + event.id)
+                            domainUriPrefix = "https://link.friendup.app/"
+                            // Open links with this app on Android
+                            androidParameters { }
+                        }
+                        val dynamicLinkUri = dynamicLink.uri
+                        //COPY LINK AND MAKE A TOAST
+                        localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
                         Toast.makeText(
                             context,
-                            "Loading timeout. Please try again later.",
+                            "Copied group link to clipboard",
                             Toast.LENGTH_LONG
                         ).show()
+
                     }
-                    null -> {
-                        // chatFlow.value is null (not sure if this is a possible case)
-                    }
+                    else -> {}
                 }
-            }
+
+            }, context=context, chatResponse=chatResponse)
+
+
 
         }
     }
@@ -847,10 +792,9 @@ fun NavGraphBuilder.groupGraph(
         }
 
         var friendList = userViewModel.getFriendsList()
-        var isLoading = userViewModel.friendsLoading.value
         val selectedUsers = remember { mutableStateListOf<String>() }
         if (groupId != null) {
-            FriendPickerScreen(
+            FriendPickerScreen(friendListResponse = userViewModel.friendsLoading.value,
                 modifier = Modifier.safeDrawingPadding(),
                 userViewModel = userViewModel,
                 goBack = { navController.popBackStack() },
@@ -881,7 +825,7 @@ fun NavGraphBuilder.groupGraph(
                             }
                         }
                     }
-                }, friendList = friendList, isLoading = isLoading, onEvent = {
+                }, friendList = friendList, onEvent = {
                     when (it) {
                         is FriendPickerEvents.GetMoreFriends -> {
                             userViewModel.getMoreFriends(UserData.user!!.id)

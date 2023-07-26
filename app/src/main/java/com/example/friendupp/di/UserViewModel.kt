@@ -23,6 +23,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.internal.notify
 import javax.inject.Inject
 
 
@@ -53,8 +54,7 @@ class UserViewModel @Inject constructor(
 
     private val _friendsList = mutableStateOf<List<User>>(emptyList())
     val friendsList: MutableState<List<User>> = _friendsList
-    private val _friendsLoading = mutableStateOf(false)
-    val friendsLoading: State<Boolean> = _friendsLoading
+
 
     // Function to cancel the listener and flow
     fun cancelCurrentUserListener() {
@@ -201,30 +201,40 @@ class UserViewModel @Inject constructor(
     fun getFriendsList(): List<User> {
         return friendsList.value
     }
+
+    /*handle loading and error of friends list */
+    private val _friendsLoading = mutableStateOf<Response<Boolean?>?>(null)
+    val friendsLoading: State<Response<Boolean?>?> get() = _friendsLoading
+
     fun getFriends(id: String) {
         viewModelScope.launch {
             repo.getFriends(id).collect { response ->
-                _friendsLoading.value = true // Set the loading state to true before fetching data
 
                 when (response) {
                     is Response.Success -> {
+
                         _friendsList.value = response.data ?: emptyList()
                         Log.d("FriendsViewModel", "Friends fetched successfully for user: $id")
+                        _friendsLoading.value=Response.Success(true)
                     }
                     is Response.Failure -> {
                         // Handle the failure case if needed (e.g., show an error message)
                         // For example:
                         _friendsList.value = emptyList()
                         Log.e("FriendsViewModel", "Failed to fetch friends for user: $id")
+                        _friendsLoading.value=Response.Failure(SocialException(message = response.e.message,e=java.lang.Exception(response.e.message)))
                     }
                     is Response.Loading -> {
                         Log.d("FriendsViewModel", "Loading friends for user: $id...")
+                        _friendsLoading.value=Response.Loading
+
                     }
                     null -> {
                         Log.e("FriendsViewModel", "Null response received for user: $id")
+                        _friendsLoading.value=null
+
                     }
                 }
-                _friendsLoading.value = false // Set the loading state to true before fetching data
 
             }
         }
@@ -290,7 +300,8 @@ class UserViewModel @Inject constructor(
             }
         }
     }
-
+    private val _profileImageResponse = mutableStateOf<Response<Boolean?>?>(null)
+    val profileImageResponse: State<Response<Boolean?>?> get() = _profileImageResponse
     fun changeUserProfilePicture(user_id: String, picture_uri: Uri) {
         viewModelScope.launch {
             _userState.value = Response.Loading
@@ -320,14 +331,20 @@ class UserViewModel @Inject constructor(
                                         }
 
                                     }
+                                    _profileImageResponse.value =Response.Success(true)
                                 }
                                 is Response.Failure -> {
                                     Log.d("ImagePicker", response.e.message)
+                                    _profileImageResponse.value=Response.Failure(e = SocialException(message = response.e.message, e = java.lang.Exception(response.e.message)))
+
                                 }
                                 else -> {}
                             }
-
+                            _profileImageResponse.value =Response.Success(true)
                         }
+                    }
+                    is Response.Loading->{
+                        _profileImageResponse.value=Response.Loading
                     }
                     is Response.Failure -> {
                         Log.d("ImagePicker", response.e.message)
@@ -336,6 +353,7 @@ class UserViewModel @Inject constructor(
                 }
 
             }
+
 
         }
     }
@@ -449,6 +467,9 @@ class UserViewModel @Inject constructor(
     }
     private val _user= mutableStateOf<User?> (null)
     val user: MutableState<User?> = _user
+    private  val _userResponse= mutableStateOf<Response<User>?>(Response.Loading)
+    val userResponse:MutableState<Response<User>?> = _userResponse
+
     fun getUserProfile(): User? {
         return user.value
     }
@@ -458,18 +479,26 @@ class UserViewModel @Inject constructor(
             repo.getUserListener(id).collect { response ->
                 when (response) {
                     is Response.Success -> {
+                        _userResponse.value=response
+
                         val user: User = response.data
                         _user.value = user
                         Log.d("UserViewModel", "User data fetched successfully")
                     }
                     is Response.Failure -> {
+                        _userResponse.value=response
+
                         _user.value = null
                         Log.e("UserViewModel", "Failed to fetch user data: ${response.e.message}")
                     }
                     is Response.Loading -> {
+                        _userResponse.value=response
+
                         Log.d("UserViewModel", "Loading user data...")
                     }
                     null -> {
+                        _userResponse.value=response
+
                         _user.value = null
                         Log.e("UserViewModel", "Null response received")
                     }
