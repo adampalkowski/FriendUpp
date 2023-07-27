@@ -554,7 +554,7 @@ fun NavGraphBuilder.groupGraph(
                         navController.navigate("GroupCamera/" + event.id)
                     }
                     is GroupDisplayEvents.AddUsers -> {
-                        navController.navigate("FriendPickerAddGroupU sers/" + event.id)
+                        navController.navigate("FriendPickerAddGroupUsers/" + event.id)
                     }
                     is GroupDisplayEvents.LeaveGroup -> {
                         groupInvitesViewModel.removeParticipantFromGroupOnlyId(

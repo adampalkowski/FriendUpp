@@ -28,29 +28,7 @@ class ChatCollectionsViewModel @Inject constructor(
         )
     )
     val chatCollectionsResponse: MutableState<Response<List<Chat>>> = _chatCollectionsResponse
-    var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
 
-    // ... Rest of your ViewModel code
-
-    private val _turnedOffChatNotificationIds = mutableStateOf<List<String>>(emptyList())
-    val turnedOffChatNotificationIds: State<List<String>> = _turnedOffChatNotificationIds
-
-    fun turnOffChatNotification(id: String) {
-        val currentList = _turnedOffChatNotificationIds.value.toMutableList()
-        currentList.add(id)
-        _turnedOffChatNotificationIds.value = currentList
-
-        // Save the updated list to SharedPreferences
-        val editor = sharedPreferences.edit()
-        editor.putStringSet("turnedOffNotificationIds", currentList.toSet())
-        editor.apply()
-    }
-
-    // Function to load the list of turned-off notification ids from SharedPreferences
-    fun loadTurnedOffNotificationIds() {
-        val idsSet = sharedPreferences.getStringSet("turnedOffNotificationIds", emptySet())
-        _turnedOffChatNotificationIds.value = idsSet?.toList() ?: emptyList()
-    }
     // Function to fetch chat collections for a chat
     fun getChatCollections(chatId: String) {
         viewModelScope.launch {

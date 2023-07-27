@@ -32,6 +32,7 @@ import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.ui.theme.FriendUppTheme
 import com.example.friendupp.Navigation.NavigationComponent
 import com.example.friendupp.Request.RequestViewModel
+import com.example.friendupp.UpdateManager.UpdateManager
 import com.example.friendupp.di.*
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.User
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
     private var notifactionLiskSet : MutableState<Boolean> = mutableStateOf(false)
+    private lateinit var updateManager: UpdateManager
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -92,6 +94,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        updateManager = UpdateManager(this)
+        updateManager.checkForAppUpdate()
         val extras = intent.extras
         if (extras != null) {
             // Extract the values from the bundle

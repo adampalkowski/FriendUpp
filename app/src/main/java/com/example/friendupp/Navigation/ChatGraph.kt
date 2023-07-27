@@ -42,6 +42,7 @@ import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.Message.MessagesViewModel
 import com.example.friendupp.Notification.*
 import com.example.friendupp.R
+import com.example.friendupp.SharedPreferencesManager
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.*
@@ -519,7 +520,12 @@ fun NavGraphBuilder.chatGraph(
 
                         }
                         is ChatEvents.TurnOffChatNotification -> {
-                                chatViewModel.
+                            SharedPreferencesManager.addId(context, event.id)
+
+                        }
+                        is ChatEvents.TurnOnChatNotification -> {
+                            SharedPreferencesManager.removeId(context, event.id)
+
                         }
                         is ChatEvents.GoToProfile -> {
                             when (chatViewModel.chat_type.value) {
@@ -583,6 +589,7 @@ fun NavGraphBuilder.chatGraph(
 
                             event.chat.members.forEach { id ->
                                 if (id != UserData.user!!.id) {
+                                    Log.d("notificaiton","send notiication")
                                     sendNotification(
                                         receiver = id,
                                         username = "",
@@ -592,7 +599,6 @@ fun NavGraphBuilder.chatGraph(
                                         type = "message",
                                         id = event.chat.id
                                     )
-
                                 }
 
                             }

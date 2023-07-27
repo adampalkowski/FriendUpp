@@ -44,6 +44,7 @@ import com.example.friendupp.Login.TextFieldState
 import com.example.friendupp.Navigation.getCurrentUTCTime
 import com.example.friendupp.Profile.ProfileDisplayEvents
 import com.example.friendupp.R
+import com.example.friendupp.SharedPreferencesManager
 import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.ChatMessage
@@ -61,6 +62,7 @@ sealed class ChatEvents {
     object GoBack : ChatEvents()
     class GoToProfile(val chat: Chat) : ChatEvents()
     class TurnOffChatNotification(val id: String) : ChatEvents()
+    class TurnOnChatNotification(val id: String) : ChatEvents()
     object ChatDoesntExist : ChatEvents()
     class SendImage(message: Uri) : ChatEvents() {
         val message = message
@@ -286,10 +288,23 @@ fun ChatContent(
 
     }
     if (chatSettings) {
+        val context= LocalContext.current
+        val retrievedIds = SharedPreferencesManager.getIds(context)
+        var notificationTurnedOff by rememberSaveable {
+            mutableStateOf(false)
+        }
+        if(retrievedIds.contains(chat.id)){
+            notificationTurnedOff=true
+        }
         ChatSettingsDialog(onCancel = { chatSettings = false },
             turnOffChatNotification = {
                                       id->
                 onEvent(ChatEvents.TurnOffChatNotification(id))
+
+            },
+            turnOnChatNotification = {
+                    id->
+                onEvent(ChatEvents.TurnOnChatNotification(id))
 
             },
             goToGroup = {},
@@ -297,7 +312,7 @@ fun ChatContent(
             reportChat = {},
             shareGroupLink = {},
             goToActivity = {},
-            goToUser = {})
+            goToUser = {},notificationTurnedOff=notificationTurnedOff)
 
     }
 

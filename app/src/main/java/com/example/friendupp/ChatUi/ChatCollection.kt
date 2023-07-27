@@ -1,5 +1,6 @@
 package com.example.friendupp.ChatUi
 
+import android.media.midi.MidiOutputPort
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -33,6 +34,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
+import com.example.friendupp.SharedPreferencesManager
 import com.example.friendupp.TimeFormat.getFormattedDate
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
@@ -54,6 +56,8 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
     BackHandler(true) {
         chatEvent(ChatCollectionEvents.GoBack)
     }
+    val context = LocalContext.current
+    val notificationOffIds= SharedPreferencesManager.getIds(context)
     LazyColumn(modifier=modifier.background(SocialTheme.colors.uiBackground)){
         item {
             ScreenHeading(title = "Chats"){
@@ -90,7 +94,8 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
                             date= convertUTCtoLocal(chat.recent_message_time.toString(), outputFormat = "yyyy-MM-dd HH:mm:ss") ,
                             onClick = {
                                 chatEvent(ChatCollectionEvents.GoToChat(chat))
-                            },highlightedMessage=chat.highlited_message.toString()
+                            },highlightedMessage=chat.highlited_message.toString(),
+                            disabledNotification=notificationOffIds.contains(chat.id)
                         )
                     }
                 }
@@ -209,7 +214,7 @@ fun ButtonAdd( onClick: () -> Unit,disabled:Boolean=false,icon:Int) {
 }
 
 @Composable
-fun ChatItem(image: String, title: String, subtitle: String, date: String,highlightedMessage:String, onClick: () -> Unit) {
+fun ChatItem(image: String, title: String, subtitle: String, date: String,highlightedMessage:String, onClick: () -> Unit,disabledNotification:Boolean) {
     val trunctuatedSubTitle =  if(subtitle.length>30){subtitle.substring(0, minOf(subtitle.length, 30))+"..."}else{subtitle}
     val trunctuatedTitle =  if(title.length>30){title.substring(0, minOf(title.length, 30))+"..."}else{title}
 
@@ -254,6 +259,12 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String,highli
                             fontSize = 12.sp
                         ), color = SocialTheme.colors.textPrimary
                     )
+                }
+                if(disabledNotification){
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Icon(painter = painterResource(id = R.drawable.ic_notification_off), contentDescription =null,tint=SocialTheme.colors.iconPrimary )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
                     text = getFormattedDate(date),

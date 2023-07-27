@@ -1,53 +1,28 @@
 package com.example.friendupp.Notification
 
+
 import android.Manifest
 import android.app.Notification
-
 import android.app.PendingIntent
-import android.app.TaskStackBuilder
-
 import android.content.Intent
-
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.graphics.*
-import android.graphics.Paint.Style
-
+import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.media.RingtoneManager
-import android.net.LocalServerSocket
-
-import android.net.Uri
-
 import android.os.Build
-
 import android.os.Bundle
 import android.util.Log
-
-
-import androidx.annotation.NonNull
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
-
 import androidx.core.app.NotificationCompat
-
 import androidx.core.app.NotificationManagerCompat
-import androidx.navigation.NavDeepLinkBuilder
 import com.example.friendupp.MainActivity
 import com.example.friendupp.R
 import com.example.friendupp.Settings.getNotificationPrefs
+import com.example.friendupp.SharedPreferencesManager
 import com.example.friendupp.model.UserData
-
-
-import com.google.firebase.auth.FirebaseAuth
-
-import com.google.firebase.auth.FirebaseUser
-
 import com.google.firebase.database.DatabaseReference
-
 import com.google.firebase.database.FirebaseDatabase
-
 import com.google.firebase.messaging.FirebaseMessagingService
-
 import com.google.firebase.messaging.RemoteMessage
 
 
@@ -118,14 +93,27 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
                 }
             }
             "message"->{
+                val retrievedIds = SharedPreferencesManager.getIds(this)
+
                 if(notificationPref.chatMessageNotification){
 
                 }else{
                     assert(sent != null)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        sendOreoNotification(remoteMessage)
+                        Log.d("notification debug","send")
+                        Log.d("notification debug",retrievedIds.toString())
+                        Log.d("notification debug",remoteMessage.data.get("id").toString())
+                        if(!retrievedIds.contains(remoteMessage.data.get("id"))){
+                            sendOreoNotification(remoteMessage)
+                        }
                     } else {
-                        sendNotifcation(remoteMessage)
+                        Log.d("notification debug","send")
+                        Log.d("notification debug",retrievedIds.toString())
+                        Log.d("notification debug",remoteMessage.data.get("id").toString())
+                        if(!retrievedIds.contains(remoteMessage.data.get("id"))){
+                            sendNotifcation(remoteMessage)
+
+                        }
                     }
                 }
             }
