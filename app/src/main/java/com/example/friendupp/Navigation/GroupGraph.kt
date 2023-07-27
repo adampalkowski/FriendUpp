@@ -170,11 +170,10 @@ fun NavGraphBuilder.groupGraph(
                         selectedUsers.add(user.id)
                         val uuid: UUID = UUID.randomUUID()
                         val id: String = uuid.toString()
-                        val formatterDate = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm")
-                        val date = LocalDateTime.now().format(formatterDate)
+
 
                         createGroupAlone(
-                            create_date = date,
+                            create_date = getCurrentUTCTime(),
                             owner_id = UserData.user!!.id,
                             id = id,
                             name = groupState.groupName.text,

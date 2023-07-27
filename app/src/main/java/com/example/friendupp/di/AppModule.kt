@@ -2,7 +2,12 @@ package com.example.friendupp.di
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.example.friendupp.BuildConfig.MAPS_API_KEY
+import com.example.friendupp.ChatCollection.ChatCollectionRepository
+import com.example.friendupp.ChatCollection.ChatCollectionRepositoryImpl
 import com.example.friendupp.GroupParticipants.GroupParticipantsRepository
 import com.example.friendupp.GroupParticipants.GroupParticipantsRepositoryImpl
 import com.example.friendupp.Invites.InviteRepository
@@ -179,6 +184,10 @@ class AppModule {
     @Provides
     fun provideRequestRepository(db: FirebaseFirestore): RequestRepository = RequestRepositoryImpl(
         activitiesRef = db.collection("Activities")
+    )
+    @Provides
+    fun provideChatCollectionRepositoryImpl(db: FirebaseFirestore): ChatCollectionRepository = ChatCollectionRepositoryImpl(
+        chatCollectionsRef = db.collection("groups"),
     )
     @Provides
     fun provideParticipantRepository(db: FirebaseFirestore): ParticipantsRepository = ParticipantsRepositoryImpl(

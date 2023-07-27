@@ -1,7 +1,7 @@
 package com.example.friendupp.ChatUi
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
@@ -13,10 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,33 +34,26 @@ import coil.request.ImageRequest
 import com.example.friendupp.Components.ScreenHeading
 import com.example.friendupp.R
 import com.example.friendupp.TimeFormat.getFormattedDate
-import com.example.friendupp.di.ChatViewModel
 import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
-import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
-import com.google.type.DateTime
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 sealed class ChatCollectionEvents {
     object GoToSearch : ChatCollectionEvents()
     object GoBack : ChatCollectionEvents()
     object GoToGroups : ChatCollectionEvents()
+    object GetMoreChatCollections : ChatCollectionEvents()
     class GoToChat (val chat:Chat): ChatCollectionEvents()
 }
 @Composable
-fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit,chatViewModel: ChatViewModel) {
-    val backPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit,chatCollectionsResponse: Response<List<Chat>>) {
     BackHandler(true) {
         chatEvent(ChatCollectionEvents.GoBack)
     }
-    val chatCollectionsToBeDisplayed = remember { mutableStateOf(ArrayList<Chat>()) }
-
     LazyColumn(modifier=modifier.background(SocialTheme.colors.uiBackground)){
         item {
             ScreenHeading(title = "Chats"){
@@ -80,33 +70,50 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
 
             }
         }
+        when(chatCollectionsResponse){
+            is Response.Loading->{
+                item {
 
-        items(chatCollectionsToBeDisplayed.value.reversed()) {chat->
-            if (chat!=null){
-
-                val (chat_name, chat_image)=  getChatNameAndImage(chat)
-
-                ChatItem(
-                image=chat_image,
-                title=chat_name,
-                subtitle=chat.recent_message.toString(),
-                date= convertUTCtoLocal(chat.recent_message_time.toString(), outputFormat = "yyyy-MM-dd HH:mm:ss") ,
-                onClick = {
-                    chatEvent(ChatCollectionEvents.GoToChat(chat))
-                },highlightedMessage=chat.highlited_message.toString()
-            )
-        }
-        }
-    }
-    chatViewModel.chatCollectionsState.value.let {response->
-        when (response) {
-            is Response.Success -> {
-                chatCollectionsToBeDisplayed.value = response.data
+                    CircularProgressIndicator()
+                }
             }
-            is Response.Loading -> {}
-            is Response.Failure -> {}
+            is Response.Success->{
+                items(chatCollectionsResponse.data) {chat->
+                    if (chat!=null){
+
+                        val (chat_name, chat_image)=  getChatNameAndImage(chat)
+
+                        ChatItem(
+                            image=chat_image,
+                            title=chat_name,
+                            subtitle=chat.recent_message.toString(),
+                            date= convertUTCtoLocal(chat.recent_message_time.toString(), outputFormat = "yyyy-MM-dd HH:mm:ss") ,
+                            onClick = {
+                                chatEvent(ChatCollectionEvents.GoToChat(chat))
+                            },highlightedMessage=chat.highlited_message.toString()
+                        )
+                    }
+                }
+                item{
+                    Spacer(modifier = Modifier.height(80.dp))
+
+                }
+                item {
+                    LaunchedEffect(true) {
+                        Log.d("CHATCOLLECTIONS","Get more chats called")
+                        chatEvent(ChatCollectionEvents.GetMoreChatCollections)
+                    }
+                }
+            }
+            is Response.Failure->{
+
+            }
+
+
+
         }
     }
+
 }
 
 
@@ -208,8 +215,10 @@ fun ChatItem(image: String, title: String, subtitle: String, date: String,highli
 
     Box(modifier = Modifier
         .fillMaxWidth()
-        .clickable(onClick = onClick, interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(color = Color.Black),)) {
+        .clickable(
+            onClick = onClick, interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(color = Color.Black),
+        )) {
         Column() {
             Row(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),

@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-
 @HiltViewModel
 class JoinedActivitiesViewModel @Inject constructor(
     private val activitiesRepo: ActivityRepository,

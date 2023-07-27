@@ -163,8 +163,8 @@ class ChatViewModel @Inject constructor(
 
     private val _chatState = mutableStateOf<Chat?>(null)
     val chatState: MutableState<Chat?> = _chatState
-    private val _chatLoading = mutableStateOf<Response<Chat>?>(Response.Loading)
-    val chatLoading: MutableState<Response<Chat>?> = _chatLoading
+    private val _chatLoading = mutableStateOf<Response<Chat>>(Response.Loading)
+    val chatLoading: MutableState<Response<Chat>> = _chatLoading
     fun getChat():Chat? {
         return chatState.value
     }

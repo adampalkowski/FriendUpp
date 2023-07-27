@@ -34,6 +34,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.friendupp.Camera.CameraEvent
 import com.example.friendupp.Camera.CameraView
+import com.example.friendupp.ChatCollection.ChatCollectionsViewModel
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.DisplayLocationDialog
 import com.example.friendupp.Components.FriendUppDialog
@@ -42,6 +43,7 @@ import com.example.friendupp.Message.MessagesViewModel
 import com.example.friendupp.Notification.*
 import com.example.friendupp.R
 import com.example.friendupp.di.ChatViewModel
+import com.example.friendupp.di.UserViewModel
 import com.example.friendupp.model.*
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
@@ -161,14 +163,27 @@ fun NavGraphBuilder.chatGraph(
             if (user != null) {
                 chatViewModel.getChatCollections(user.id)
             }
-            ChatCollection(modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding(),
+            val chatCollectionViewModel:ChatCollectionsViewModel= hiltViewModel()
+
+            LaunchedEffect(Unit ){
+                chatCollectionViewModel.getChatCollections(user?.id!!)
+            }
+            val chatCollectionsResponse= chatCollectionViewModel.chatCollectionsResponse.value
+
+
+
+            ChatCollection(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding(),
                 chatEvent = { event ->
                     when (event) {
                         is ChatCollectionEvents.GoToChat -> {
                             currentChat.value = event.chat
-                            navController.navigate("ChatItem/" + event.chat.id)
+                            Log.d("ChatGRAPH",event.chat.id.toString())
+                               navController.navigate("ChatItem/" + event.chat.id)
+
+
                         }
                         is ChatCollectionEvents.GoBack -> {
                             navController.navigate("Home")
@@ -176,16 +191,22 @@ fun NavGraphBuilder.chatGraph(
                         is ChatCollectionEvents.GoToGroups -> {
                             navController.navigate("Groups")
                         }
-                        is ChatCollectionEvents.GoToSearch -> {
+                         is ChatCollectionEvents.GoToSearch -> {
                             navController.navigate("Search")
+                        }
+
+                        is ChatCollectionEvents.GetMoreChatCollections -> {
+                            chatCollectionViewModel.getMoreChatCollections(user?.id!!)
                         }
                     }
 
-                }, chatViewModel = chatViewModel)
+                }, chatCollectionsResponse = chatCollectionsResponse
+            )
         }
 
         composable(
-            "ChatSettings",
+            "ChatSettings/{chatId}",
+            arguments = listOf(navArgument("chatId") { type = NavType.StringType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     "Chat" ->
@@ -226,91 +247,64 @@ fun NavGraphBuilder.chatGraph(
                     else -> null
                 }
             }
-        ) {
+        ) { backStackEntry ->
+            val chatID = backStackEntry.arguments?.getString("chatID")
 
-            var chat = remember { mutableStateOf<Chat?>(null) }
-            loadChat(modifier = Modifier, chatViewModel = chatViewModel, chat = chat) { }
 
-            var openReportDialog by remember{mutableStateOf(false)}
-            var openBlockDialog by remember{mutableStateOf(false)}
+            LaunchedEffect(chatID) {
+                if (chatID != null) {
+                    chatViewModel.getChatCollection(chatID)
+                }
+            }
+            val chatResponse = chatViewModel.chatLoading.value
+
+
+
             val context = LocalContext.current
 
-            if(chat.value!=null){
-                var type by remember {
-                    mutableStateOf<TYPE?>(null)
-                }
-                when(chat.value!!.type){
-                    "duo"->{type=TYPE.DUO}
-                    "activity"->{type=TYPE.ACTIVITY}
-                    "group"->{type=TYPE.GROUP}
-                }
 
-                if(type==null){
-                    navController.popBackStack()
-                }else{
-                    ChatSettings(modifier=Modifier.safeDrawingPadding(),
-                        type!!, chatSettingsEvents = { event ->
-                            when (event) {
-                                is ChatSettingsEvents.GoBack -> {
-                                    navController.popBackStack()
-                                }
-                                is ChatSettingsEvents.GoToUserProfile -> {
-
-
-                                    when(chat.value!!.type){
-
-                                        "duo"->{
-                                            var otherUserID=""
-                                            chat.value!!.members.forEach {
-                                                if(it!=UserData.user?.id){
-                                                    otherUserID=it
-                                                }
-                                            }
-                                            navController.navigate("ProfileDisplay/"+otherUserID)
-
+            ChatSettingsScreen(
+                modifier = Modifier.safeDrawingPadding(),
+              chatSettingsEvents = { event ->
+                    when (event) {
+                        is ChatSettingsEvents.GoBack -> {
+                            navController.popBackStack()
+                        }
+                        is ChatSettingsEvents.GoToUserProfile -> {
+                            when (event.chat.type) {
+                                "duo" -> {
+                                    var otherUserID = ""
+                                    event.chat.members.forEach {
+                                        if (it != UserData.user?.id) {
+                                            otherUserID = it
                                         }
-                                        "activity"->{type=TYPE.ACTIVITY}
-                                        "group"->{type=TYPE.GROUP}
                                     }
+                                    navController.navigate("ProfileDisplay/" + otherUserID)
 
                                 }
-                                is ChatSettingsEvents.Report -> {
-                                    openReportDialog=true
-
+                                "activity" -> {
                                 }
-                                is ChatSettingsEvents.Block -> {
-                                    openBlockDialog=true
-
+                                "group" -> {
                                 }
-                                else -> {}
                             }
-                        }, chatViewModel,chat.value!!
-                    )
-                }
 
-                if(openReportDialog){
-                    FriendUppDialog(
-                        label = "If the chat contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
-                        icon = R.drawable.ic_flag,
-                        onCancel = { openReportDialog=false },
-                        onConfirm = {       chatViewModel.reportChat(chat.value!!.id.toString())
-                            Toast.makeText(context,"Chat reported",Toast.LENGTH_SHORT).show()
-                            openReportDialog=false}, confirmLabel = "Report")
-                }
-                if(openBlockDialog){
-                    FriendUppDialog(
-                        label = "Enabling the chat block feature restricts the ability of users to send messages. This action is reversible, allowing for the restoration of message-sending capabilities.",
-                        icon = R.drawable.ic_block,
-                        onCancel = { openBlockDialog=false },
-                        onConfirm = {
-                            chatViewModel.blockChat(chat.value!!.id.toString())
-                            Toast.makeText(context,"Chat blocked",Toast.LENGTH_SHORT).show()
-                            openBlockDialog=false}, confirmLabel = "Block", confirmTextColor = SocialTheme.colors.error)
-                }
-            }else{
-                //Chat shouldn't be null
-                navController.popBackStack()
-            }
+                        }
+                        is ChatSettingsEvents.Report -> {
+                            chatViewModel.reportChat(event.id.toString())
+                            Toast.makeText(context, "Chat reported", Toast.LENGTH_SHORT).show()
+
+                        }
+                        is ChatSettingsEvents.Block -> {
+                            chatViewModel.blockChat(event.id.toString())
+                            Toast.makeText(context, "Block", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
+                    }
+                }, chatViewModel, chatResponse,
+                context=context
+            )
+
+
 
         }
 
@@ -369,7 +363,8 @@ fun NavGraphBuilder.chatGraph(
                 mutableStateOf<Uri?>(null)
             }
             val context = LocalContext.current
-            CameraView(modifier=modifier,
+            CameraView(
+                modifier = modifier,
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -380,7 +375,7 @@ fun NavGraphBuilder.chatGraph(
                 onEvent = { event ->
                     when (event) {
                         is CameraEvent.GoBack -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
 
@@ -396,7 +391,7 @@ fun NavGraphBuilder.chatGraph(
                             }
                         }
                         is CameraEvent.DeletePhoto -> {
-                            if(photoUri!=null){
+                            if (photoUri != null) {
                                 photoUri!!.toFile().delete()
                             }
 
@@ -404,7 +399,8 @@ fun NavGraphBuilder.chatGraph(
                             photoUri = null
                         }
                         is CameraEvent.Download -> {
-                            Toast.makeText(context,"Image saved in gallery",Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Image saved in gallery", Toast.LENGTH_SHORT)
+                                .show()
                             Log.d("CreateGraphActivity", "dElete photo")
                             photoUri = null
                         }
@@ -465,7 +461,8 @@ fun NavGraphBuilder.chatGraph(
 
 
             val chatID = backStackEntry.arguments?.getString("chatID")
-            val messagesViewModel :MessagesViewModel= hiltViewModel()
+
+            val messagesViewModel: MessagesViewModel = hiltViewModel()
             /*
             1.get chat id
             2.call for chat
@@ -480,7 +477,7 @@ fun NavGraphBuilder.chatGraph(
                     messagesViewModel.getMessages(chatID, getCurrentUTCTime())
                 }
             }
-
+            val chatResponse = chatViewModel.chatLoading.value
             val locationPermissionState = rememberPermissionState(
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
@@ -501,158 +498,147 @@ fun NavGraphBuilder.chatGraph(
                 }
             }
 
-            var chat = rememberSaveable { mutableStateOf<Chat?>(null) }
-
-            loadChat(
-                modifier = Modifier,
-                chatViewModel,
-                chat,
-                chatNonExistent = {
-                    Log.d("CHATREPOSITYIMPLCHATCOLLECT", "Creatae colleciton")
-                    when (chatViewModel.chat_type.value) {
-                        "duo" -> {
-                            Log.d("CHATREPOSITYIMPLCHATCOLLECT", "duo")
-
-                        }
-                        "activity" -> {
-
-                        }
-                        "group" -> {
-
-                        }
-                        else -> {
-
-                        }
-                    }
-                })
-
+            val context = LocalContext.current
             val valueExist = rememberSaveable { mutableStateOf(false) }
-            var chatFinal = chat.value
-            var messages =messagesViewModel.getMessagesList()
-            if (chatFinal != null) {
-                ChatContent(
-                    modifier = Modifier.safeDrawingPadding(),
-                    onEvent = { event ->
-                        when (event) {
-                            is ChatEvents.GoBack -> {
-                                navController.popBackStack()
-                            }
-                            is ChatEvents.Delete -> {
-                                messagesViewModel.deleteMessage(chatFinal.id!!,event.id)
-                            }
-                            is ChatEvents.SendImage -> {
+            var messages = messagesViewModel.getMessagesList()
 
-                            }
-                            is ChatEvents.GoToProfile -> {
-                                when (chatViewModel.chat_type.value) {
-                                    "duo" -> {
-                                        navController.navigate("ProfileDisplay/"+chat.value!!.id)
-
-                                    }
-                                    "activity" -> {
-
-                                    }
-                                    "group" -> {
-
-                                    }
-                                    else -> {
-
-                                    }
-                                }
-                            }
-                            is ChatEvents.OpenChatSettings -> {
-                                navController.navigate("ChatSettings")
-                            }
-                            is ChatEvents.GetMoreMessages -> {
-                                messagesViewModel.getMoreMessages(event.chat_id)
-                            }
-                            is ChatEvents.OpenGallery -> {
-                                navController.navigate("ChatCamera")
-                            }
-                            is ChatEvents.ShareLocation -> {
-                                /*share your location to chat
-                            1.check permission
-                            2.display confirmation dialog
-                            3.send message
-                            */
-                                if (locationPermissionState.status.isGranted) {
-                                    sendLocationDialog = true
-                                } else {
-                                    sendLocationDialog = false
-                                    locationPermissionState.launchPermissionRequest()
-                                }
-
-
-                            }
-                            is ChatEvents.CreateNonExistingChatCollection -> {
-
-                            }
-                            is ChatEvents.SendMessage -> {
-                                chatViewModel.addMessage(
-                                    event.chat_id,
-                                    ChatMessage(
-                                        text = event.message,
-                                        sender_picture_url = UserData.user?.pictureUrl!!,
-                                        sent_time = getCurrentUTCTime(),
-                                        sender_id = UserData.user!!.id,
-                                        message_type = "text",
-                                        id = "",
-                                        collectionId = event.chat_id,
-                                        replyTo = null
-                                    )
-                                )
-                                /*send notification to all chat users*/
-
-                                chatFinal.members.forEach{id->
-                                    if(id!=UserData.user!!.id){
-                                        sendNotification(receiver=id, username ="" ,
-                                            message =event.message , title = UserData.user?.name!!,
-                                            picture =UserData.user?.pictureUrl!!,type="message",id=chatFinal.id)
-
-                                    }
-
-                                }
-
-
-
-                            }
-                            is ChatEvents.SendReply -> {
-                                chatViewModel.addMessage(
-                                    event.chat_id,
-                                    ChatMessage(
-                                        text = event.message,
-                                        sender_picture_url = UserData.user?.pictureUrl!!,
-                                        sent_time = getCurrentUTCTime(),
-                                        sender_id = UserData.user!!.id,
-                                        message_type = "reply",
-                                        id = "",
-                                        collectionId = event.chat_id,
-                                        replyTo = event.replyTo
-                                    )
-                                )
-                            }
-                            else -> {}
+            ChatScreen(
+                modifier = Modifier.safeDrawingPadding(),
+                onEvent = { event ->
+                    when (event) {
+                        is ChatEvents.GoBack -> {
+                            navController.popBackStack()
                         }
+                        is ChatEvents.Delete -> {
+                            messagesViewModel.deleteMessage(event.chatId!!, event.id)
+                        }
+                        is ChatEvents.SendImage -> {
 
-                    },
-                    chatViewModel = chatViewModel,
-                    displayLocation = { displayLocationDialog = it },
-                    higlightDialog = { messageToHighlight ->
-                        highlightDialog = messageToHighlight
+                        }
+                        is ChatEvents.ChatDoesntExist -> {
 
-                    },
-                    chatFinal!!,
-                    messages =messages,
-                    valueExist = valueExist.value,
-                    displayImage = {image->
-                        imageDisplay=image
+                        }
+                        is ChatEvents.TurnOffChatNotification -> {
+                                chatViewModel.
+                        }
+                        is ChatEvents.GoToProfile -> {
+                            when (chatViewModel.chat_type.value) {
+                                "duo" -> {
+                                    /*todo*/
+                                }
+                                "activity" -> {
+                                    navController.navigate("ProfileDisplay/" + event.chat.id)
+
+                                }
+                                "group" -> {
+                                    navController.navigate("ProfileDisplay/" + event.chat.id)
+                                }
+                                else -> {
+
+                                }
+                            }
+                        }
+                        is ChatEvents.OpenChatSettings -> {
+                            navController.navigate("ChatSettings/"+chatID)
+                        }
+                        is ChatEvents.GetMoreMessages -> {
+                            messagesViewModel.getMoreMessages(event.chat_id)
+                        }
+                        is ChatEvents.OpenGallery -> {
+                            navController.navigate("ChatCamera")
+                        }
+                        is ChatEvents.ShareLocation -> {
+                            /*share your location to chat
+                        1.check permission
+                        2.display confirmation dialog
+                        3.send message
+                        */
+                            if (locationPermissionState.status.isGranted) {
+                                sendLocationDialog = true
+                            } else {
+                                sendLocationDialog = false
+                                locationPermissionState.launchPermissionRequest()
+                            }
+
+
+                        }
+                        is ChatEvents.CreateNonExistingChatCollection -> {
+
+                        }
+                        is ChatEvents.SendMessage -> {
+                            chatViewModel.addMessage(
+                                event.chat_id,
+                                ChatMessage(
+                                    text = event.message,
+                                    sender_picture_url = UserData.user?.pictureUrl!!,
+                                    sent_time = getCurrentUTCTime(),
+                                    sender_id = UserData.user!!.id,
+                                    message_type = "text",
+                                    id = "",
+                                    collectionId = event.chat_id,
+                                    replyTo = null
+                                )
+                            )
+                            /*send notification to all chat users*/
+
+                            event.chat.members.forEach { id ->
+                                if (id != UserData.user!!.id) {
+                                    sendNotification(
+                                        receiver = id,
+                                        username = "",
+                                        message = event.message,
+                                        title = UserData.user?.name!!,
+                                        picture = UserData.user?.pictureUrl!!,
+                                        type = "message",
+                                        id = event.chat.id
+                                    )
+
+                                }
+
+                            }
+
+
+                        }
+                        is ChatEvents.SendReply -> {
+                            chatViewModel.addMessage(
+                                event.chat_id,
+                                ChatMessage(
+                                    text = event.message,
+                                    sender_picture_url = UserData.user?.pictureUrl!!,
+                                    sent_time = getCurrentUTCTime(),
+                                    sender_id = UserData.user!!.id,
+                                    message_type = "reply",
+                                    id = "",
+                                    collectionId = event.chat_id,
+                                    replyTo = event.replyTo
+                                )
+                            )
+                        }
+                        else -> {}
                     }
-                )
-            }
-            AnimatedVisibility(visible =imageDisplay!=null, enter = scaleIn(), exit = scaleOut() ) {
-                Box(modifier = Modifier.fillMaxSize()){
+
+                },
+                chatViewModel = chatViewModel,
+                displayLocation = { displayLocationDialog = it },
+                higlightDialog = { messageToHighlight ->
+                    highlightDialog = messageToHighlight
+
+                },
+                messages = messages,
+                valueExist = valueExist.value,
+                displayImage = { image ->
+                    imageDisplay = image
+                },
+                chatResponse = chatResponse, context = context
+            )
+            AnimatedVisibility(
+                visible = imageDisplay != null,
+                enter = scaleIn(),
+                exit = scaleOut()
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     BackHandler() {
-                        imageDisplay=null
+                        imageDisplay = null
                     }
 
                     AsyncImage(
@@ -674,13 +660,21 @@ fun NavGraphBuilder.chatGraph(
                                 )
                             )
                     )
-                    Box(modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(24.dp)){
-                        Box(modifier = Modifier
-                            .clickable(onClick = { imageDisplay = null })
-                            .padding(12.dp)){
-                            Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription =null, tint = Color.White )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(24.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clickable(onClick = { imageDisplay = null })
+                                .padding(12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = null,
+                                tint = Color.White
+                            )
 
                         }
                     }
@@ -708,7 +702,6 @@ fun NavGraphBuilder.chatGraph(
                     displayLocationDialog = null
                 })
             }
-            val context = LocalContext.current
             if (sendLocationDialog) {
 
                 FriendUppDialog(
@@ -731,8 +724,12 @@ fun NavGraphBuilder.chatGraph(
                                     replyTo = null
                                 )
                             )
-                        }else{
-                            Toast.makeText(context,"Current location unavailable",Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Current location unavailable",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         sendLocationDialog = false
 
@@ -780,19 +777,26 @@ fun getCurrentUTCTime(): String {
     val currentDateTime = Calendar.getInstance().time
     return dateFormat.format(currentDateTime)
 }
+
 fun convertToUTC(startTime: String): String {
     val inputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-    inputDateFormat.timeZone = TimeZone.getDefault() // Assuming the provided start time is in the local time zone
+    inputDateFormat.timeZone =
+        TimeZone.getDefault() // Assuming the provided start time is in the local time zone
     val startDate = inputDateFormat.parse(startTime)
 
     val outputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     outputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     return outputDateFormat.format(startDate)
 }
-fun sendNotification(receiver: String, username: String, message: String,title:String,picture:String?=null
-                     ,type:String?="joinActivity",id:String?=null) {
+
+fun sendNotification(
+    receiver: String, username: String, message: String, title: String, picture: String? = null,
+    type: String? = "joinActivity", id: String? = null,
+) {
     Log.d(TAG, "notificaiton sented")
-    val tokens = FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/").getReference("Tokens")
+    val tokens =
+        FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app/")
+            .getReference("Tokens")
     val query = tokens.orderByKey().equalTo(receiver)
     query.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
@@ -800,16 +804,14 @@ fun sendNotification(receiver: String, username: String, message: String,title:S
                 val token: Token? = dataSnapshot.getValue(Token::class.java)
                 val data = Data(
                     UserData.user!!.id, R.drawable.ic_wave,
-                    if(!username.isNullOrEmpty()){
+                    if (!username.isNullOrEmpty()) {
                         "$username:$message"
-                    }else{
+                    } else {
                         "$message"
-                    }
-                    , title,
+                    }, title,
                     receiver,
                     picture = picture,
-                    type=type
-                , id =id
+                    type = type, id = id
                 )
                 val sender = Sender(data, token?.token.toString())
                 Log.d(TAG, sender.toString() + "X")
@@ -818,7 +820,10 @@ fun sendNotification(receiver: String, username: String, message: String,title:S
                     APIService::class.java
                 )
                 apiService.sendNotification(sender)?.enqueue(object : Callback<MyResponse?> {
-                    override fun onResponse(call: Call<MyResponse?>, response: Response<MyResponse?>) {
+                    override fun onResponse(
+                        call: Call<MyResponse?>,
+                        response: Response<MyResponse?>,
+                    ) {
                         Log.d(TAG, response.toString())
                         if (response.code() == 200) {
                             if (response.body()?.success != 1) {

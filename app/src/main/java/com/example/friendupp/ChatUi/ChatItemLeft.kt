@@ -47,6 +47,7 @@ fun ChatItemLeft(
     highlite_message: Boolean,
     isReply:Boolean=false,
     replyTo: String?,
+    groupId: String?,
     displayImage:(String)->Unit
 ) {
     var clicked by remember {
@@ -399,7 +400,9 @@ fun ChatItemLeft(
                 ChatSettingItem(
                     label = "Delete",
                     icon = R.drawable.ic_delete,
-                    onClick = { onEvent(ChatEvents.Delete(chat.id)) })
+                    onClick = {      if(groupId!=null){
+                        onEvent(ChatEvents.Delete(groupId,chat.id))
+                    } })
                 ChatSettingItem(
                     label = "Report",
                     icon = R.drawable.ic_flag,

@@ -1,6 +1,7 @@
 package com.example.friendupp.Profile
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -365,8 +366,12 @@ fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents)
         }
         UserOption.FRIEND->{
             ProfileOptionItem(R.drawable.ic_chat_300,"Chat", onClick = {
+                Log.d("profiledisplay","GO TO click")
+
                 val chat_id=UserData.user!!.friends_ids.get(user_id)
                 if(chat_id!=null){
+                    Log.d("profiledisplay","GO ")
+
                     onEvent(ProfileDisplayEvents.GoToChat(chat_id=chat_id))
                 }else{
                 }

@@ -1034,6 +1034,7 @@ fun NavGraphBuilder.profileGraph(
                             ).show()
                         }
                         is ProfileDisplayEvents.GoToChat -> {
+                            Log.d("profiledisplay","GO TO CHA")
                             navController.navigate("ChatItem/" + event.chat_id)
                         }
 

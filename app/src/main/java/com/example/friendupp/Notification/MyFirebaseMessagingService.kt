@@ -75,6 +75,7 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
         val sent = remoteMessage.data["sent"]
         val user = remoteMessage.data["user"]
         val type= remoteMessage.data["type"]
+        val id= remoteMessage.data["id"]
         val notificationPref= getNotificationPrefs(applicationContext)
         when(type){
             "friendRequest"->{
@@ -120,7 +121,6 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
                 if(notificationPref.chatMessageNotification){
 
                 }else{
-
                     assert(sent != null)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         sendOreoNotification(remoteMessage)

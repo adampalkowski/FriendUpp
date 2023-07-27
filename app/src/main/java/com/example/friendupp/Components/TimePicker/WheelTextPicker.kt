@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.commandiron.wheel_picker_compose.core.SelectorProperties
 import com.commandiron.wheel_picker_compose.core.WheelPickerDefaults
-
+/*
 @Composable
 fun WheelTextPicker(
     modifier: Modifier = Modifier,
@@ -40,4 +40,4 @@ fun WheelTextPicker(
             maxLines = 1
         )
     }
-}
+}*/

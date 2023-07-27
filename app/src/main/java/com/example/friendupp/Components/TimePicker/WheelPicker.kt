@@ -18,13 +18,14 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+/*
 import dev.chrisbanes.snapper.ExperimentalSnapperApi
 import dev.chrisbanes.snapper.SnapperLayoutInfo
 import dev.chrisbanes.snapper.rememberLazyListSnapperLayoutInfo
 import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
 import kotlin.math.absoluteValue
-
-
+*/
+/*
 @OptIn(ExperimentalSnapperApi::class)
 @Composable
 internal fun WheelPicker(
@@ -102,7 +103,8 @@ internal fun WheelPicker(
         }
     }
 }
-
+*/
+/*
 @OptIn(ExperimentalSnapperApi::class)
 private fun calculateSnappedItemIndex(snapperLayoutInfo: SnapperLayoutInfo): Int? {
     var currentItemIndex = snapperLayoutInfo.currentItem?.index
@@ -157,7 +159,7 @@ private fun calculateAnimatedRotationX(
         animatedRotationX
     }
 }
-
+*/
 object WheelPickerDefaults{
     @Composable
     fun selectorProperties(
@@ -212,5 +214,4 @@ internal class DefaultSelectorProperties(
         return rememberUpdatedState(border)
     }
 }
-
 

@@ -11,15 +11,22 @@ plugins {
 android {
     namespace 'com.example.friendupp'
     compileSdk 33
-
+    testOptions {
+        unitTests {
+            // Provide a mock implementation of android.util.Log for tests
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
     defaultConfig {
         applicationId "com.example.friendupp"
         minSdk 28
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner = "com.example.friendupp.CustomTestRunner"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+     //   testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -58,11 +65,16 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.test:core-ktx:1.5.0'
+    implementation 'com.google.ar:core:1.30.0'
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$compose_version")
+// Needed for createAndroidComposeRule, but not createComposeRule:
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
     implementation "com.google.accompanist:accompanist-permissions:0.30.1"
 
     implementation("com.marosseleng.android:compose-material3-datetime-pickers:0.7.1")
     //snapper
-    implementation "dev.chrisbanes.snapper:snapper:v0.3.0"
+    androidTestImplementation  "dev.chrisbanes.snapper:snapper:v0.3.0"
     implementation 'com.github.commandiron:WheelPickerCompose:1.1.11'
 
     implementation 'com.firebase:geofire-android-common:3.2.0'
@@ -152,6 +164,25 @@ dependencies {
     // Add the dependency for the Realtime Database library
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-database-ktx")
+
+    //testings
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0"
+
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
+    testImplementation 'org.mockito:mockito-inline:3.12.4'
+    testImplementation 'org.mockito:mockito-android:3.12.4'
+    // For Robolectric tests.
+    testImplementation 'com.google.dagger:hilt-android-testing:2.44'
+    // ...with Kotlin.
+    kaptTest 'com.google.dagger:hilt-android-compiler:2.44.2'
+    // For instrumented tests.
+    androidTestImplementation 'com.google.dagger:hilt-android-testing:2.44.2'
+    // ...with Kotlin.
+    kaptAndroidTest 'com.google.dagger:hilt-android-compiler:2.44.2'
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+
 
 }
 kapt {

@@ -1,5 +1,6 @@
 package com.example.friendupp.ChatUi
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -34,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.friendupp.Components.FriendUppDialog
+import com.example.friendupp.Groups.GroupDisplayContent
+import com.example.friendupp.Groups.GroupDisplayEvents
 import com.example.friendupp.Home.eButtonSimple
 import com.example.friendupp.Home.eButtonSimpleBlue
 import com.example.friendupp.Login.TextFieldState
@@ -55,7 +59,9 @@ import java.util.*
 
 sealed class ChatEvents {
     object GoBack : ChatEvents()
-    object GoToProfile : ChatEvents()
+    class GoToProfile(val chat: Chat) : ChatEvents()
+    class TurnOffChatNotification(val id: String) : ChatEvents()
+    object ChatDoesntExist : ChatEvents()
     class SendImage(message: Uri) : ChatEvents() {
         val message = message
     }
@@ -64,12 +70,12 @@ sealed class ChatEvents {
     object ShareLocation : ChatEvents()
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
-    class SendMessage(val chat_id: String, val message: String) : ChatEvents()
+    class SendMessage(val chat_id: String, val message: String, val chat: Chat) : ChatEvents()
     class SendReply(val chat_id: String, val message: String, var replyTo: String) : ChatEvents()
     object OpenChatSettings : ChatEvents()
     class Reply(val message: ChatMessage) : ChatEvents()
     object Report : ChatEvents()
-    class Delete(val id: String) : ChatEvents()
+    class Delete(val chatId: String, val id: String) : ChatEvents()
     class Copy(val text: String) : ChatEvents()
     object CreateNonExistingChatCollection : ChatEvents()
 
@@ -110,6 +116,71 @@ fun getChatNameAndImage(chat: Chat): Pair<String, String> {
 }
 
 @Composable
+fun ChatScreen(
+    modifier: Modifier,
+    onEvent: (ChatEvents) -> Unit,
+    chatViewModel: ChatViewModel,
+    displayLocation: (LatLng) -> Unit,
+    higlightDialog: (String) -> Unit,
+    messages: List<ChatMessage>,
+    valueExist: Boolean,
+    displayImage: (String) -> Unit,
+    chatResponse: Response<Chat>, context: Context,
+) {
+    // Handle null safety and loading state
+    when (chatResponse) {
+        is Response.Success -> {
+
+            // The data has been successfully fetched, and group is not null
+            ChatContent(
+                modifier = modifier,
+                onEvent = onEvent,
+                chatViewModel = chatViewModel,
+                displayLocation = displayLocation,
+                higlightDialog = higlightDialog,
+                chat = chatResponse.data,
+                messages = messages,
+                valueExist = valueExist,
+                displayImage = displayImage
+            )
+        }
+        is Response.Loading -> {
+            // Show a loading indicator while data is being fetched
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material.CircularProgressIndicator()
+            }
+        }
+        is Response.Failure -> {
+            // Show an error message or navigate back on failure
+            Toast.makeText(
+                context,
+                "Failed to load chat. Please try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            if (chatResponse.e.message.equals("document_null")) {
+                onEvent(ChatEvents.ChatDoesntExist)
+            }
+            // You can also navigate back using the onEvent callback
+            onEvent(ChatEvents.GoBack)
+        }
+        else -> {
+            // Show a loading indicator or some placeholder content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material.CircularProgressIndicator()
+            }
+        }
+
+    }
+}
+
+@Composable
 fun ChatContent(
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
@@ -120,7 +191,7 @@ fun ChatContent(
     messages: List<ChatMessage>,
     valueExist: Boolean,
     displayImage: (String) -> Unit,
-    ) {
+) {
     DisposableEffect(Unit) {
         onDispose {
             chatViewModel.resetChat()
@@ -136,7 +207,8 @@ fun ChatContent(
     }
     //handle image loading animatipn
     var showLoading by remember { mutableStateOf(false) }
-    val flowimageaddition = chatViewModel?.isImageAddedToStorageAndFirebaseState?.collectAsState()
+    var chatSettings by rememberSaveable { mutableStateOf(false) }
+    val flowimageaddition = chatViewModel.isImageAddedToStorageAndFirebaseState.collectAsState()
 
     val replyMessage = remember { mutableStateOf<ChatMessage?>(null) }
     val permission_flow = chatViewModel.granted_permission.collectAsState()
@@ -159,9 +231,14 @@ fun ChatContent(
             TopChatBar(
                 title = chat_name,
                 image = chat_image,
-                chatEvents = onEvent
+                chatEvents = onEvent,
+                chat = chat,
+                OpenChatSettings = {
+                    chatSettings = true
+                }
             )
             ChatMessages(
+                group = chat,
                 modifier.weight(1f),
                 onEvent = { event ->
                     Log.d("CHATDEBUG", "EVENT")
@@ -172,7 +249,7 @@ fun ChatContent(
                             replyMessage.value = event.message
                         }
                         is ChatEvents.Delete -> {
-                            onEvent(ChatEvents.Delete(event.id))
+                            onEvent(ChatEvents.Delete(chat.id!!, event.id))
                         }
                         else -> {
                             onEvent(event)
@@ -203,12 +280,26 @@ fun ChatContent(
                     highlite_message = !highlite_message
                 },
                 addImage = { onEvent(ChatEvents.OpenGallery) },
-                liveActivity = {}, highlite_message = highlite_message
+                liveActivity = {}, highlite_message = highlite_message, chat = chat
             )
         }
 
     }
+    if (chatSettings) {
+        ChatSettingsDialog(onCancel = { chatSettings = false },
+            turnOffChatNotification = {
+                                      id->
+                onEvent(ChatEvents.TurnOffChatNotification(id))
 
+            },
+            goToGroup = {},
+            group = chat,
+            reportChat = {},
+            shareGroupLink = {},
+            goToActivity = {},
+            goToUser = {})
+
+    }
 
     DisposableEffect(Unit) {
         onDispose { showLoading = false }
@@ -320,6 +411,7 @@ fun loadChat(
 
 @Composable
 fun ChatMessages(
+    group: Chat,
     modifier: Modifier,
     onEvent: (ChatEvents) -> Unit,
     messages: List<ChatMessage>,
@@ -349,7 +441,8 @@ fun ChatMessages(
             val shouldGroup =
                 lastMessageSenderID == message.sender_id || lastMessageSenderID == null
             ChatBox(
-                message,
+                group = group,
+                chat = message,
                 onLongPress = { },
                 highlite_message = highlight_message,
                 displayPicture = {},
@@ -404,6 +497,7 @@ fun convertUTCtoLocal(utcDate: String, outputFormat: String): String {
 
 @Composable
 fun ChatBox(
+    group: Chat,
     chat: ChatMessage,
     highlite_message: Boolean,
     onLongPress: () -> Unit,
@@ -426,6 +520,7 @@ fun ChatBox(
         Spacer(modifier = Modifier.height(padding))
 
         ChatItemRight(
+            groupId = group.id!!,
             text_type = chat.message_type,
             text = chat.text,
             timeSent = convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"),
@@ -455,6 +550,7 @@ fun ChatBox(
         Spacer(modifier = Modifier.height(padding))
 
         ChatItemLeft(
+            groupId = group.id,
             text_type = chat.message_type,
             text = chat.text,
             timeSent = convertUTCtoLocal(chat.sent_time, outputFormat = "yyyy-MM-dd HH:mm:ss"),
@@ -476,9 +572,9 @@ fun ChatBox(
             displayLocation = displayLocation,
             highlite_message = highlite_message,
             replyTo = chat.replyTo,
-            displayImage = displayImage
+            displayImage = displayImage,
 
-        )
+            )
 
     }
 
@@ -720,6 +816,7 @@ fun BottomChatBar(
     addImage: () -> Unit,
     liveActivity: () -> Unit,
     highlite_message: Boolean,
+    chat: Chat,
 ) {
     var focused by remember { mutableStateOf(false) }
     var text by rememberSaveable(stateSaver = MessageStateSaver) {
@@ -777,7 +874,7 @@ fun BottomChatBar(
                         replyMessage.value = null
                         text.text = ""
                     } else {
-                        onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text))
+                        onEvent(ChatEvents.SendMessage(chat_id = chat_id, text.text, chat = chat))
                         text.text = ""
                     }
 
@@ -800,7 +897,7 @@ fun ReplyMessage(chat: ChatMessage) {
             .padding(vertical = 8.dp, horizontal = 24.dp)
     ) {
         if (chat.sender_id == UserData.user!!.id) {
-            ChatItemRight(
+            ChatItemRight(groupId = null,
                 text_type = chat.message_type,
                 text = chat.text,
                 onEvent = {},
@@ -813,7 +910,7 @@ fun ReplyMessage(chat: ChatMessage) {
 
         } else {
 
-            ChatItemLeft(
+            ChatItemLeft(groupId = null,
                 text_type = chat.message_type,
                 text = chat.text,
                 onEvent = {},
@@ -826,7 +923,13 @@ fun ReplyMessage(chat: ChatMessage) {
 }
 
 @Composable
-fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
+fun TopChatBar(
+    title: String,
+    image: String,
+    chatEvents: (ChatEvents) -> Unit,
+    chat: Chat,
+    OpenChatSettings: () -> Unit,
+) {
     Column {
 
         //todo set appropirate color to theme
@@ -858,7 +961,7 @@ fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                modifier = Modifier.clickable(onClick = { chatEvents(ChatEvents.GoToProfile) }),
+                modifier = Modifier.clickable(onClick = { chatEvents(ChatEvents.GoToProfile(chat = chat)) }),
                 text = title,
                 style = TextStyle(
                     fontFamily = Lexend,
@@ -868,7 +971,7 @@ fun TopChatBar(title: String, image: String, chatEvents: (ChatEvents) -> Unit) {
                 )
             )
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { chatEvents(ChatEvents.OpenChatSettings) }) {
+            IconButton(onClick = { OpenChatSettings() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_more),
                     contentDescription = null,
