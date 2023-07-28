@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,23 +37,19 @@ import com.example.friendupp.model.UserData
 import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent) -> Unit) {
 
     val context = LocalContext.current
-    Card(
+    androidx.compose.material.Card(
+        elevation = 10.dp,
         modifier = Modifier
             .widthIn(min = 150.dp, max = 350.dp)
             .padding(8.dp)
             .clip(shape = RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(
-            contentColor = SocialTheme.colors.uiBackground,
-            containerColor = SocialTheme.colors.uiBackground
-        ),
-        elevation = CardDefaults.cardElevation(5.dp),
         shape = RoundedCornerShape(16.dp),
-        onClick = {}) {
+        onClick = {}, backgroundColor = SocialTheme.colors.uiBackground) {
         Column() {
             Spacer(modifier = Modifier.height(8.dp))
             TimeIndicator(
@@ -60,7 +57,8 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                 tags = activity.tags,
                 requests = activity.requests.size,
                 participantConfirmation = activity.participantConfirmation,
-                isCreator = activity.creator_id==UserData.user!!.id
+                isCreator = activity.creator_id==UserData.user!!.id,
+                Divider=false
             )
 
             if (!activity.image.isNullOrEmpty()) {

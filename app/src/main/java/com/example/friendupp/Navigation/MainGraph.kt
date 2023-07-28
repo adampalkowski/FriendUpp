@@ -13,9 +13,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -27,6 +29,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.friendupp.*
+import com.example.friendupp.Activities.PublicActivitiesViewModel
 import com.example.friendupp.ActivityPreview.CreatorSettingsEvent
 import com.example.friendupp.ActivityPreview.CreatorSettingsScreen
 import com.example.friendupp.ActivityPreview.handleActivityEvents
@@ -34,23 +38,18 @@ import com.example.friendupp.Components.FriendUppDialog
 import com.example.friendupp.FriendPicker.FriendPickerEvents
 import com.example.friendupp.FriendPicker.FriendPickerScreen
 import com.example.friendupp.Groups.GroupInvitesViewModel
-import com.example.friendupp.Home.HomeEvents
-import com.example.friendupp.Home.HomeScreen
-import com.example.friendupp.Home.HomeViewModel
-import com.example.friendupp.Home.LiveUserSettingsDialog
+import com.example.friendupp.Home.*
 import com.example.friendupp.Invites.InvitesViewModel
 import com.example.friendupp.Map.MapViewModel
-import com.example.friendupp.MapEvent
-import com.example.friendupp.MapScreen
 import com.example.friendupp.Participants.ParticipantsEvents
 import com.example.friendupp.Participants.ParticipantsScreen
-import com.example.friendupp.ParticipantsViewModel
 import com.example.friendupp.R
 import com.example.friendupp.Request.RequestViewModel
 import com.example.friendupp.Request.RequestsEvents
 import com.example.friendupp.Request.RequestsScreen
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
+import com.example.friendupp.Settings.getSavedRangeValue
 import com.example.friendupp.bottomBar.ActivityUi.*
 import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
@@ -67,6 +66,7 @@ import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
@@ -78,6 +78,17 @@ import java.util.*
 import java.util.concurrent.Executor
 
 const val NAVIGATION_SCREEN_TIME_ANIMATION_DURATION = 300
+
+object ScreenSize {
+    const val TabletSize = 600 // Define your breakpoint here for tablet layout
+
+}
+
+@Composable
+private fun isTablet(): Boolean {
+    val screenConfig = LocalConfiguration.current
+    return screenConfig.smallestScreenWidthDp >= ScreenSize.TabletSize
+}
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.mainGraph(
@@ -1378,199 +1389,233 @@ fun NavGraphBuilder.mainGraph(
             val locationPermissionState = rememberPermissionState(
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             )
+            val publicActivitiesViewModel:PublicActivitiesViewModel= hiltViewModel()
+            /* get current location updates*/
+            val flow = mapViewModel.currentLocation.collectAsState()
+            var currentLocation by remember { mutableStateOf(LatLng(50.0, 20.0)) }
+            flow.value.let { latLng ->
+                if (latLng != null) {
+                    currentLocation = latLng
+                }
+            }
+            val radius = getSavedRangeValue(context)*1000.0
 
+            LaunchedEffect(Unit){
+                publicActivitiesViewModel.getPublicActivities(currentLocation.latitude,currentLocation.longitude,radius)
+            }
+            val publicActivitiesResponse= publicActivitiesViewModel.publicActivitiesListResponse.value
 
             if (locationPermissionState.status.isGranted) {
                 mapViewModel.startLocationUpdates()
 
-                MapScreen(
-                    mapViewModel,
-                    activityViewModel = activityViewModel,
-                    onEvent = { event ->
-                        when (event) {
-                            is MapEvent.PreviewActivity -> {
-                                homeViewModel.setExpandedActivity(event.activity)
-                                navController.navigate("ActivityPreview")
+                val isTablet = isTablet()
+
+                if (isTablet) {
+                    MapScreenTablet(
+                        onEvent = { event ->
+                            when (event) {
+                                is MapEvent.PreviewActivity -> {
+                                    homeViewModel.setExpandedActivity(event.activity)
+                                    navController.navigate("ActivityPreview")
+                                }
+                                else -> {}
                             }
-                            else -> {}
-                        }
-                    })
-            } else {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column (Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally){
+                        },currentLocation=currentLocation,publicActivitiesResponse=publicActivitiesResponse)
+                } else {
+                    MapScreen(
+                        onEvent = { event ->
+                            when (event) {
+                                is MapEvent.PreviewActivity -> {
+                                    homeViewModel.setExpandedActivity(event.activity)
+                                    navController.navigate("ActivityPreview")
+                                }
+                                is MapEvent.GetMorePublicActivities -> {
+                                    publicActivitiesViewModel.getMorePublicActivities(currentLocation.latitude,currentLocation.longitude,radius)
+                                }
+                                else -> {}
+                            }
+                        },currentLocation=currentLocation,publicActivitiesResponse=publicActivitiesResponse)
+                }
 
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_map),
-                            contentDescription = null,
-                            tint = SocialTheme.colors.iconPrimary
-                        )
-                        Text(
-                            modifier = Modifier
-                                .padding(horizontal = 24.dp),
-                            textAlign = TextAlign.Center,
-                            text = "Share your current location to search for nearby activities",
-                            style = TextStyle(fontFamily = Lexend)
-                        )
-                        Button(onClick = {
-                            locationPermissionState.launchPermissionRequest()
+        } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-                        } ){
-                            Text(
-                                modifier = Modifier
-                                    .padding(horizontal = 24.dp),
-                                text = "Share ",
-                                style = TextStyle(fontFamily = Lexend)
-                            )
-                        }
-                    }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_map),
+                    contentDescription = null,
+                    tint = SocialTheme.colors.iconPrimary
+                )
+                Text(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp),
+                    textAlign = TextAlign.Center,
+                    text = "Share your current location to search for nearby activities",
+                    style = TextStyle(fontFamily = Lexend)
+                )
+                Button(onClick = {
+                    locationPermissionState.launchPermissionRequest()
 
+                }) {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp),
+                        text = "Share ",
+                        style = TextStyle(fontFamily = Lexend)
+                    )
                 }
             }
-
 
         }
+    }
 
-
-        composable(
-            "Search",
-            enterTransition = {
-                when (initialState.destination.route) {
-                    "Chat" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
-                    else -> null
-                }
-            },
-            exitTransition = {
-                when (targetState.destination.route) {
-                    "Chat" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Left,
-                            animationSpec = tween(700)
-                        )
-                    else -> null
-                }
-            },
-            popEnterTransition = {
-                when (initialState.destination.route) {
-                    "Chat" ->
-                        slideIntoContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    else -> null
-                }
-            },
-            popExitTransition = {
-                when (targetState.destination.route) {
-                    "Chat" ->
-                        slideOutOfContainer(
-                            AnimatedContentScope.SlideDirection.Right,
-                            animationSpec = tween(700)
-                        )
-                    else -> null
-                }
-            }
-        ) {
-            //flow for user search
-            val userFlow = userViewModel.userState.collectAsState()
-
-            //RESET USER VALUE
-            userViewModel.resetUserValue()
-
-
-            SearchScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
-                when (event) {
-                    is SearchEvents.GoBack -> {
-                        navController.popBackStack()
-                    }
-                    is SearchEvents.DisplayUser -> {
-                        navController.navigate("ProfileDisplay/" + event.id)
-
-                    }
-                    is SearchEvents.SearchForUser -> {
-                        userViewModel.getUserByUsername(event.username)
-                    }
-                    is SearchEvents.OnInviteAccepted -> {
-                        invitesViewModel.removeInvite(event.invite)
-                        val uuid: UUID = UUID.randomUUID()
-                        val id: String = uuid.toString()
-                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                        val current = LocalDateTime.now().format(formatter)
-                        userViewModel.acceptInvite(
-                            UserData.user!!, event.invite.senderId, Chat(
-                                current,
-                                owner_id = event.invite.senderId,
-                                id = id,
-                                name = null,
-                                imageUrl = null,
-                                recent_message = "",
-                                recent_message_time = current,
-                                type = "duo",
-                                members = arrayListOf(UserData.user!!.id, event.invite.senderId),
-                                invites = emptyList(),
-                                user_one_username = UserData.user!!.username,
-                                user_two_username = event.invite.senderName,
-                                user_one_profile_pic = UserData.user!!.pictureUrl,
-                                user_two_profile_pic = event.invite.senderProfilePictureUrl,
-                                highlited_message = "",
-                                description = "",
-                                numberOfUsers = 2,
-                                numberOfActivities = 0,
-                                public = false,
-                                reports = 0,
-                                blocked = false,
-                                user_one_id = UserData.user!!.id.toString(),
-                                user_two_id = event.invite.senderId.toString(),
-                            )
-                        )
-
-                    }
-                    is SearchEvents.RemoveInvite -> {
-                        invitesViewModel.removeInvite(event.invite)
-
-                    }
-                }
-            }, userViewModel = userViewModel, invitesViewModel = invitesViewModel)
-
-            /*
-            CHECK IF USER EXISTS in search, if succes navigate to profile with user
-            * */
-            userFlow.value.let {
-                when (it) {
-                    is Response.Success -> {
-                        if (it.data != null) {
-                            Log.d("SEARCHSCREENDEBUG", "search cseren scuesss")
-                            //check if user is me then go to profiel
-                            if (it.data.id == UserData.user!!.id) {
-                                navController.navigate("Profile")
-                            } else if (it.data.blocked_ids.contains(UserData.user!!.id)) {
-                                Toast.makeText(
-                                    LocalContext.current,
-                                    "Failed to find user with given username", Toast.LENGTH_LONG
-                                ).show()
-                            } else {
-                                navController.navigate("ProfileDisplay/" + it.data.id.toString())
-
-                            }
-                        }
-
-                    }
-                    is Response.Failure -> {
-                        Toast.makeText(
-                            LocalContext.current,
-                            "Failed to find user with given username", Toast.LENGTH_LONG
-                        ).show()
-
-                    }
-                    else -> {}
-
-                }
-            }
-        }
 
     }
+
+
+    composable(
+        "Search",
+        enterTransition = {
+            when (initialState.destination.route) {
+                "Chat" ->
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+                else -> null
+            }
+        },
+        exitTransition = {
+            when (targetState.destination.route) {
+                "Chat" ->
+                    slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        animationSpec = tween(700)
+                    )
+                else -> null
+            }
+        },
+        popEnterTransition = {
+            when (initialState.destination.route) {
+                "Chat" ->
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                else -> null
+            }
+        },
+        popExitTransition = {
+            when (targetState.destination.route) {
+                "Chat" ->
+                    slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        animationSpec = tween(700)
+                    )
+                else -> null
+            }
+        }
+    ) {
+        //flow for user search
+        val userFlow = userViewModel.userState.collectAsState()
+
+        //RESET USER VALUE
+        userViewModel.resetUserValue()
+
+
+        SearchScreen(modifier = Modifier.safeDrawingPadding(), onEvent = { event ->
+            when (event) {
+                is SearchEvents.GoBack -> {
+                    navController.popBackStack()
+                }
+                is SearchEvents.DisplayUser -> {
+                    navController.navigate("ProfileDisplay/" + event.id)
+
+                }
+                is SearchEvents.SearchForUser -> {
+                    userViewModel.getUserByUsername(event.username)
+                }
+                is SearchEvents.OnInviteAccepted -> {
+                    invitesViewModel.removeInvite(event.invite)
+                    val uuid: UUID = UUID.randomUUID()
+                    val id: String = uuid.toString()
+                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    val current = LocalDateTime.now().format(formatter)
+                    userViewModel.acceptInvite(
+                        UserData.user!!, event.invite.senderId, Chat(
+                            current,
+                            owner_id = event.invite.senderId,
+                            id = id,
+                            name = null,
+                            imageUrl = null,
+                            recent_message = "",
+                            recent_message_time = current,
+                            type = "duo",
+                            members = arrayListOf(UserData.user!!.id, event.invite.senderId),
+                            invites = emptyList(),
+                            user_one_username = UserData.user!!.username,
+                            user_two_username = event.invite.senderName,
+                            user_one_profile_pic = UserData.user!!.pictureUrl,
+                            user_two_profile_pic = event.invite.senderProfilePictureUrl,
+                            highlited_message = "",
+                            description = "",
+                            numberOfUsers = 2,
+                            numberOfActivities = 0,
+                            public = false,
+                            reports = 0,
+                            blocked = false,
+                            user_one_id = UserData.user!!.id.toString(),
+                            user_two_id = event.invite.senderId.toString(),
+                        )
+                    )
+
+                }
+                is SearchEvents.RemoveInvite -> {
+                    invitesViewModel.removeInvite(event.invite)
+
+                }
+            }
+        }, userViewModel = userViewModel, invitesViewModel = invitesViewModel)
+
+        /*
+        CHECK IF USER EXISTS in search, if succes navigate to profile with user
+        * */
+        userFlow.value.let {
+            when (it) {
+                is Response.Success -> {
+                    if (it.data != null) {
+                        Log.d("SEARCHSCREENDEBUG", "search cseren scuesss")
+                        //check if user is me then go to profiel
+                        if (it.data.id == UserData.user!!.id) {
+                            navController.navigate("Profile")
+                        } else if (it.data.blocked_ids.contains(UserData.user!!.id)) {
+                            Toast.makeText(
+                                LocalContext.current,
+                                "Failed to find user with given username", Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            navController.navigate("ProfileDisplay/" + it.data.id.toString())
+
+                        }
+                    }
+
+                }
+                is Response.Failure -> {
+                    Toast.makeText(
+                        LocalContext.current,
+                        "Failed to find user with given username", Toast.LENGTH_LONG
+                    ).show()
+
+                }
+                else -> {}
+
+            }
+        }
+    }
+
+}
 }
 

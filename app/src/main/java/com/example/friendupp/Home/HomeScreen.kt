@@ -306,7 +306,7 @@ fun HomeScreen(
 
                             if(publicActivities.isEmpty()){
                                 Spacer(Modifier.height(24.dp))
-                                Text(modifier=Modifier.padding(horizontal = 24.dp), textAlign = TextAlign.Center,text = "No nearby activites, try increasing range or create one yourself.", style = TextStyle(
+                                Text(modifier=Modifier.fillMaxWidth().padding(horizontal = 24.dp), textAlign = TextAlign.Center,text = "No nearby activites, try increasing range or create one yourself.", style = TextStyle(
                                     fontFamily = Lexend, fontWeight = FontWeight.Normal,
                                 ),color=SocialTheme.colors.iconPrimary
                                 )

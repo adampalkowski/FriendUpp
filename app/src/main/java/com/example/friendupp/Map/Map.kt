@@ -16,8 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
+import androidx.compose.material.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.runtime.*
@@ -40,6 +39,7 @@ import com.example.friendupp.Map.MapActivityItem
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.model.Activity
+import com.example.friendupp.model.Response
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
@@ -48,39 +48,24 @@ import com.google.maps.android.compose.*
 sealed class MapEvent {
     class PreviewActivity(val activity: Activity) : MapEvent()
     class GoToProfile(val id: String) : MapEvent()
+    object GetMorePublicActivities : MapEvent()
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MapScreen(
-    mapViewModel: MapViewModel,
-    activityViewModel: ActivityViewModel,
+
     onEvent: (MapEvent) -> Unit,
+    currentLocation:LatLng,
+    publicActivitiesResponse:Response<List<Activity>>
 ) {
     val publicActivities = remember { mutableStateListOf<Activity>() }
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
     var publicActivitiesExist = remember { mutableStateOf(false) }
 
-    val flow = mapViewModel.currentLocation.collectAsState()
     val context = LocalContext.current
-    var currentLocation by remember { mutableStateOf(LatLng(50.0, 20.0)) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
-    var datePicked = remember {
-        mutableStateOf<String?>(null)
-    }
-    flow.value.let { latLng ->
-        if (latLng != null) {
-            currentLocation = latLng
-        }
-    }
-    loadPublicActivities(
-        activityViewModel,
-        publicActivities,
-        activitiesExist = publicActivitiesExist,
-        currentLocation,
-        selectedTags = SnapshotStateList(),
-        date = datePicked.value,
-        morePublicActivities
-    )
+
 
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 11f)
@@ -107,76 +92,128 @@ fun MapScreen(
 
     Box(modifier = Modifier.consumeWindowInsets(WindowInsets.ime)) {
 
-        GoogleMap(
-            Modifier.fillMaxSize(), cameraPositionState,
-            properties = properties, onMapLoaded = {
-                isMapLoaded = true
-            }, onMapLongClick = { latlng ->
-                selectedLocation = latlng
-            }, onMapClick = {
-            },
-            uiSettings = uiSettings
-        ) {
 
-            val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
-            selectedLocation.let { selectedLatLng ->
-                if (selectedLatLng != null) {
 
-                    MarkerInfoWindow(
-                        state = MarkerState(
-                            position = selectedLatLng
-                        )
-                    ) {
 
+        var hideActivities by rememberSaveable {
+            mutableStateOf(true)
+        }
+
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberBottomSheetScaffoldState()
+        val icon= if(hideActivities){
+            painterResource(id = R.drawable.ic_down)}else{
+            painterResource(id = R.drawable.ic_up)}
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 40.dp,
+            sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+            sheetBackgroundColor = SocialTheme.colors.uiBackground,
+            sheetContentColor = SocialTheme.colors.uiBackground,
+            backgroundColor = SocialTheme.colors.uiBackground,
+            sheetContent = {
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(4.dp)
+                            .width(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(SocialTheme.colors.uiBorder)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    when (publicActivitiesResponse) {
+                        is Response.Success -> {
+                            MapActivitiesDisplay(
+                                modifier = Modifier,
+                                publicActivities = publicActivitiesResponse.data,
+                                CenterOnPoint = { latLng ->
+                                    cameraPositionState.position =
+                                        CameraPosition.fromLatLngZoom(latLng, 13f)
+
+                                },
+                                activityToScroll = activityToScroll,
+                                onEvent = onEvent,
+                                hideActivities = hideActivities,
+                                GetMoreActivities = { onEvent(MapEvent.GetMorePublicActivities) })
+                        }
+                        is Response.Loading -> {
+                            androidx.compose.material3.CircularProgressIndicator(color = SocialTheme.colors.textPrimary)
+                        }
+                        else -> {}
+                    }
+
+                }
+
+            }) { innerPadding ->
+            GoogleMap(
+                Modifier.fillMaxSize(), cameraPositionState,
+                properties = properties, onMapLoaded = {
+                    isMapLoaded = true
+                }, onMapLongClick = { latlng ->
+                    selectedLocation = latlng
+                }, onMapClick = {
+                },
+                uiSettings = uiSettings
+            ) {
+
+                val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
+                selectedLocation.let { selectedLatLng ->
+                    if (selectedLatLng != null) {
+
+                        MarkerInfoWindow(
+                            state = MarkerState(
+                                position = selectedLatLng
+                            )
+                        ) {
+
+                        }
                     }
                 }
-            }
+                when(publicActivitiesResponse){
+                    is Response.Success->{
+                        publicActivitiesResponse.data.forEach { activity ->
+                            if (activity.lat != null) {
+                                val latLng = LatLng(activity.lat!!, activity.lng!!)
+                                MarkerInfoWindow(
+                                    alpha = 0.8f,
+                                    state = MarkerState(
+                                        position = latLng,
+                                    )
+                                ) {
+                                    activityToScroll.value = activity
+                                }
+                            }
 
-            publicActivities.forEach { activity ->
-                if (activity.lat != null) {
-                    val latLng = LatLng(activity.lat!!, activity.lng!!)
+                        }
+                    }
+                    else->{}
+                }
+
+
+                currentLocation.let { latLng ->
                     MarkerInfoWindow(
                         alpha = 0.8f,
                         state = MarkerState(
-                            position = latLng,
-                        )
+                            position = latLng
+                        ), icon = bitmap
                     ) {
-                        activityToScroll.value = activity
+
                     }
                 }
 
-            }
-
-            currentLocation.let { latLng ->
-                MarkerInfoWindow(
-                    alpha = 0.8f,
-                    state = MarkerState(
-                        position = latLng
-                    ), icon = bitmap
-                ) {
-
-                }
             }
 
         }
 
-        MapActivitiesDisplay(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            publicActivities = publicActivities,
-            morePublicActivities = morePublicActivities,
-            CenterOnPoint = { latLng ->
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(latLng, 13f)
 
-            },
-            activityToScroll = activityToScroll,
-            onEvent = onEvent
-        )
 
-        Row(
+        Column(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(24.dp).padding(top=24.dp)
+                .align(Alignment.CenterEnd)
+                .padding(24.dp)
+                .padding(top = 24.dp)
         ) {
 
             Card(elevation = 5.dp) {
@@ -193,13 +230,13 @@ fun MapScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_my_location),
                         contentDescription = null,
-                        tint = Color.Black
+                        tint = SocialTheme.colors.textInteractive
                     )
                 }
             }
 
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Card(elevation = 5.dp) {
                 Box(
@@ -215,7 +252,26 @@ fun MapScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_refresh_map),
                         contentDescription = null,
-                        tint = Color.Black
+                        tint =  SocialTheme.colors.textInteractive
+
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(elevation = 5.dp, shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)) {
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SocialTheme.colors.textInteractive)
+                        .clickable(onClick = {
+                            hideActivities = !hideActivities
+                        }), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter =icon,
+                        contentDescription = null,
+                        tint =  Color.White
                     )
                 }
             }
@@ -251,55 +307,38 @@ fun MapScreen(
 @Composable
 fun MapActivitiesDisplay(
     activityToScroll: MutableState<Activity?>,
-    modifier: Modifier, publicActivities: MutableList<Activity>,
-    morePublicActivities: MutableList<Activity>,
-    CenterOnPoint: (LatLng) -> Unit, onEvent: (MapEvent) -> Unit,
+    modifier: Modifier, publicActivities: List<Activity>,
+    CenterOnPoint: (LatLng) -> Unit, onEvent: (MapEvent) -> Unit, GetMoreActivities: () -> Unit,hideActivities:Boolean
 ) {
-    var hideActivities by rememberSaveable  {
-        mutableStateOf(true)
-    }
-    val icon= if(hideActivities){
-        painterResource(id = R.drawable.ic_down)}else{
-        painterResource(id = R.drawable.ic_up)}
+
     val lazyListState = rememberLazyListState()
-    Column(horizontalAlignment = Alignment.End,                modifier = modifier.fillMaxWidth(),
+    Column(horizontalAlignment = Alignment.Start,                modifier = modifier.fillMaxWidth(),
     ) {
-        Card(elevation = 5.dp, shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)) {
-            Box(
-                Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp))
-                    .background(SocialTheme.colors.uiBackground)
-                    .clickable(onClick = {
-                        hideActivities = !hideActivities
-                    }), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter =icon,
-                    contentDescription = null,
-                    tint = Color.Black
-                )
-            }
-        }
         if(!hideActivities){
             Spacer(modifier = Modifier.height(24.dp))
-
         }
         AnimatedVisibility(visible = hideActivities) {
             LazyRow(
                 state = lazyListState
             ) {
                 items(publicActivities) { activity ->
-                    MapActivityItem(onClick = {
-                        val latLng = LatLng(activity.lat!!, activity.lng!!)
+                        MapActivityItem(onClick = {
+                            val latLng = LatLng(activity.lat!!, activity.lng!!)
 
-                        CenterOnPoint(latLng)
-                    }, activity = activity, onEvent = onEvent)
-                    Spacer(modifier = Modifier.width(16.dp))
+                            CenterOnPoint(latLng)
+                        }, activity = activity, onEvent = onEvent)
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                }
+                item{
+                    Spacer(modifier = Modifier.width(80.dp))
+                }
+                item{
+                    GetMoreActivities()
                 }
             }
         }
-
+    Spacer(modifier = Modifier.height(12.dp))
     }
     // Trigger scrolling when the activityToScroll value changes
     LaunchedEffect(activityToScroll.value) {
@@ -356,6 +395,263 @@ fun loadIcon(
     } catch (e: Exception) {
         e.printStackTrace()
         return null
+    }
+
+}
+
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun MapScreenTablet(
+    currentLocation:LatLng,
+    onEvent: (MapEvent) -> Unit,    publicActivitiesResponse:Response<List<Activity>>
+) {
+    val context = LocalContext.current
+    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    val cameraPositionState: CameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(currentLocation, 11f)
+    }
+    var uiSettings by remember {
+        mutableStateOf(
+            MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = true,
+                indoorLevelPickerEnabled = true
+            )
+        )
+    }
+
+
+    var isMapLoaded by remember { mutableStateOf(false) }
+    var markerOptions by remember { mutableStateOf<MarkerOptions?>(null) }
+
+    var properties by remember {
+        mutableStateOf(MapProperties(mapType = MapType.NORMAL))
+    }
+
+    val activityToScroll = remember { mutableStateOf<Activity?>(null) }
+
+    Box(modifier = Modifier.consumeWindowInsets(WindowInsets.ime)) {
+
+
+        var hideActivities by rememberSaveable {
+            mutableStateOf(true)
+        }
+
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberBottomSheetScaffoldState()
+        val icon = if (hideActivities) {
+            painterResource(id = R.drawable.ic_down)
+        } else {
+            painterResource(id = R.drawable.ic_up)
+        }
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 40.dp,
+            sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+            sheetBackgroundColor = SocialTheme.colors.uiBackground,
+            sheetContentColor = SocialTheme.colors.uiBackground,
+            backgroundColor = SocialTheme.colors.uiBackground,
+            sheetContent = {
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(4.dp)
+                            .width(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(SocialTheme.colors.uiBorder)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    when (publicActivitiesResponse) {
+                        is Response.Success -> {
+                            MapActivitiesDisplay(
+                                modifier = Modifier,
+                                publicActivities = publicActivitiesResponse.data,
+                                CenterOnPoint = { latLng ->
+                                    cameraPositionState.position =
+                                        CameraPosition.fromLatLngZoom(latLng, 13f)
+
+                                },
+                                activityToScroll = activityToScroll,
+                                onEvent = onEvent,
+                                hideActivities = hideActivities,
+                                GetMoreActivities = { onEvent(MapEvent.GetMorePublicActivities) })
+                        }
+                        is Response.Loading -> {
+                            androidx.compose.material3.CircularProgressIndicator(color = SocialTheme.colors.textPrimary)
+                        }
+                        else -> {}
+                    }
+
+                }
+
+
+            }) { innerPadding ->
+
+            Column() {
+
+
+                GoogleMap(
+                    Modifier.fillMaxWidth().weight(1f), cameraPositionState,
+                    properties = properties, onMapLoaded = {
+                        isMapLoaded = true
+                    }, onMapLongClick = { latlng ->
+                        selectedLocation = latlng
+                    }, onMapClick = {
+                    },
+                    uiSettings = uiSettings
+                ) {
+
+                    val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
+                    selectedLocation.let { selectedLatLng ->
+                        if (selectedLatLng != null) {
+
+                            MarkerInfoWindow(
+                                state = MarkerState(
+                                    position = selectedLatLng
+                                )
+                            ) {
+
+                            }
+                        }
+                    }
+                    when (publicActivitiesResponse) {
+                        is Response.Success -> {
+                            publicActivitiesResponse.data.forEach { activity ->
+                                if (activity.lat != null) {
+                                    val latLng = LatLng(activity.lat!!, activity.lng!!)
+                                    MarkerInfoWindow(
+                                        alpha = 0.8f,
+                                        state = MarkerState(
+                                            position = latLng,
+                                        )
+                                    ) {
+                                        activityToScroll.value = activity
+                                    }
+                                }
+
+                            }
+                        }
+                        else -> {}
+                    }
+
+
+                    currentLocation.let { latLng ->
+                        MarkerInfoWindow(
+                            alpha = 0.8f,
+                            state = MarkerState(
+                                position = latLng
+                            ), icon = bitmap
+                        ) {
+
+                        }
+                    }
+
+                }
+
+
+            Spacer(modifier = Modifier.height(200.dp))
+            }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(24.dp)
+                    .padding(top = 24.dp)
+            ) {
+
+                Card(elevation = 5.dp) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SocialTheme.colors.uiBackground)
+                            .clickable(onClick = {
+                                cameraPositionState.position =
+                                    CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                            }), contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_my_location),
+                            contentDescription = null,
+                            tint = SocialTheme.colors.textInteractive
+                        )
+                    }
+                }
+
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Card(elevation = 5.dp) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SocialTheme.colors.uiBackground)
+                            .clickable(onClick = {
+                                cameraPositionState.position =
+                                    CameraPosition.fromLatLngZoom(currentLocation, 11f)
+                            }), contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_refresh_map),
+                            contentDescription = null,
+                            tint = SocialTheme.colors.textInteractive
+
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    elevation = 5.dp,
+                    shape = RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(SocialTheme.colors.textInteractive)
+                            .clickable(onClick = {
+                                hideActivities = !hideActivities
+                            }), contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = icon,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+                }
+        }
+
+
+/*
+            Spacer(modifier = Modifier.weight(1f))
+            Card(elevation = 5.dp) {
+                SocialButtonNormal(
+                    icon = R.drawable.ic_filte_300,
+                    onClick = { },
+                    false
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+            Card(elevation = 5.dp) {
+                SocialButtonNormal(
+                    icon = R.drawable.ic_calendar_300,
+                    onClick = { },
+                    false
+                )
+
+
+            }
+*/
+        }
+
+
     }
 
 }

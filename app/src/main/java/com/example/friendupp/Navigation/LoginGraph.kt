@@ -109,7 +109,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
 
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
                 Log.d("SIGNINWITHGOOGLE", "Result code: ${result.resultCode}")
-                Log.d("SIGNINWITHGOOGLE", "Data: ${result.data}")
+                Log.d("SIGNINWITHGOOGLE", "Data: ${result.data?.extras.toString()}")
 
                 if (result.resultCode == RESULT_OK) {
                     Log.d("SIGNINWITHGOOGLE","result ok")
@@ -148,6 +148,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                     is OneTapResponse.Success -> oneTapSignInResponse.data?.let {
                         Log.d("ONETAP","RESponse")
                         Log.d("ONETAP",it.toString())
+                        Log.d("ONETAP",it.pendingIntent.toString())
                         LaunchedEffect(it) {
                             Log.d("ONETAP","launch")
                             launch(it)
