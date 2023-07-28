@@ -50,6 +50,21 @@ class AuthViewModel @Inject constructor(
     fun signInWithGoogle(googleCredential: AuthCredential) = viewModelScope.launch {
         oneTapSignInResponse = OneTapResponse.Loading
         signInWithGoogleResponse = repo.firebaseSignInWithGoogle(googleCredential)
+        when(signInWithGoogleResponse ){
+            is Response.Success->{
+                Log.d("SIGNINWITHGOOGLE","success")
+
+            }
+            is Response.Loading->{
+                Log.d("SIGNINWITHGOOGLE","LOADING")
+            }
+            is Response.Failure->{
+                    Log.d("SIGNINWITHGOOGLE","failure"+ (signInWithGoogleResponse as Response.Failure).e.message.toString())
+
+
+
+            }
+        }
     }
     private val _loginFlow= MutableStateFlow<Response<FirebaseUser>?>(null)
     val loginFlow: StateFlow<Response<FirebaseUser>?> = _loginFlow

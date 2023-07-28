@@ -11,8 +11,11 @@ import com.example.friendupp.di.ChatRepository
 import com.example.friendupp.model.ChatMessage
 import com.example.friendupp.model.Participant
 import com.example.friendupp.model.Response
+import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,31 +37,40 @@ class MessagesViewModel @Inject constructor(
     fun getMessagesList(): List<ChatMessage> {
         return messagesListState.value
     }
-
+    private var snapshotListenerJob: Job? = null
+    private val viewModelScope = CoroutineScope(Dispatchers.Main)
+    override fun onCleared() {
+        super.onCleared()
+        // Remove the listener when the ViewModel is cleared
+        snapshotListenerJob?.cancel()
+    }
     // Function to fetch messages for a chat
     fun getMessages(chatId: String, current_time: String) {
         viewModelScope.launch {
-            _messagesLoading.value = true
-            // Call the chatRepo's getMessages function that provides a Flow<Response<ArrayList<ChatMessage>>>
-            chatRepo.getMessages(chatId, current_time).collect { response ->
-                when (response) {
-                    is Response.Success -> {
-                        val newMessage = response.data // Assuming response.data is of type ChatMessage
-                        // Add the new message to the front of the list
-                        _messagesList.value = listOf(newMessage) + _messagesList.value
-                        Log.d("MessagesViewModel", "Messages fetched successfully for chat: $chatId")
+            // Check if the listener is already active and remove it if necessary
+            snapshotListenerJob?.cancel()
+
+            // Create a new listener and store its registration
+            snapshotListenerJob  = chatRepo.getMessages(chatId, current_time)
+                .onEach { response ->
+                    when (response) {
+                        is Response.Success -> {
+                            val newMessage = response.data // Assuming response.data is of type ChatMessage
+                            // Add the new message to the front of the list
+                            _messagesList.value = listOf(newMessage) + _messagesList.value
+                            Log.d("MessagesViewModel", "Messages fetched successfully for chat: $chatId")
+                        }
+                        is Response.Failure -> {
+                            _messagesList.value = emptyList()
+                            Log.d("MessagesViewModel", "Failed to fetch messages for chat: $chatId. Error: ${response.e.message}")
+                        }
+                        is Response.Loading -> {
+                            Log.d("MessagesViewModel", "Fetching messages in progress...")
+                        }
+                        else -> { /* Handle other response cases if needed */ }
                     }
-                    is Response.Failure -> {
-                        _messagesList.value = emptyList()
-                        Log.d("MessagesViewModel", "Failed to fetch messages for chat: $chatId. Error: ${response.e.message}")
-                    }
-                    is Response.Loading -> {
-                        Log.d("MessagesViewModel", "Fetching messages in progress...")
-                    }
-                    else -> { /* Handle other response cases if needed */ }
                 }
-                _messagesLoading.value = false
-            }
+                .launchIn(viewModelScope)
         }
     }
 

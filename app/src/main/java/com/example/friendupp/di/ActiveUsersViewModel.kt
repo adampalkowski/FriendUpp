@@ -1,11 +1,13 @@
 package com.example.friendupp.di
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendupp.model.ActiveUser
+import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.SocialException
 import com.google.android.gms.maps.model.LatLng
@@ -29,14 +31,23 @@ class ActiveUsersViewModel @Inject constructor(
     private val repo: ActivityRepository
 ) : ViewModel() {
 
-    private val _currentUserActive = mutableStateOf<Response<kotlin.collections.List<ActiveUser>>?>(null)
-    val currentUserActive: State<Response<List<ActiveUser>>?> = _currentUserActive
+    private val _currentUserActive = mutableStateOf<Response<List<ActiveUser>>>(
+        Response.Success(
+            emptyList())
+    )
+    val currentUserActive: State<Response<List<ActiveUser>>> = _currentUserActive
 
 
-    private val _activeUsersListState = mutableStateOf<Response<List<ActiveUser>>>(Response.Loading)
-    val activeUsersListState: State<Response<List<ActiveUser>>> = _activeUsersListState
-    private val _moreActiveUsers = mutableStateOf<Response<List<ActiveUser>>>(Response.Loading)
-    val moreActiveUsers: State<Response<List<ActiveUser>>> = _moreActiveUsers
+    private val _activeUsersListState = mutableStateOf<List<ActiveUser>>(emptyList())
+    val activeUsersListState: MutableState<List<ActiveUser>> = _activeUsersListState
+
+
+    private val _activeUsersResponse = mutableStateOf<Response<List<ActiveUser>>>(
+        Response.Success(
+            emptyList()
+        )
+    )
+    val activeUsersResponse: MutableState<Response<List<ActiveUser>>> = _activeUsersResponse
 
 
     private val _isActiveUsersAddedState= MutableStateFlow<Response<Boolean>?>(null)
@@ -85,16 +96,8 @@ class ActiveUsersViewModel @Inject constructor(
             }
         }
     }
-    fun resetLiveUsers(){
-        viewModelScope.launch {
-            _activeUsersListState.value=Response.Loading
-        }
-    }
-    fun resetCurrentUser(){
-        viewModelScope.launch {
-           _currentUserActive.value=null
-        }
-    }
+
+
     // Function to cancel the listener and flow
     fun cancelCurrentUserActiveListener() {
         viewModelScope.coroutineContext.cancelChildren()
@@ -104,7 +107,7 @@ class ActiveUsersViewModel @Inject constructor(
     }
     fun getActiveUsersForUser(id: String?) {
         if (id == null) {
-            _activeUsersListState.value = Response.Failure(
+            _activeUsersResponse.value = Response.Failure(
                 SocialException(
                     "getActiveUserForUser id passed is null",
                     Exception()
@@ -132,18 +135,25 @@ class ActiveUsersViewModel @Inject constructor(
                                 if(list_without_removed_activites.isEmpty()){
                                     Log.d("ActiveUsersViewModel_CHECKING", "Empty")
 
-                                    _activeUsersListState.value =
-                                        Response.Success(emptyList())
+                                    _activeUsersResponse.value = Response.Success(emptyList())
+                                    _activeUsersListState.value = emptyList()
                                 }else{
                                     Log.d("ActiveUsersViewModel_CHECKING",list_without_removed_activites.toString())
+                                    _activeUsersListState.value = response.data ?: emptyList()
+                                    _activeUsersResponse.value = Response.Success(_activeUsersListState.value)
 
 
-                                    _activeUsersListState.value =
-                                        Response.Success(list_without_removed_activites as List<ActiveUser>)
                                 }
 
 
                             }
+                        }
+                        is Response.Loading->{
+                            _activeUsersResponse.value = response
+                        }
+                        is Response.Failure->{
+                            _activeUsersResponse.value = Response.Success(emptyList())
+                            _activeUsersListState.value = emptyList()
                         }
                         else->{}
                     }
@@ -175,14 +185,11 @@ class ActiveUsersViewModel @Inject constructor(
                             if(list_without_removed_activites.isEmpty()){
                                 Log.d("ActiveUsersViewModel_CHECKING", "Empty")
 
-                                _moreActiveUsers.value =
-                                    Response.Success(emptyList())
                             }else{
                                 Log.d("ActiveUsersViewModel_CHECKING",list_without_removed_activites.toString())
+                                _activeUsersListState.value = _activeUsersListState.value + (response.data ?: emptyList())
+                                _activeUsersResponse.value = Response.Success(_activeUsersListState.value)
 
-
-                                _moreActiveUsers.value =
-                                    Response.Success(list_without_removed_activites as List<ActiveUser>)
                             }
 
 

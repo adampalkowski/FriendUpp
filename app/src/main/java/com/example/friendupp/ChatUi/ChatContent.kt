@@ -61,6 +61,9 @@ import java.util.*
 sealed class ChatEvents {
     object GoBack : ChatEvents()
     class GoToProfile(val chat: Chat) : ChatEvents()
+    class GoToGroup(val id: String) : ChatEvents()
+    class GoToUser(val id: String) : ChatEvents()
+    class GoToActivity(val id: String) : ChatEvents()
     class TurnOffChatNotification(val id: String) : ChatEvents()
     class TurnOnChatNotification(val id: String) : ChatEvents()
     object ChatDoesntExist : ChatEvents()
@@ -72,6 +75,7 @@ sealed class ChatEvents {
     object ShareLocation : ChatEvents()
     object OpenGallery : ChatEvents()
     class GetMoreMessages(val chat_id: String) : ChatEvents()
+    class ReportChat(val chat_id: String) : ChatEvents()
     class SendMessage(val chat_id: String, val message: String, val chat: Chat) : ChatEvents()
     class SendReply(val chat_id: String, val message: String, var replyTo: String) : ChatEvents()
     object OpenChatSettings : ChatEvents()
@@ -135,7 +139,7 @@ fun ChatScreen(
 
             // The data has been successfully fetched, and group is not null
             ChatContent(
-                modifier = modifier,
+                modifier = modifier.safeDrawingPadding(),
                 onEvent = onEvent,
                 chatViewModel = chatViewModel,
                 displayLocation = displayLocation,
@@ -287,6 +291,7 @@ fun ChatContent(
         }
 
     }
+    var reportDialog by remember{ mutableStateOf(false) }
     if (chatSettings) {
         val context= LocalContext.current
         val retrievedIds = SharedPreferencesManager.getIds(context)
@@ -307,15 +312,41 @@ fun ChatContent(
                 onEvent(ChatEvents.TurnOnChatNotification(id))
 
             },
-            goToGroup = {},
+            goToGroup = {
+                onEvent(ChatEvents.GoToGroup(chat.id.toString()))
+            },
             group = chat,
-            reportChat = {},
+            reportChat = {
+                reportDialog = true
+                chatSettings=false
+            },
             shareGroupLink = {},
-            goToActivity = {},
-            goToUser = {},notificationTurnedOff=notificationTurnedOff)
+            goToActivity = {
+                onEvent(ChatEvents.GoToActivity(chat.id.toString()))
+            },
+            goToUser = {
+                chat.members.forEach{id->
+                    if(UserData.user!!.id!=id){
+                        onEvent(ChatEvents.GoToUser(id))
+
+                    }
+
+                }
+            },notificationTurnedOff=notificationTurnedOff)
 
     }
+    if(reportDialog){
+        FriendUppDialog(
+            label = "If the chat contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
+            icon = R.drawable.ic_flag,
+            onCancel = { reportDialog = false },
+            onConfirm = {
+                onEvent(ChatEvents.ReportChat(chat.id.toString()))
 
+                reportDialog = false
+            }, confirmLabel = "Report"
+        )
+    }
     DisposableEffect(Unit) {
         onDispose { showLoading = false }
     }
@@ -325,7 +356,6 @@ fun ChatContent(
             is Response.Success -> {
                 if (it.data.equals("successfully added image"))
                     showLoading = false
-
             }
             is Response.Failure -> {}
             is Response.Loading -> {
@@ -337,9 +367,11 @@ fun ChatContent(
 
 
     isImageAddedToStorage.let { response ->
-        Log.d("ImagePicker", response.toString())
         when (response) {
-            is Response.Success -> {}
+            is Response.Success -> {
+                Log.d("ImagePicker", response.toString())
+
+            }
             is Response.Loading -> {}
             is Response.Failure -> {
                 Log.d("ImagePicker", "failure")
@@ -709,7 +741,8 @@ fun SocialEditText(
                 value = textState.text, onValueChange = { textState.text = it },
                 textStyle = TextStyle(
                     fontFamily = Lexend, fontSize = 14.sp,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Light,
+                    color = SocialTheme.colors.textPrimary
                 ),
                 singleLine = false,
                 maxLines = Int.MAX_VALUE,
@@ -801,7 +834,7 @@ fun chatButtonsRow(
                 .height(1.dp)
                 .background(color = SocialTheme.colors.uiBorder)
         )
-        eButtonSimple(icon = R.drawable.ic_wave_300, onClick = liveActivity)
+       /* eButtonSimple(icon = R.drawable.ic_wave_300, onClick = liveActivity)*/
 
         Spacer(
             modifier = Modifier

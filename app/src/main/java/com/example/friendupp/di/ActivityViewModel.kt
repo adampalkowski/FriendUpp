@@ -326,12 +326,24 @@ class ActivityViewModel @Inject constructor(
                             deleteActivity = {
                                 Log.d("getActivitiesForUser", "delete activity")
                                 deleteActivity(response.data)
+                                _activityState.value = Response.Failure(e= SocialException(message = "Activity deleted",e=java.lang.Exception()))
 
-                            })
 
+                            }, saveActivity = {
+                                _activityState.value = response
 
-                        _activityState.value = response
-                        }   else->{}
+                            }
+                        )
+
+                        }
+                    is Response.Loading->{
+                        _activityState.value=response
+                    }
+                    is Response.Failure->{
+                        _activityState.value=response
+
+                    }
+
 
                 }
 
@@ -916,7 +928,7 @@ class ActivityViewModel @Inject constructor(
         }
     }
 }
-fun checkIfDelete(endTime: String, deleteActivity: () -> Unit) {
+fun checkIfDelete(endTime: String, deleteActivity: () -> Unit, saveActivity: () -> Unit={}) {
     val currentUtcTime = getCurrentUTCTime()
     val inputDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     inputDateFormat.timeZone = TimeZone.getTimeZone("UTC")
@@ -928,7 +940,10 @@ fun checkIfDelete(endTime: String, deleteActivity: () -> Unit) {
         if (currentDate != null && endDate != null && currentDate.after(endDate)) {
             // Delete activity if the current UTC time is after the end time
             deleteActivity()
+        }else{
+            saveActivity()
         }
+
     } catch (e: Exception) {
         // Handle parsing or comparison errors
         e.printStackTrace()

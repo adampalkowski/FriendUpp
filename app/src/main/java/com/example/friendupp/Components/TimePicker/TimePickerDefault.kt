@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.example.friendupp.ui.theme.SocialTheme
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
@@ -32,7 +33,7 @@ fun WheelTimePicker(
     size: DpSize = DpSize(128.dp, 128.dp),
     rowCount: Int = 3,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
-    textColor: Color = LocalContentColor.current,
+    textColor: Color = SocialTheme.colors.textPrimary,
     selectorProperties: com.example.friendupp.Components.TimePicker.SelectorProperties = com.example.friendupp.Components.TimePicker.WheelPickerDefaults.selectorProperties(),
     onSnappedTime : (snappedTime: LocalTime) -> Unit = {},
 ) {

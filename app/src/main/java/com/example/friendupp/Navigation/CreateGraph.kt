@@ -379,9 +379,7 @@ fun NavGraphBuilder.createGraph(
                             Toast.LENGTH_LONG
                         ).show()
                     }
-
-
-                    navController.navigate("Home")
+                    navController.popBackStack("Home",true)
                 },friendList=friendList,onEvent={
                     when(it){
                         is FriendPickerEvents.GetMoreFriends->{

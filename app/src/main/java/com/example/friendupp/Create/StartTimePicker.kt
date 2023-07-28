@@ -34,7 +34,8 @@ fun StartTimePicker(modifier: Modifier, dateState: HorizontalDateState2, startTi
     var showDatePickerStart by remember { mutableStateOf(false) }
 
     val backTextStyle= TextStyle(fontFamily = Lexend, fontWeight = FontWeight.Light, fontSize = 16.sp)
-    val timeTextStyle= TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+    val timeTextStyle= TextStyle(fontFamily = Lexend, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,color=SocialTheme
+        .colors.textPrimary)
     val selectedDate =
         LocalDate.of(dateState.selectedYear, dateState.selectedMonth, dateState.selectedDay)
 

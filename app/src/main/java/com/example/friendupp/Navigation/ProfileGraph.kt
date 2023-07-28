@@ -9,6 +9,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -336,8 +337,7 @@ fun NavGraphBuilder.profileGraph(
             ProfileScreen(context = context, joinedActivitiesResponse = joinedActivitiesResponse,
                 createdActivitiesResponse = createdActivitiesResponse,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
+                    .fillMaxSize().statusBarsPadding(),
                 onEvent = { event ->
                     when (event) {
                         is ProfileEvents.GoBack -> {

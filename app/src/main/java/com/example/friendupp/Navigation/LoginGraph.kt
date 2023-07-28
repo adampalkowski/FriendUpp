@@ -105,18 +105,35 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                     }
                 }
             }
-
+                val context= LocalContext.current
 
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+                Log.d("SIGNINWITHGOOGLE", "Result code: ${result.resultCode}")
+                Log.d("SIGNINWITHGOOGLE", "Data: ${result.data}")
+
                 if (result.resultCode == RESULT_OK) {
+                    Log.d("SIGNINWITHGOOGLE","result ok")
+
                     try {
+                        Log.d("SIGNINWITHGOOGLE","here")
+
                         val credentials = authViewModel.oneTapClient.getSignInCredentialFromIntent(result.data)
-                        val googleIdToken = credentials.googleIdToken
-                        val googleCredentials = getCredential(googleIdToken, null)
-                        authViewModel.signInWithGoogle(googleCredentials)
+                        if (credentials.googleIdToken != null) {
+                            // This is a Google credential, proceed with sign-in
+                            val googleIdToken = credentials.googleIdToken
+                            val googleCredentials = getCredential(googleIdToken, null)
+                            authViewModel.signInWithGoogle(googleCredentials)
+                        } else {
+                            // This is not a Google credential, handle the error gracefully
+                            Toast.makeText(context, "Please select a Google account.", Toast.LENGTH_SHORT).show()
+                        }
+
                     } catch (it: ApiException) {
                         print(it)
                     }
+                }else{
+                    Toast.makeText(context,"Please sign in with a google account, not a connected email to google account.",Toast.LENGTH_SHORT).show()
+
                 }
             }
 

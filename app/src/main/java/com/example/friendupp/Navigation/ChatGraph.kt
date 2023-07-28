@@ -8,10 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
@@ -38,6 +35,7 @@ import com.example.friendupp.ChatCollection.ChatCollectionsViewModel
 import com.example.friendupp.ChatUi.*
 import com.example.friendupp.Components.DisplayLocationDialog
 import com.example.friendupp.Components.FriendUppDialog
+import com.example.friendupp.Home.HomeViewModel
 import com.example.friendupp.Map.MapViewModel
 import com.example.friendupp.Message.MessagesViewModel
 import com.example.friendupp.Notification.*
@@ -70,7 +68,7 @@ fun NavGraphBuilder.chatGraph(
     currentChat: MutableState<Chat?>,
     outputDirectory: File,
     executor: Executor,
-    mapViewModel: MapViewModel,
+    mapViewModel: MapViewModel
 ) {
     navigation(startDestination = "Chat", route = "Chats") {
         composable(
@@ -164,25 +162,25 @@ fun NavGraphBuilder.chatGraph(
             if (user != null) {
                 chatViewModel.getChatCollections(user.id)
             }
-            val chatCollectionViewModel:ChatCollectionsViewModel= hiltViewModel()
+            val chatCollectionViewModel: ChatCollectionsViewModel = hiltViewModel()
 
-            LaunchedEffect(Unit ){
+            LaunchedEffect(Unit) {
                 chatCollectionViewModel.getChatCollections(user?.id!!)
             }
-            val chatCollectionsResponse= chatCollectionViewModel.chatCollectionsResponse.value
+            val chatCollectionsResponse = chatCollectionViewModel.chatCollectionsResponse.value
 
 
 
             ChatCollection(
                 modifier = Modifier
                     .fillMaxSize()
-                    .safeDrawingPadding(),
+                    .statusBarsPadding(),
                 chatEvent = { event ->
                     when (event) {
                         is ChatCollectionEvents.GoToChat -> {
                             currentChat.value = event.chat
-                            Log.d("ChatGRAPH",event.chat.id.toString())
-                               navController.navigate("ChatItem/" + event.chat.id)
+                            Log.d("ChatGRAPH", event.chat.id.toString())
+                            navController.navigate("ChatItem/" + event.chat.id)
 
 
                         }
@@ -192,7 +190,7 @@ fun NavGraphBuilder.chatGraph(
                         is ChatCollectionEvents.GoToGroups -> {
                             navController.navigate("Groups")
                         }
-                         is ChatCollectionEvents.GoToSearch -> {
+                        is ChatCollectionEvents.GoToSearch -> {
                             navController.navigate("Search")
                         }
 
@@ -260,13 +258,12 @@ fun NavGraphBuilder.chatGraph(
             val chatResponse = chatViewModel.chatLoading.value
 
 
-
             val context = LocalContext.current
 
 
             ChatSettingsScreen(
                 modifier = Modifier.safeDrawingPadding(),
-              chatSettingsEvents = { event ->
+                chatSettingsEvents = { event ->
                     when (event) {
                         is ChatSettingsEvents.GoBack -> {
                             navController.popBackStack()
@@ -302,9 +299,8 @@ fun NavGraphBuilder.chatGraph(
                         else -> {}
                     }
                 }, chatViewModel, chatResponse,
-                context=context
+                context = context
             )
-
 
 
         }
@@ -463,15 +459,18 @@ fun NavGraphBuilder.chatGraph(
 
             val chatID = backStackEntry.arguments?.getString("chatID")
 
-            val messagesViewModel: MessagesViewModel = hiltViewModel()
+
             /*
             1.get chat id
             2.call for chat
             3.store chat in view model
             */
 
-            LaunchedEffect(chatID) {
+            val messagesViewModel: MessagesViewModel = hiltViewModel()
+
+            LaunchedEffect(Unit) {
                 if (chatID != null) {
+
                     Log.d("CHATDEBUG", "GET CHAT CALLED " + chatID)
                     chatViewModel.getChatCollection(chatID)
                     messagesViewModel.getFirstMessages(chatID, getCurrentUTCTime())
@@ -504,7 +503,7 @@ fun NavGraphBuilder.chatGraph(
             var messages = messagesViewModel.getMessagesList()
 
             ChatScreen(
-                modifier = Modifier.safeDrawingPadding(),
+                modifier =Modifier,
                 onEvent = { event ->
                     when (event) {
                         is ChatEvents.GoBack -> {
@@ -523,6 +522,16 @@ fun NavGraphBuilder.chatGraph(
                             SharedPreferencesManager.addId(context, event.id)
 
                         }
+                        is ChatEvents.GoToUser -> {
+                            navController.navigate("ProfileDisplay/" + event.id)
+
+                        }
+                        is ChatEvents.GoToActivity -> {
+                            navController.navigate("ActivityPreview/"+event.id)
+                        }
+                        is ChatEvents.GoToGroup -> {
+                            navController.navigate("GroupDisplay/" + event.id)
+                        }
                         is ChatEvents.TurnOnChatNotification -> {
                             SharedPreferencesManager.removeId(context, event.id)
 
@@ -533,11 +542,8 @@ fun NavGraphBuilder.chatGraph(
                                     /*todo*/
                                 }
                                 "activity" -> {
-                                    navController.navigate("ProfileDisplay/" + event.chat.id)
-
                                 }
                                 "group" -> {
-                                    navController.navigate("ProfileDisplay/" + event.chat.id)
                                 }
                                 else -> {
 
@@ -545,7 +551,7 @@ fun NavGraphBuilder.chatGraph(
                             }
                         }
                         is ChatEvents.OpenChatSettings -> {
-                            navController.navigate("ChatSettings/"+chatID)
+                            navController.navigate("ChatSettings/" + chatID)
                         }
                         is ChatEvents.GetMoreMessages -> {
                             messagesViewModel.getMoreMessages(event.chat_id)
@@ -571,6 +577,11 @@ fun NavGraphBuilder.chatGraph(
                         is ChatEvents.CreateNonExistingChatCollection -> {
 
                         }
+                        is ChatEvents.ReportChat -> {
+                            chatViewModel.reportChat(event.chat_id)
+                            Toast.makeText(context, "Activity reported", Toast.LENGTH_SHORT).show()
+
+                        }
                         is ChatEvents.SendMessage -> {
                             chatViewModel.addMessage(
                                 event.chat_id,
@@ -589,7 +600,7 @@ fun NavGraphBuilder.chatGraph(
 
                             event.chat.members.forEach { id ->
                                 if (id != UserData.user!!.id) {
-                                    Log.d("notificaiton","send notiication")
+                                    Log.d("notificaiton", "send notiication")
                                     sendNotification(
                                         receiver = id,
                                         username = "",
@@ -669,7 +680,7 @@ fun NavGraphBuilder.chatGraph(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(24.dp)
+                            .padding(24.dp).padding(top=24.dp)
                     ) {
                         Box(
                             modifier = Modifier

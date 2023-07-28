@@ -162,7 +162,7 @@ fun ChatItemRight(
                         fontSize = 14.sp,
 
                         ),
-                    color = SocialTheme.colors.uiBackground
+                    color = SocialTheme.colors.textSecondary
                 )
             }
         } else if (text_type.equals("latLng")) {

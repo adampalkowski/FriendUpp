@@ -457,6 +457,7 @@ class ChatRepositoryImpl @Inject constructor(
                         channel.close(exception)
                         return@addSnapshotListener
                     }
+                    Log.d("ChatDebug", "listener@@@@@")
 
                     for (dc in snapshots!!.documentChanges) {
                         when (dc.type) {
@@ -497,6 +498,8 @@ class ChatRepositoryImpl @Inject constructor(
                 .get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
+                        Log.d("CHATDEBUG", "listner")
+
                         val documents = task.result?.documents
                         if (documents != null && documents.isNotEmpty()) {
                             val newMessages = ArrayList<ChatMessage>()
@@ -523,7 +526,8 @@ class ChatRepositoryImpl @Inject constructor(
                     }
                 }
 
-            awaitClose {}
+            awaitClose {
+            }
         }
     //todo ::PAGINATION
 

@@ -85,7 +85,9 @@ fun HomeScreen(
     activityViewModel: ActivityViewModel,
     mapViewModel: MapViewModel,
     activeUserViewModel: ActiveUsersViewModel,
-    groupInvitesNumber:Int
+    groupInvitesNumber:Int,
+    activeUsersReponse:Response<List<ActiveUser>>,
+    currentUserActive:Response<List<ActiveUser>>,
 ) {
 
     var calendarView by rememberSaveable {
@@ -108,9 +110,6 @@ fun HomeScreen(
 
     val publicActivities = remember { mutableStateListOf<Activity>() }
     val morePublicActivities = remember { mutableStateListOf<Activity>() }
-    val activeUsers = remember { mutableStateListOf<ActiveUser>() }
-    val moreActiveUsers = remember { mutableStateListOf<ActiveUser>() }
-    val currentUserActiveUser = remember { mutableStateListOf<ActiveUser>() }
     var publicActivitiesExist = remember { mutableStateOf(false) }
     var activeUsersExist = remember { mutableStateOf(false) }
 
@@ -151,7 +150,6 @@ fun HomeScreen(
         datePicked.value=null
     }
 
-    loadActiveUsers(activeUserViewModel,activeUsers,moreActiveUsers,currentUserActiveUser,activeUsersExist)
     if (selectedOption.option == Option.FRIENDS) {
         loadFriendsActivities(activityViewModel, activities, activitiesExist = activitiesExist)
         loadMoreFriendsActivities(activityViewModel, moreActivities)
@@ -215,7 +213,7 @@ fun HomeScreen(
             onOptionSelected = { option -> selectedOption.option = option },
             selectedOption = selectedOption.option,
             openDrawer = { onEvent(HomeEvents.OpenDrawer) },groupInvitesNumber=groupInvitesNumber)
-        Box(Modifier.pullRefresh(pState)) {
+        Box(modifier.pullRefresh(pState)) {
             Column() {
                 LazyColumn(
                     state = lazyListState
@@ -268,7 +266,7 @@ fun HomeScreen(
                             calendarClicked = calendarView,
                             filterClicked = filterView,
                             displayFilters = selectedOption.option == Option.PUBLIC
-                        , activeUsers = activeUsers,moreActiveUsers=moreActiveUsers,currentUserActiveUser=currentUserActiveUser)
+                        , activeUsersReponse = activeUsersReponse,currentUserActiveUser=currentUserActive)
                     }
 
                     if (selectedOption.option == Option.FRIENDS) {
@@ -395,67 +393,7 @@ fun HomeScreen(
             activitiesFetched.value = true
         }
     }
-    activeUserViewModel.currentUserActive.value.let {response ->
-        when (response) {
-            is Response.Success -> {
-                currentUserActiveUser.clear()
-                currentUserActiveUser.addAll(response.data)
-                activeUserViewModel.resetCurrentUser()
 
-            }
-            is Response.Failure -> {
-                currentUserActiveUser.clear()
-                activeUserViewModel.resetCurrentUser()
-            }
-            is Response.Loading -> {
-                currentUserActiveUser.clear()
-                activeUserViewModel.resetCurrentUser()
-            }
-            null -> {
-
-            }
-        }
-
-    }
-    activeUserViewModel.activeUsersListState.value.let { response ->
-        when (response) {
-            is Response.Success -> {
-                activeUsers.clear()
-                activeUsers.addAll(response.data)
-                activeUsersExist.value = true
-                activeUserViewModel.resetLiveUsers()
-
-            }
-            is Response.Failure -> {
-                activeUsers.clear()
-                activeUserViewModel.resetLiveUsers()
-            }
-            is Response.Loading -> {
-                activeUsers.clear()
-                activeUserViewModel.resetLiveUsers()
-            }
-            null -> {
-
-            }
-        }
-    }
-    activeUserViewModel.moreActiveUsers.value.let { response ->
-        when (response) {
-            is Response.Success -> {
-                moreActiveUsers.clear()
-                moreActiveUsers.addAll(response.data)
-
-            }
-            is Response.Failure -> {
-
-            }
-            is Response.Loading -> {
-            }
-            null -> {
-
-            }
-        }
-    }
 }
 
 

@@ -3,13 +3,13 @@ package com.example.friendupp.Navigation
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,7 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -47,10 +51,7 @@ import com.example.friendupp.Request.RequestsEvents
 import com.example.friendupp.Request.RequestsScreen
 import com.example.friendupp.Search.SearchEvents
 import com.example.friendupp.Search.SearchScreen
-import com.example.friendupp.bottomBar.ActivityUi.ActivityPreview
-import com.example.friendupp.bottomBar.ActivityUi.ActivityPreviewEvents
-import com.example.friendupp.bottomBar.ActivityUi.ChangeDescriptionDialog
-import com.example.friendupp.bottomBar.ActivityUi.RemoveUsersDialog
+import com.example.friendupp.bottomBar.ActivityUi.*
 import com.example.friendupp.di.ActiveUsersViewModel
 import com.example.friendupp.di.ActivityViewModel
 import com.example.friendupp.di.ChatViewModel
@@ -59,6 +60,7 @@ import com.example.friendupp.model.Chat
 import com.example.friendupp.model.Participant
 import com.example.friendupp.model.Response
 import com.example.friendupp.model.UserData
+import com.example.friendupp.ui.theme.Lexend
 import com.example.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
@@ -74,7 +76,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executor
-const val NAVIGATION_SCREEN_TIME_ANIMATION_DURATION=300
+
+const val NAVIGATION_SCREEN_TIME_ANIMATION_DURATION = 300
+
 @OptIn(ExperimentalAnimationApi::class, ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.mainGraph(
     navController: NavController,
@@ -88,7 +92,7 @@ fun NavGraphBuilder.mainGraph(
     executor: Executor,
     outputDirectory: File,
     requestViewModel: RequestViewModel,
-    groupInvitesViewModel: GroupInvitesViewModel
+    groupInvitesViewModel: GroupInvitesViewModel,
 ) {
     navigation(startDestination = "Home", route = "Main") {
         composable(
@@ -363,6 +367,11 @@ fun NavGraphBuilder.mainGraph(
                     activeUserViewModel.cancelCurrentUserActiveListener()
                 }
             }
+            LaunchedEffect(Unit) {
+                activeUserViewModel.getCurrentUserActive(UserData.user!!.id)
+
+                activeUserViewModel.getActiveUsersForUser(UserData.user!!.id)
+            }
             homeViewModel.deep_link.value.let { deep_link ->
                 when (deep_link?.pathSegments?.get(0)) {
                     "Activity" -> {
@@ -481,10 +490,12 @@ fun NavGraphBuilder.mainGraph(
 
             }
             val context = LocalContext.current
-            var groupInvitesNumber=groupInvitesViewModel.getGroupInvites().size
-            groupInvitesNumber+=invitesViewModel.getCurrentInvitesList().size
+            var groupInvitesNumber = groupInvitesViewModel.getGroupInvites().size
+            groupInvitesNumber += invitesViewModel.getCurrentInvitesList().size
             HomeScreen(
-                modifier = Modifier.safeDrawingPadding(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 activityEvents = { event ->
                     handleActivityEvents(
                         event = event,
@@ -521,7 +532,9 @@ fun NavGraphBuilder.mainGraph(
                 activityViewModel = activityViewModel,
                 mapViewModel = mapViewModel,
                 activeUserViewModel = activeUserViewModel,
-                groupInvitesNumber=groupInvitesNumber
+                groupInvitesNumber = groupInvitesNumber,
+                activeUsersReponse = activeUserViewModel.activeUsersResponse.value,
+                currentUserActive = activeUserViewModel.currentUserActive.value
             )
             if (liveUserDialogSettings != null) {
                 val context = LocalContext.current
@@ -537,6 +550,184 @@ fun NavGraphBuilder.mainGraph(
 
 
         }
+        composable(
+            "ActivityPreview/{activityId}",
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    "Chat" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideIntoContainer(
+                            AnimatedContentScope.SlideDirection.Right,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            },
+            popExitTransition = {
+                when (targetState.destination.route) {
+                    "Chat" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Map" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+                    "Profile" ->
+                        slideOutOfContainer(
+                            AnimatedContentScope.SlideDirection.Left,
+                            animationSpec = tween(700)
+                        )
+
+                    else -> null
+                }
+            }
+        ) { backStackEntry ->
+            val activityId = backStackEntry.arguments?.getString("activityId")
+            LaunchedEffect(activityId) {
+                if (activityId != null) {
+                    activityViewModel.getActivity(activityId)
+                }
+            }
+
+            val localClipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
+            val activityResponse = activityViewModel.activityState.value
+            var openReportDialog by remember { mutableStateOf<String?>(null) }
+            BackHandler(true) {
+                navController.popBackStack()
+            }
+            ActivityPreviewScreen(modifier = modifier, onEvent = { event ->
+                when (event) {
+                    is ActivityPreviewEvents.GoBack -> {
+                        navController.popBackStack()
+                    }
+                    is ActivityPreviewEvents.GoToActivityParticipants -> {
+                        navController.navigate("Participants/" + event.id)
+                    }
+                    is ActivityPreviewEvents.GoToActivityRequests -> {
+                        navController.navigate("Requests/" + event.id)
+                    }
+                    is ActivityPreviewEvents.ShareActivityLink -> {
+                        //CREATE A DYNAMINC LINK TO DOMAIN
+                        val dynamicLink = Firebase.dynamicLinks.dynamicLink {
+                            link =
+                                Uri.parse("https://link.friendup.app/" + "Activity" + "/" + event.link)
+                            domainUriPrefix = "https://link.friendup.app/"
+                            // Open links with this app on Android
+                            androidParameters { }
+                        }
+                        val dynamicLinkUri = dynamicLink.uri
+                        //COPY LINK AND MAKE A TOAST
+                        localClipboardManager.setText(AnnotatedString(dynamicLinkUri.toString()))
+                        Toast.makeText(
+                            context,
+                            "Copied activity link to clipboard",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    is ActivityPreviewEvents.AddUsers -> {
+                        navController.navigate("FriendPickerAddActivityUsers/" + event.id)
+                    }
+
+                    is ActivityPreviewEvents.CreatorSettings -> {
+                        navController.navigate("CreatorSettings/" + event.id)
+                    }
+
+                    is ActivityPreviewEvents.OpenChat -> {
+                        navController.navigate("ChatItem/" + event.id)
+
+                    }
+                    is ActivityPreviewEvents.ReportActivity -> {
+                        openReportDialog = event.id
+
+                    }
+
+                }
+            }, activityEvents = { event ->
+                handleActivityEvents(
+                    event = event,
+                    activityViewModel = activityViewModel,
+                    userViewModel = userViewModel,
+                    homeViewModel = homeViewModel,
+                    navController = navController,
+                    context = context,
+                    requestViewModel = requestViewModel
+                )
+
+            }, activityResponse = activityResponse)
+
+            if (openReportDialog != null) {
+                FriendUppDialog(
+                    label = "If the activity contains any violations, inappropriate content, or any other concerns that violate community guidelines, please report it.",
+                    icon = R.drawable.ic_flag,
+                    onCancel = { openReportDialog = null },
+                    onConfirm = {
+                        chatViewModel.reportChat(openReportDialog.toString())
+                        Toast.makeText(context, "Activity reported", Toast.LENGTH_SHORT).show()
+                        openReportDialog = null
+                    }, confirmLabel = "Report"
+                )
+            }
+        }
+
+
         composable(
             "ActivityPreview",
             enterTransition = {
@@ -628,7 +819,7 @@ fun NavGraphBuilder.mainGraph(
             val context = LocalContext.current
             var openReportDialog by remember { mutableStateOf<String?>(null) }
 
-            ActivityPreview(modifier = modifier, onEvent = { event ->
+            ActivityPreviewScreenVM(modifier = modifier, onEvent = { event ->
                 when (event) {
                     is ActivityPreviewEvents.GoBack -> {
                         navController.popBackStack()
@@ -676,7 +867,7 @@ fun NavGraphBuilder.mainGraph(
                     }
 
                 }
-            },activityEvents={event->
+            }, activityEvents = { event ->
                 handleActivityEvents(
                     event = event,
                     activityViewModel = activityViewModel,
@@ -686,7 +877,6 @@ fun NavGraphBuilder.mainGraph(
                     context = context,
                     requestViewModel = requestViewModel
                 )
-
 
             }, homeViewModel = homeViewModel)
 
@@ -1093,7 +1283,8 @@ fun NavGraphBuilder.mainGraph(
 
                             }
                         }
-                    },friendListResponse=userViewModel.friendsLoading.value)
+                    }, friendListResponse = userViewModel.friendsLoading.value
+                )
             } else {
                 navController.popBackStack()
             }
@@ -1206,17 +1397,33 @@ fun NavGraphBuilder.mainGraph(
                     })
             } else {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = "Share your current location to search for nearby activities"
-                    )
-                    Button(onClick = {
-                        locationPermissionState.launchPermissionRequest()
+                    Column (Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally){
 
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_map),
+                            contentDescription = null,
+                            tint = SocialTheme.colors.iconPrimary
+                        )
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp),
+                            textAlign = TextAlign.Center,
+                            text = "Share your current location to search for nearby activities",
+                            style = TextStyle(fontFamily = Lexend)
+                        )
+                        Button(onClick = {
+                            locationPermissionState.launchPermissionRequest()
 
-                    }) {
-
+                        } ){
+                            Text(
+                                modifier = Modifier
+                                    .padding(horizontal = 24.dp),
+                                text = "Share ",
+                                style = TextStyle(fontFamily = Lexend)
+                            )
+                        }
                     }
+
                 }
             }
 
@@ -1303,7 +1510,7 @@ fun NavGraphBuilder.mainGraph(
                                 recent_message_time = current,
                                 type = "duo",
                                 members = arrayListOf(UserData.user!!.id, event.invite.senderId),
-                                invites= emptyList(),
+                                invites = emptyList(),
                                 user_one_username = UserData.user!!.username,
                                 user_two_username = event.invite.senderName,
                                 user_one_profile_pic = UserData.user!!.pictureUrl,

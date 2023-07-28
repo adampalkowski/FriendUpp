@@ -69,89 +69,95 @@ fun GroupsScreen(
     BackHandler(true) {
         onEvent(GroupsEvents.GoBack)
     }
+    val context = LocalContext.current
+    LazyColumn(modifier = modifier) {
 
-    Column(modifier = modifier) {
-        ScreenHeading(
-            title = "Groups",
-            backButton = true,
-            onBack = { onEvent(GroupsEvents.GoBack) }) {
-            Row(Modifier.weight(1f)) {
-                ButtonAdd(onClick = { onEvent(GroupsEvents.CreateGroup) }, icon = R.drawable.ic_add)
-            }
-        }
-        CreateHeading(text = "Your groups", icon = R.drawable.ic_group, tip = false)
-        val context = LocalContext.current
-        LazyColumn {
-            items(groups) { group ->
-                GroupItem(groupname = group.name.toString(),
-                    description = group.description.toString(),
-                    groupPicture = group.imageUrl.toString(),
-                    numberOfUsers = group.members.size.toString(),
-                    isCreator = group.owner_id == UserData.user!!.id,
-                    onEvent = { event ->
-                        when (event) {
-                            is GroupItemEvent.GoToGroup -> {
-                                Toast.makeText(context, group.id.toString(), Toast.LENGTH_SHORT)
-                                    .show()
-                                onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
-                            }
-                            is GroupItemEvent.OpenGroupItemSettings -> {
-                                displaySettings = true
-
-                            }
-                            else -> {}
-                        }
-
-
-                    }, groupOwner = group.owner_id
-                )
-            }
-
-            item {
-                LaunchedEffect(true) {
-                    /*called on init*/
-                    onEvent(GroupsEvents.GetMoreGroups)
+        item {
+            ScreenHeading(
+                title = "Groups",
+                backButton = true,
+                onBack = { onEvent(GroupsEvents.GoBack) }) {
+                Row(Modifier) {
+                    ButtonAdd(
+                        onClick = { onEvent(GroupsEvents.CreateGroup) },
+                        icon = R.drawable.ic_add
+                    )
                 }
             }
+            CreateHeading(text = "Your groups", icon = R.drawable.ic_group, tip = false)
         }
-        CreateHeading(text = "Group invites", icon = R.drawable.ic_invites, tip = false)
-        LazyColumn {
-            items(groupsInvites) { group ->
-                GroupInvitesItem(groupname = group.name.toString(),
-                    description = group.description.toString(),
-                    groupPicture = group.imageUrl.toString(),
-                    numberOfUsers = group.members.size.toString(),
-                    isCreator = group.owner_id == UserData.user!!.id,
-                    onEvent = { event ->
-                        when (event) {
-                            is GroupItemEvent.GoToGroup -> {
-                                Toast.makeText(context, group.id.toString(), Toast.LENGTH_SHORT)
-                                    .show()
-                                onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
-                            }
-                            is GroupItemEvent.OpenGroupItemSettings -> {
-                                displaySettings = true
 
-                            }
-                            else -> {}
+
+        items(groups) { group ->
+            GroupItem(
+                groupname = group.name.toString(),
+                description = group.description.toString(),
+                groupPicture = group.imageUrl.toString(),
+                numberOfUsers = group.members.size.toString(),
+                isCreator = group.owner_id == UserData.user!!.id,
+                onEvent = { event ->
+                    when (event) {
+                        is GroupItemEvent.GoToGroup -> {
+                            Toast.makeText(context, group.id.toString(), Toast.LENGTH_SHORT)
+                                .show()
+                            onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
                         }
+                        is GroupItemEvent.OpenGroupItemSettings -> {
+                            displaySettings = true
+
+                        }
+                        else -> {}
+                    }
 
 
-                    }, onAccept = { onEvent(GroupsEvents.AcceptGroupInvite(group)) }, onRemove = {
-                        onEvent(GroupsEvents.RemoveGroupInvite(group))
-
-                    })
-            }
-
-            item {
-                LaunchedEffect(true) {
-                    /*called on init*/
-                    onEvent(GroupsEvents.GetMoreGroupInvites)
-
-                }
-            }
+                }, groupOwner = group.owner_id
+            )
         }
 
+        item {
+            LaunchedEffect(true) {
+                /*called on init*/
+                onEvent(GroupsEvents.GetMoreGroups)
+            }
+        }
+        item {
+            CreateHeading(text = "Group invites", icon = R.drawable.ic_invites, tip = false)
+
+        }
+        items(groupsInvites) { group ->
+            GroupInvitesItem(groupname = group.name.toString(),
+                description = group.description.toString(),
+                groupPicture = group.imageUrl.toString(),
+                numberOfUsers = group.members.size.toString(),
+                isCreator = group.owner_id == UserData.user!!.id,
+                onEvent = { event ->
+                    when (event) {
+                        is GroupItemEvent.GoToGroup -> {
+                            Toast.makeText(context, group.id.toString(), Toast.LENGTH_SHORT)
+                                .show()
+                            onEvent(GroupsEvents.GoToGroupDisplay(group.id.toString()))
+                        }
+                        is GroupItemEvent.OpenGroupItemSettings -> {
+                            displaySettings = true
+
+                        }
+                        else -> {}
+                    }
+
+
+                }, onAccept = { onEvent(GroupsEvents.AcceptGroupInvite(group)) }, onRemove = {
+                    onEvent(GroupsEvents.RemoveGroupInvite(group))
+
+                })
+        }
+
+        item {
+            LaunchedEffect(true) {
+                /*called on init*/
+                onEvent(GroupsEvents.GetMoreGroupInvites)
+
+            }
+        }
     }
     AnimatedVisibility(visible = displaySettings) {
         Dialog(onDismissRequest = { displaySettings = false }) {
@@ -268,7 +274,6 @@ fun GroupItem(
                 }
 
 
-
             }
 
             AnimatedVisibility(visible = expand) {
@@ -337,167 +342,168 @@ fun GroupItem(
 
     }
 }
-    @OptIn(ExperimentalFoundationApi::class)
-    @Composable
-    fun GroupInvitesItem(
-        groupname: String,
-        description: String,
-        numberOfUsers: String,
-        groupPicture: String,
-        isCreator: Boolean,
-        onEvent: (GroupItemEvent) -> Unit,
-        onAccept: () -> Unit,
-        onRemove: () -> Unit,
-    ) {
-        var expand by remember { mutableStateOf(false) }
-        val context = LocalContext.current
-        Column() {
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                    .combinedClickable(
-                        onClick = { onEvent(GroupItemEvent.GoToGroup) },
-                        onLongClick = { onEvent(GroupItemEvent.OpenGroupItemSettings) },
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(color = Color.Black)
-                    )
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-            ) {
-                if (groupPicture.isEmpty()) {
 
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_group),
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .size(32.dp),
-                        contentDescription = null,
-                        tint = SocialTheme.colors.iconPrimary
-                    )
-                } else {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(groupPicture)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.ic_group),
-                        contentDescription = "stringResource(R.string.description)",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                    )
-                }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun GroupInvitesItem(
+    groupname: String,
+    description: String,
+    numberOfUsers: String,
+    groupPicture: String,
+    isCreator: Boolean,
+    onEvent: (GroupItemEvent) -> Unit,
+    onAccept: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    var expand by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    Column() {
+        Row(
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+                .combinedClickable(
+                    onClick = { onEvent(GroupItemEvent.GoToGroup) },
+                    onLongClick = { onEvent(GroupItemEvent.OpenGroupItemSettings) },
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(color = Color.Black)
+                )
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            if (groupPicture.isEmpty()) {
 
-                Spacer(modifier = Modifier.width(24.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = groupname,
-                        style = TextStyle(
-                            fontFamily = Lexend,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        ),
-                        color = SocialTheme.colors.textPrimary
-                    )
-                    if (description.isNotEmpty()) {
-                        Text(
-                            text = description,
-                            style = TextStyle(
-                                fontFamily = Lexend,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp
-                            ),
-                            color = SocialTheme.colors.textPrimary.copy(0.6f)
-                        )
-                    }
-                }
-                Box(
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_group),
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onAccept)
-                        .background(SocialTheme.colors.textInteractive)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
+                        .padding(start = 12.dp)
+                        .size(32.dp),
+                    contentDescription = null,
+                    tint = SocialTheme.colors.iconPrimary
+                )
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(groupPicture)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.ic_group),
+                    contentDescription = "stringResource(R.string.description)",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = groupname,
+                    style = TextStyle(
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    ),
+                    color = SocialTheme.colors.textPrimary
+                )
+                if (description.isNotEmpty()) {
                     Text(
-                        text = context.getString(R.string.accept),
-                        color = Color.White,
+                        text = description,
                         style = TextStyle(
                             fontFamily = Lexend,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
-                    )
-                }
-                IconButton(onClick = onRemove) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_x),
-                        contentDescription = null,
-                        tint = SocialTheme.colors.iconPrimary
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp
+                        ),
+                        color = SocialTheme.colors.textPrimary.copy(0.6f)
                     )
                 }
             }
-
-            AnimatedVisibility(visible = expand) {
-                Column() {
-
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        if (isCreator) {
-                            ChatSettingItem(
-                                label = "Chat",
-                                icon = R.drawable.ic_chat_300,
-                                onClick = {
-                                })
-                            ChatSettingItem(label = "Share", icon = R.drawable.ic_share, onClick = {
-                            })
-
-                            ChatSettingItem(
-                                label = "Leave",
-                                icon = R.drawable.ic_logout,
-                                onClick = {
-                                })
-                            ChatSettingItem(
-                                label = "Delete",
-                                icon = R.drawable.ic_delete,
-                                onClick = {
-                                })
-                            ChatSettingItem(
-                                label = "Add users",
-                                icon = R.drawable.ic_group_add,
-                                onClick = {
-                                })
-
-                        } else {
-                            ChatSettingItem(
-                                label = "Chat",
-                                icon = R.drawable.ic_chat_300,
-                                onClick = {
-                                })
-                            ChatSettingItem(label = "Share", icon = R.drawable.ic_share, onClick = {
-                            })
-
-                            ChatSettingItem(
-                                label = "Leave",
-                                icon = R.drawable.ic_logout,
-                                onClick = {
-                                })
-
-                        }
-
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(0.5.dp)
-                            .background(SocialTheme.colors.uiBorder)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onAccept)
+                    .background(SocialTheme.colors.textInteractive)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = context.getString(R.string.accept),
+                    color = Color.White,
+                    style = TextStyle(
+                        fontFamily = Lexend,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
                     )
-                }
-
+                )
+            }
+            IconButton(onClick = onRemove) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_x),
+                    contentDescription = null,
+                    tint = SocialTheme.colors.iconPrimary
+                )
             }
         }
 
+        AnimatedVisibility(visible = expand) {
+            Column() {
+
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    if (isCreator) {
+                        ChatSettingItem(
+                            label = "Chat",
+                            icon = R.drawable.ic_chat_300,
+                            onClick = {
+                            })
+                        ChatSettingItem(label = "Share", icon = R.drawable.ic_share, onClick = {
+                        })
+
+                        ChatSettingItem(
+                            label = "Leave",
+                            icon = R.drawable.ic_logout,
+                            onClick = {
+                            })
+                        ChatSettingItem(
+                            label = "Delete",
+                            icon = R.drawable.ic_delete,
+                            onClick = {
+                            })
+                        ChatSettingItem(
+                            label = "Add users",
+                            icon = R.drawable.ic_group_add,
+                            onClick = {
+                            })
+
+                    } else {
+                        ChatSettingItem(
+                            label = "Chat",
+                            icon = R.drawable.ic_chat_300,
+                            onClick = {
+                            })
+                        ChatSettingItem(label = "Share", icon = R.drawable.ic_share, onClick = {
+                        })
+
+                        ChatSettingItem(
+                            label = "Leave",
+                            icon = R.drawable.ic_logout,
+                            onClick = {
+                            })
+
+                    }
+
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(SocialTheme.colors.uiBorder)
+                )
+            }
+
+        }
     }
+
+}

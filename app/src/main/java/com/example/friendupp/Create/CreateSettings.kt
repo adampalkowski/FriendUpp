@@ -137,7 +137,7 @@ fun CreateSettings(modifier: Modifier,onEvent: (CreateSettingsEvents) -> Unit, a
                     tags = activityState.tags,
                     onSelected = { activityState.tags.add(it) },
                     onDeSelected = { activityState.tags.remove(it) })
-                ParticipantsLimitsSettings(focusRequester,minState=minParticipantsState,maxState=maxParticipantsState)
+             /*   ParticipantsLimitsSettings(focusRequester,minState=minParticipantsState,maxState=maxParticipantsState)*/
                 Customize(activitySharing,
                     onActivitySharingChanged = { newValue -> activitySharing = newValue },
                     disableChat,

@@ -238,6 +238,7 @@ fun CameraView(modifier: Modifier,
         modifier
 
             .background(Color.Black)
+            .verticalScroll(rememberScrollState())
     ) {
         if (photoUri == null) {
             CameraTopBar(onEvent = { topbarevent ->

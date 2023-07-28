@@ -137,7 +137,7 @@ fun LoginScreen (modifier: Modifier,onEvent:(LoginEvents)->Unit,authViewModel:Au
         Spacer(modifier = Modifier.height(48.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             DoubleButton("Google",image= R.drawable.google,textColor=Color(0xFFD9503F),onClick={onEvent(LoginEvents.LoginWithGoogle)})
-            DoubleButton("Facebook",image= R.drawable.fb,textColor=Color(0xFF3F71B5), onClick = {})
+        /*   DoubleButton("Facebook",image= R.drawable.fb,textColor=Color(0xFF3F71B5), onClick = {})*/
         }
 
 

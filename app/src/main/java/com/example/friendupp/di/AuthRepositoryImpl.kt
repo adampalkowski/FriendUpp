@@ -146,16 +146,17 @@ class AuthRepositoryImpl @Inject constructor(
     }
     override suspend fun oneTapSignInWithGoogle(): OneTapSignInResponse {
         return try {
-                Log.d("ONETAP","123")
+            Log.d("ONETAP","123")
             val signInResult = oneTapClient.beginSignIn(signInRequest).await()
             Log.d("ONETAP",signInResult.toString())
-
             OneTapResponse.Success(signInResult)
         } catch (e: Exception) {
+            Log.d("ONETAP","exception"+e.message.toString())
+
             try {
+                Log.d("ONETAP","exception"+e.message.toString())
 
                 val signUpResult = oneTapClient.beginSignIn(signUpRequest).await()
-                Log.d("ONETAP","exception")
                 OneTapResponse.Success(signUpResult)
             } catch (e: Exception) {
                 OneTapResponse.Failure(SocialException("oneTapSignInWithGoogle error",e))

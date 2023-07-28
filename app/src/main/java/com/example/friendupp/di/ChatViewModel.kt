@@ -492,6 +492,7 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendImage(chat_id: String,message:ChatMessage, uri: Uri) {
+        Log.d("SENDIMAGE","SEND IMAGE ")
         _isImageAddedToStorageAndFirebaseState.value=Response.Loading
         val uuid: UUID = UUID.randomUUID()
         val id:String = uuid.toString()

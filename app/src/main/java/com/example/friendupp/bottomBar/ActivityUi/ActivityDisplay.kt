@@ -228,7 +228,6 @@ fun activityItem(
                     onEvent(ActivityEvents.Expand(activity))
                 },
                 OpenSettings = {
-
                     Log.d("ACTIVITYDEBUG", "LAUNCH ")
                 },
                 confirmParticipation = activity.participantConfirmation && activity.creator_id != UserData.user!!.id
