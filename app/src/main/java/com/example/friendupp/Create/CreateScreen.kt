@@ -114,17 +114,6 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     }
     var hasAssignedTitle by remember { mutableStateOf(false) }
     var hasAssignedDescription by remember { mutableStateOf(false) }
-    LaunchedEffect(activityState.location,activityState.selectedOptionState ){
-        if (activityState.location== LatLng(0.0, 0.0)) {
-            if(activityState.selectedOptionState.option==Option.PUBLIC){
-                errorMessage= "Please select location to create the public activity."
-                progressBlocked=true
-            }else{
-                progressBlocked=false
-            }
-
-        }
-    }
 
     BackHandler(true) {
         onEvent(CreateEvents.GoBack)
@@ -163,12 +152,27 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     if (!isStartTimeInFuture) {
         errorMessage = "Invalid time: Start time should take place in the future"
     }
-    if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid) {
-        Log.d("DATEDEBUG", " progres blocked")
-        progressBlocked = true
-    } else {
-        progressBlocked = false
+
+    if (selectedOption.option==Option.PUBLIC){
+        if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid||activityState.location==LatLng(0.0,0.0) ) {
+            Log.d("DATEDEBUG", " progres blocked")
+            progressBlocked = true
+        } else {
+            progressBlocked = false
+        }
+        if (activityState.location==LatLng(0.0,0.0) ){
+            errorMessage = "Pick location to create a public activity."
+        }
+    }else{
+        if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid) {
+            Log.d("DATEDEBUG", " progres blocked")
+            progressBlocked = true
+        } else {
+            progressBlocked = false
+        }
+
     }
+
 
     Box(modifier = modifier.fillMaxSize()) {
             Column(

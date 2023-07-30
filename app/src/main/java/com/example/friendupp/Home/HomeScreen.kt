@@ -447,7 +447,73 @@ fun TopBar(
     }
 
 }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SocialButtonNormalMedium(icon: Int, onClick: () -> Unit, clicked: Boolean = false) {
+    val interactionSource = MutableInteractionSource()
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scale = remember {
+        Animatable(1f)
+    }
 
+    val FrontColor by animateColorAsState(
+        if (clicked) {
+            SocialTheme.colors.textInteractive
+        } else {
+            SocialTheme.colors.uiBackground
+        }, tween(300)
+    )
+    var border = if (clicked) {
+        null
+    } else {
+        BorderStroke(0.5.dp, SocialTheme.colors.uiBorder)
+    }
+
+    var iconColor = if (clicked) {
+        Color.White
+    } else {
+        SocialTheme.colors.textInteractive
+
+    }
+    var elevation = if (clicked) {
+        10.dp
+    } else {
+        0.dp
+    }
+
+
+       androidx.compose.material. Card(
+            modifier = Modifier.size(52.dp).clickable(interactionSource = interactionSource, indication = null) {
+                coroutineScope.launch {
+                    scale.animateTo(
+                        0.8f,
+                        animationSpec = tween(300),
+                    )
+                    scale.animateTo(
+                        1f,
+                        animationSpec = tween(100),
+                    )
+
+                    onClick()
+                }
+
+            }
+                .scale(scale = scale.value),
+            elevation = 5.dp,
+            shape = RoundedCornerShape(12.dp),
+           backgroundColor = FrontColor
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    modifier = Modifier.align(Alignment.Center),
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = iconColor
+                )
+            }
+        }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SocialButtonNormal(icon: Int, onClick: () -> Unit, clicked: Boolean = false) {

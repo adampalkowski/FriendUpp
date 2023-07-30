@@ -1407,7 +1407,7 @@ fun NavGraphBuilder.mainGraph(
 
             if (locationPermissionState.status.isGranted) {
                 mapViewModel.startLocationUpdates()
-
+/*
                 val isTablet = isTablet()
 
                 if (isTablet) {
@@ -1422,6 +1422,8 @@ fun NavGraphBuilder.mainGraph(
                             }
                         },currentLocation=currentLocation,publicActivitiesResponse=publicActivitiesResponse)
                 } else {
+
+                }*/
                     MapScreen(
                         onEvent = { event ->
                             when (event) {
@@ -1432,10 +1434,38 @@ fun NavGraphBuilder.mainGraph(
                                 is MapEvent.GetMorePublicActivities -> {
                                     publicActivitiesViewModel.getMorePublicActivities(currentLocation.latitude,currentLocation.longitude,radius)
                                 }
+                                is MapEvent.GetPublicActivities -> {
+                                    publicActivitiesViewModel.getPublicActivities(currentLocation.latitude,currentLocation.longitude,radius)
+                                }
+                                is MapEvent.GetClosestFilteredActivities -> {
+                                    publicActivitiesViewModel.getPublicActivitiesWithTags(lat=currentLocation.latitude,lng=currentLocation.longitude,radius=radius,tags=event.tags)
+                                }
+                                is MapEvent.GetMorePublicActivitiesWithTags -> {
+                                publicActivitiesViewModel.getMorePublicActivitiesWithTags(lat=currentLocation.latitude,lng=currentLocation.longitude,radius=radius,tags=event.tags)
+                               }
+                                is MapEvent.GetPublicActivitiesWithDate -> {
+                                    publicActivitiesViewModel.getPublicActivitiesWithDate(lat=currentLocation.latitude,lng=currentLocation.longitude,radius=radius,date=event.date)
+                                }
+                                is MapEvent.GetMorePublicActivitiesWithDate -> {
+                                    publicActivitiesViewModel.getMorePublicActivitiesWithDate(lat=currentLocation.latitude,lng=currentLocation.longitude,radius=radius,date=event.date)
+                                }
                                 else -> {}
                             }
-                        },currentLocation=currentLocation,publicActivitiesResponse=publicActivitiesResponse)
-                }
+                        },currentLocation=currentLocation,
+                        publicActivitiesResponse=publicActivitiesResponse,activityEvents={
+                                event ->
+                            handleActivityEvents(
+                                event = event,
+                                activityViewModel = activityViewModel,
+                                userViewModel = userViewModel,
+                                homeViewModel = homeViewModel,
+                                navController = navController,
+                                context = context,
+                                requestViewModel=requestViewModel)
+
+
+                        })
+
 
         } else {
         Box(modifier = Modifier.fillMaxSize()) {

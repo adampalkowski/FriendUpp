@@ -47,11 +47,12 @@ class PublicActivitiesViewModel @Inject constructor(
                                     list_without_removed_activites.remove(it)
                                 })
 
-                            _publicActivitiesListState.value =list_without_removed_activites?: emptyList()
-                            _publicActivitiesListResponse.value =
-                                Response.Success(list_without_removed_activites as List<Activity>)
+
                         }
-                        Log.d("PublicActivitiesViewModel", "Activities fetched successfully: ")
+                        _publicActivitiesListState.value =list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value =
+                            Response.Success(list_without_removed_activites as List<Activity>)
+                        Log.d("PublicActivitiesViewModel", "Activities fetched successfully: "+list_without_removed_activites.size)
 
                     }
                     is Response.Failure -> {
@@ -83,7 +84,6 @@ class PublicActivitiesViewModel @Inject constructor(
                 when (response) {
                     is Response.Success -> {
                         response.data.forEach {
-                            Log.d("getClosestActivities",it.toString())
                             list_without_removed_activites.add(it)
                             checkIfDelete(
                                 it.end_time,
@@ -93,16 +93,16 @@ class PublicActivitiesViewModel @Inject constructor(
                                     list_without_removed_activites.remove(it)
                                 })
 
-                            _publicActivitiesListState.value =_publicActivitiesListState.value + list_without_removed_activites?: emptyList()
-                            _publicActivitiesListResponse.value = Response.Success(_publicActivitiesListState.value)
+
                         }
+                        _publicActivitiesListState.value =_publicActivitiesListState.value + list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value = Response.Success(_publicActivitiesListState.value)
                         Log.d(
                             "PublicActivitiesViewModel",
                             "More activities fetched successfully:"
                         )
                     }
                     is Response.Failure -> {
-                        _publicActivitiesListResponse.value = response
                         Log.d(
                             "PublicActivitiesViewModel",
                             "Failed to fetch more activities:. Error: ${response.e.message}"
@@ -116,6 +116,98 @@ class PublicActivitiesViewModel @Inject constructor(
             }
         }
     }
+
+
+    fun getPublicActivitiesWithTags(lat:Double,lng:Double,tags:ArrayList<String>,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            activitiesRepo.getClosestFilteredActivities(lat,lng,tags,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            list_without_removed_activites.add(it)
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it)
+                                    list_without_removed_activites.remove(it)
+                                })
+
+
+                        }
+                        _publicActivitiesListState.value =list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value =
+                            Response.Success(list_without_removed_activites as List<Activity>)
+                        Log.d("PublicActivitiesViewModel", "Activities fetched successfully: "+list_without_removed_activites.size)
+
+                    }
+                    is Response.Failure -> {
+                        _publicActivitiesListState.value = emptyList()
+                        _publicActivitiesListResponse.value = Response.Failure(
+                            e = SocialException(message = "Failed to fetch public activities.", e = response.e)
+                        )
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "Failed to fetch activities:  Error: ${response.e.message}"
+                        )
+                    }
+                    is Response.Loading -> {
+                        _publicActivitiesListResponse.value = response
+                        Log.d("PublicActivitiesViewModel", "Fetching activities in progress...")
+
+                    }
+                }
+
+
+            }
+        }
+    }
+
+    fun getMorePublicActivitiesWithTags(lat:Double,lng:Double,tags:ArrayList<String>,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            activitiesRepo.getMoreFilteredClosestActivities(lat,lng,tags,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            list_without_removed_activites.add(it)
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it)
+                                    list_without_removed_activites.remove(it)
+                                })
+
+
+                        }
+                        _publicActivitiesListState.value =_publicActivitiesListState.value + list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value = Response.Success(_publicActivitiesListState.value)
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "More activities fetched successfully:"
+                        )
+                    }
+                    is Response.Failure -> {
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "Failed to fetch more activities:. Error: ${response.e.message}"
+                        )
+                    }
+                    is Response.Loading -> {
+                        Log.d("PublicActivitiesViewModel", "Fetching more activities in progress...")
+                    }
+                    else -> { /* Handle other response cases if needed */ }
+                }
+
+
+            }
+        }
+    }
+
+
+
 
     // Additional logging functionality can be added here
     // For example:
@@ -164,6 +256,96 @@ class PublicActivitiesViewModel @Inject constructor(
                 activitiesRepo.increaseUserStats(activity.creator_id,activity.participants_ids.size).collect(){
                         response->
                 }
+            }
+        }
+    }
+
+
+    fun getPublicActivitiesWithDate(lat:Double,lng:Double,date:String,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            Log.d("getClosestFilteredDateActivities",radius.toString())
+
+            activitiesRepo.getClosestFilteredDateActivities(lat,lng,date,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            list_without_removed_activites.add(it)
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it)
+                                    list_without_removed_activites.remove(it)
+                                })
+
+
+                        }
+                        _publicActivitiesListState.value =list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value =
+                            Response.Success(list_without_removed_activites as List<Activity>)
+                        Log.d("PublicActivitiesViewModel", "Activities fetched successfully: "+list_without_removed_activites.size)
+
+                    }
+                    is Response.Failure -> {
+                        _publicActivitiesListState.value = emptyList()
+                        _publicActivitiesListResponse.value = Response.Failure(
+                            e = SocialException(message = "Failed to fetch public activities.", e = response.e)
+                        )
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "Failed to fetch activities:  Error: ${response.e.message}"
+                        )
+                    }
+                    is Response.Loading -> {
+                        _publicActivitiesListResponse.value = response
+                        Log.d("PublicActivitiesViewModel", "Fetching activities in progress...")
+
+                    }
+                }
+
+
+            }
+        }
+    }
+    fun getMorePublicActivitiesWithDate(lat:Double,lng:Double,date:String,radius:Double){
+        viewModelScope.launch {
+            val list_without_removed_activites: ArrayList<Activity> = ArrayList()
+            activitiesRepo.getMoreFilteredDateClosestActivities(lat,lng,date,radius).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        response.data.forEach {
+                            list_without_removed_activites.add(it)
+                            checkIfDelete(
+                                it.end_time,
+                                deleteActivity = {
+                                    Log.d("getActivitiesForUser", "delete activity")
+                                    deleteActivity(it)
+                                    list_without_removed_activites.remove(it)
+                                })
+
+
+                        }
+                        _publicActivitiesListState.value =_publicActivitiesListState.value + list_without_removed_activites?: emptyList()
+                        _publicActivitiesListResponse.value = Response.Success(_publicActivitiesListState.value)
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "More activities fetched successfully:"
+                        )
+                    }
+                    is Response.Failure -> {
+                        Log.d(
+                            "PublicActivitiesViewModel",
+                            "Failed to fetch more activities:. Error: ${response.e.message}"
+                        )
+                    }
+                    is Response.Loading -> {
+                        Log.d("PublicActivitiesViewModel", "Fetching more activities in progress...")
+                    }
+                    else -> { /* Handle other response cases if needed */ }
+                }
+
+
             }
         }
     }

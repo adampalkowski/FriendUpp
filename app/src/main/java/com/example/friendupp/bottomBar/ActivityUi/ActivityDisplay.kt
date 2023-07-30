@@ -239,11 +239,7 @@ fun activityItem(
             var switch by remember { mutableStateOf(joined) }
             var bookmarked = activity.bookmarked.contains(UserData.user!!.id)
             var bookmark by remember { mutableStateOf(bookmarked) }
-            Log.d("Clickedc",activity.participantConfirmation.toString())
-            Log.d("Clickedc",UserData.user!!.id.toString())
-            Log.d("Clickedc",activity.creator_id)
-            val cgeck=activity.participantConfirmation && activity.creator_id != UserData.user!!.id
-            Log.d("Clickedc",cgeck.toString())
+
 
             buttonsRow(
                 modifier = Modifier,

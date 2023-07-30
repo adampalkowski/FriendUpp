@@ -987,7 +987,7 @@ fun DateItem(month: String, dayNumber: String, dayLabel: String) {
 @Composable
 fun ActivityPreviewLocation(modifier: Modifier, latLng: LatLng) {
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(latLng, 11f)
+        position = CameraPosition.fromLatLngZoom(latLng, 14f)
     }
     var uiSettings by remember {
         mutableStateOf(

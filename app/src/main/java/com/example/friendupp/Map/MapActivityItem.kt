@@ -39,7 +39,7 @@ import com.example.friendupp.ui.theme.SocialTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent) -> Unit) {
+fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent) -> Unit, activityEvents: (ActivityEvents) -> Unit) {
 
     val context = LocalContext.current
     androidx.compose.material.Card(
@@ -78,6 +78,10 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                     )
                 }
             }
+            var switch by remember { mutableStateOf(false) }
+            var bookmarked = activity.bookmarked.contains(UserData.user!!.id)
+            var bookmark by remember { mutableStateOf(bookmarked) }
+
             activityCard(
                 title = activity.title,
                 description = activity.description,
@@ -91,6 +95,22 @@ fun MapActivityItem(onClick: () -> Unit, activity: Activity, onEvent: (MapEvent)
                     onEvent(MapEvent.PreviewActivity(activity))
                 }
             )
+            buttonsRow(
+                modifier = Modifier,
+                onEvent =activityEvents,
+                id = activity.id,
+                joined = switch,
+                joinChanged = { it ->
+                    switch = it
+                },
+                activity.participants_profile_pictures,
+                bookmarked = bookmark,
+                bookmarkedChanged = { bookmark = it },
+                activity = activity,
+                chatDisabled = activity.disableChat,
+                confirmParticipation = activity.participantConfirmation && activity.creator_id != UserData.user!!.id
+            )
+
 
         }
     }
