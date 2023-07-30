@@ -473,7 +473,8 @@ fun SocialButtonNormalMedium(icon: Int, onClick: () -> Unit, clicked: Boolean = 
     var iconColor = if (clicked) {
         Color.White
     } else {
-        SocialTheme.colors.textInteractive
+       SocialTheme.colors.textPrimary.copy(0.7f)
+
 
     }
     var elevation = if (clicked) {

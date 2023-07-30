@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -191,21 +192,18 @@ fun ParallelLines() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun TagItem(title: String, icon: Int, onClick: () -> Unit,selected:Boolean) {
 
     var color =
-        if (selected) SocialTheme.colors.textInteractive else SocialTheme.colors.uiBorder.copy(0.0f)
+        if (selected) SocialTheme.colors.textInteractive else SocialTheme.colors.uiBackground
     var border = if (selected) null else BorderStroke(1.dp, SocialTheme.colors.uiBorder)
     var textColor = if (selected) Color.White else SocialTheme.colors.textPrimary.copy(0.7f)
-    Card(modifier = Modifier
+    androidx.compose.material.Card(modifier = Modifier
         .wrapContentHeight()
-        .wrapContentWidth(), shape = RoundedCornerShape(8.dp), border = border,
-        colors = CardDefaults.cardColors(
-            contentColor = Color(0xFF4870FD).copy(alpha = 0.9f),
-            containerColor = color
-        ), onClick = {
+        .wrapContentWidth(), shape = RoundedCornerShape(24.dp), elevation=4.dp,
+        backgroundColor = color, contentColor = color, onClick = {
             onClick()
         }) {
         Row(

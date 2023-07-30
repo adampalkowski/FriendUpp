@@ -10,12 +10,16 @@ import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -30,9 +34,11 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.example.friendupp.Categories.Category
 import com.example.friendupp.Components.Calendar.rememberHorizontalDatePickerState2
 import com.example.friendupp.Components.CalendarComponent
 import com.example.friendupp.Components.FilterList
+import com.example.friendupp.Components.TagItem
 import com.example.friendupp.Create.Option
 import com.example.friendupp.Create.rememberSelectedOptionState
 import com.example.friendupp.Home.SocialButtonNormal
@@ -62,7 +68,9 @@ sealed class MapEvent {
     class GetMorePublicActivitiesWithDate(val date: String) : MapEvent()
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun MapScreen(
 
@@ -170,7 +178,7 @@ fun MapScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
 
-                        Card(elevation = 5.dp) {
+                        Card(elevation = 4.dp) {
                             Box(
                                 Modifier
                                     .size(52.dp)
@@ -184,7 +192,7 @@ fun MapScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_my_location),
                                     contentDescription = null,
-                                    tint = SocialTheme.colors.textInteractive
+                                    tint = SocialTheme.colors.textPrimary.copy(0.7f)
                                 )
                             }
                         }
@@ -192,27 +200,8 @@ fun MapScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Card(elevation = 5.dp) {
-                            Box(
-                                Modifier
-                                    .size(52.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(SocialTheme.colors.uiBackground)
-                                    .clickable(onClick = {
-                                        cameraPositionState.position =
-                                            CameraPosition.fromLatLngZoom(currentLocation, 11f)
-                                    }), contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_refresh_map),
-                                    contentDescription = null,
-                                    tint =  SocialTheme.colors.textInteractive
 
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
+                      /*  Spacer(modifier = Modifier.width(12.dp))
                         SocialButtonNormalMedium(
                             icon = R.drawable.ic_filte_300,
                             onClick = {
@@ -225,7 +214,7 @@ fun MapScreen(
                         )
                         Spacer(modifier = Modifier
                             .width(12.dp)
-                            .height(1.dp) )
+                            .height(1.dp) )*/
                         SocialButtonNormalMedium(
                             icon = R.drawable.ic_calendar_300,
                             onClick = {
@@ -276,7 +265,7 @@ fun MapScreen(
                                 onDayClick = { state.setSelectedDay(it) },
                                 onDayClick2= { state.setSelectedDay(it) })
                         }
-                        AnimatedVisibility(
+                      /*  AnimatedVisibility(
                             visible = filterView && selectedOption.option == Option.PUBLIC,
                             enter = expandVertically (animationSpec = tween(400)),
                             exit = shrinkVertically(animationSpec = tween(400))
@@ -290,7 +279,7 @@ fun MapScreen(
                                 selectedTags.remove(it)
                             })
 
-                        }
+                        }*/
                         Spacer(modifier = Modifier.height(8.dp))
                         Box(
                             modifier = Modifier
@@ -338,65 +327,100 @@ fun MapScreen(
 
 
             }) { innerPadding ->
-            GoogleMap(
-                Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 24.dp), cameraPositionState,
-                properties = properties, onMapLoaded = {
-                    isMapLoaded = true
-                }, onMapLongClick = { latlng ->
-                    selectedLocation = latlng
-                }, onMapClick = {
-                },
-                uiSettings = uiSettings
-            ) {
+            Box(Modifier.fillMaxSize()){
+                GoogleMap(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 24.dp), cameraPositionState,
+                    properties = properties, onMapLoaded = {
+                        isMapLoaded = true
+                    }, onMapLongClick = { latlng ->
+                        selectedLocation = latlng
+                    }, onMapClick = {
+                    },
+                    uiSettings = uiSettings
+                ) {
 
-                val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
-                selectedLocation.let { selectedLatLng ->
-                    if (selectedLatLng != null) {
+                    val bitmap = getBitmapDescriptor(context, R.drawable.ic_puck)
+                    selectedLocation.let { selectedLatLng ->
+                        if (selectedLatLng != null) {
 
+                            MarkerInfoWindow(
+                                state = MarkerState(
+                                    position = selectedLatLng
+                                )
+                            ) {
+
+                            }
+                        }
+                    }
+                    when(publicActivitiesResponse){
+                        is Response.Success->{
+                            publicActivitiesResponse.data.forEach { activity ->
+                                if (activity.lat != null) {
+                                    val latLng = LatLng(activity.lat!!, activity.lng!!)
+                                    MarkerInfoWindow(
+                                        alpha = 0.8f,
+                                        state = MarkerState(
+                                            position = latLng,
+                                        )
+                                    ) {
+                                        activityToScroll.value = activity
+                                    }
+                                }
+
+                            }
+                        }
+                        else->{}
+                    }
+
+
+                    currentLocation.let { latLng ->
                         MarkerInfoWindow(
+                            alpha = 0.8f,
                             state = MarkerState(
-                                position = selectedLatLng
-                            )
+                                position = latLng
+                            ), icon = bitmap
                         ) {
 
                         }
                     }
+
                 }
-                when(publicActivitiesResponse){
-                    is Response.Success->{
-                        publicActivitiesResponse.data.forEach { activity ->
-                            if (activity.lat != null) {
-                                val latLng = LatLng(activity.lat!!, activity.lng!!)
-                                MarkerInfoWindow(
-                                    alpha = 0.8f,
-                                    state = MarkerState(
-                                        position = latLng,
-                                    )
-                                ) {
-                                    activityToScroll.value = activity
+                val expandedTags = remember { mutableStateListOf<Category>() }
+
+                LazyHorizontalStaggeredGrid(modifier = Modifier
+                    .fillMaxWidth().padding(top=24.dp)
+                    .heightIn(min = 30.dp, max = 90.dp)
+                    .padding(8.dp),
+                    rows = StaggeredGridCells.Adaptive(minSize = 30.dp),
+                    horizontalItemSpacing = 4.dp,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    content = {
+
+                        items(Category.values()) { it ->
+                            var isExpanded by remember { mutableStateOf(expandedTags.contains(it)) }
+                            TagItem(
+                                title = it.label, it.icon,
+                                onClick = {
+                                    if (isExpanded) {
+                                        expandedTags.remove(it)
+                                        selectedTags.remove(it.label)
+                                        isExpanded = false
+                                    } else {
+                                        expandedTags.add(it)
+                                        selectedTags.add(it.label)
+
+                                        isExpanded = true
+                                    }
                                 }
-                            }
-
+                                ,selected=isExpanded)
                         }
-                    }
-                    else->{}
-                }
-
-
-                currentLocation.let { latLng ->
-                    MarkerInfoWindow(
-                        alpha = 0.8f,
-                        state = MarkerState(
-                            position = latLng
-                        ), icon = bitmap
-                    ) {
 
                     }
-                }
-
+                )
             }
+
 
         }
 
