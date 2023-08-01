@@ -21,6 +21,8 @@ enum class Category(val label: String, val icon: Int, val subCategories: List<Su
     MUSIC(label="Music",icon=R.drawable.ic_music, subCategories = listOf()),
     CREATIVE("Creative",R.drawable.ic_creative,subCategories= listOf()),
     SOCIAL("Social events",R.drawable.ic_event,subCategories= listOf()),
+
+
     SPORTS("Sports", R.drawable.ic_volleyball, subCategories = listOf(
         SubCategory.FOOTBALL,
         SubCategory.TENNIS,

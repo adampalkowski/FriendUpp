@@ -15,6 +15,8 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.palkowski.friendupp.MainActivity
 import com.palkowski.friendupp.R
 import com.palkowski.friendupp.Settings.getNotificationPrefs
@@ -24,6 +26,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.palkowski.friendupp.model.User
 
 
 const val channelId = "notification"
@@ -35,13 +38,18 @@ class MyFirebaseMessaging : FirebaseMessagingService() {
     private var notificationManager: NotificationManagerCompat? = null
     override fun onNewToken(s: String) {
         super.onNewToken(s)
-        updateToken(s)
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (firebaseUser != null) {
+            updateToken(s)
+        }
     }
 
     fun updateToken(s: String) {
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
         val reference: DatabaseReference =FirebaseDatabase.getInstance("https://friendupp-3ecc2-default-rtdb.europe-west1.firebasedatabase.app").getReference("Tokens")
         val token = Token(s)
-        reference.child(UserData.user!!.id.toString()).setValue(token)
+        assert(firebaseUser != null)
+        reference.child(firebaseUser!!.uid).setValue(token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

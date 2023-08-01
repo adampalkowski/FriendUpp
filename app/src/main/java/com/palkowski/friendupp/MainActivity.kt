@@ -1,14 +1,19 @@
 package com.palkowski.friendupp
 
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -20,24 +25,36 @@ import androidx.compose.ui.platform.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import com.palkowski.friendupp.Groups.GroupInvitesViewModel
 import com.palkowski.friendupp.Home.HomeViewModel
 import com.palkowski.friendupp.Invites.InvitesViewModel
 import com.palkowski.friendupp.ui.theme.FriendUppTheme
 import com.palkowski.friendupp.Navigation.NavigationComponent
 import com.palkowski.friendupp.Request.RequestViewModel
-import com.palkowski.friendupp.UpdateManager.UpdateManager
 import com.palkowski.friendupp.di.*
 import com.palkowski.friendupp.model.Response
 import com.palkowski.friendupp.model.UserData
 import com.google.android.gms.location.*
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallState
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,8 +73,78 @@ class MainActivity : ComponentActivity() {
     private lateinit var photoUri: Uri
     private var shouldShowPhoto: MutableState<Boolean> = mutableStateOf(false)
     private var notifactionLiskSet : MutableState<Boolean> = mutableStateOf(false)
-    private lateinit var updateManager: UpdateManager
 
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val updateType=AppUpdateType.IMMEDIATE
+    private val installStateUpdatedListener= InstallStateUpdatedListener { state->
+        if (state.installStatus()==InstallStatus.DOWNLOADED) {
+            Toast.makeText(applicationContext,"Download succesful. Restarting app",Toast.LENGTH_LONG).show()
+        }
+        lifecycleScope.launch {
+            delay(5.seconds)
+            appUpdateManager.completeUpdate()
+        }
+    }
+    private fun checkForUpdates(){
+        appUpdateManager.appUpdateInfo.addOnSuccessListener {
+            info->
+            val isUpdateAvailable = info.updateAvailability()==UpdateAvailability.UPDATE_AVAILABLE
+            val isUpdateAllowed= when (updateType){
+                AppUpdateType.FLEXIBLE->info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                AppUpdateType.IMMEDIATE->info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                else->false
+            }
+            if (isUpdateAvailable && isUpdateAllowed){
+                appUpdateManager.startUpdateFlowForResult(
+                    info,updateType,this,123
+                )
+            }
+
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode==123){
+            if(resultCode!= RESULT_OK){
+                Log.d("UpdateManager","update went wrong"+resultCode.toString())
+            }
+        }
+    }
+/*
+    //.......................................................................
+        private lateinit var appUpdateManager: AppUpdateManager
+
+    private val updateAvailable = MutableLiveData<Boolean>().apply { value = false }
+    private var updateInfo: AppUpdateInfo? = null
+    private var updateListener = InstallStateUpdatedListener { state: InstallState ->
+        commonLog("update01:$state")
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            Log.d("UpdateManager,","insatlled")
+        }
+    }
+    private fun checkForUpdate() {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener {
+            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                updateInfo = it
+                updateAvailable.value = true
+                commonLog("update01:Version code available ${it.availableVersionCode()}")
+                startForInAppUpdate(updateInfo)
+            } else {
+                updateAvailable.value = false
+                commonLog("update01:Update not available")
+            }
+        }
+    }
+    private fun startForInAppUpdate(it: AppUpdateInfo?) {
+        appUpdateManager.startUpdateFlowForResult(it!!, AppUpdateType.FLEXIBLE, this, 1101)
+    }
+
+    private fun commonLog(message :String) {
+        Log.d("tag001",message)
+    }
+*/
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -69,21 +156,32 @@ class MainActivity : ComponentActivity() {
 
     override fun onRestart() {
         super.onRestart()
+        if(updateType==AppUpdateType.IMMEDIATE){
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { info->
+                if (info.updateAvailability()==UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS){
+                    appUpdateManager.startUpdateFlowForResult(
+                        info,updateType,this,123
+                    )
+                }
+            }
+        }
+
     }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("notificationLinkSet", true)
     }
 
-
-
-
-
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        updateManager = UpdateManager(this)
-        updateManager.checkForAppUpdate()
+        appUpdateManager=AppUpdateManagerFactory.create(applicationContext)
+        Toast.makeText(this,"Version 15",Toast.LENGTH_LONG).show()
+        if(updateType==AppUpdateType.FLEXIBLE){
+            appUpdateManager.registerListener(installStateUpdatedListener)
+        }
+        checkForUpdates()
         val extras = intent.extras
         if (extras != null) {
             // Extract the values from the bundle
@@ -112,7 +210,14 @@ class MainActivity : ComponentActivity() {
             }
         }
         requestCameraPermission()
-
+        /*try{
+            //.......................................................................
+            appUpdateManager = AppUpdateManagerFactory.create(this)
+            appUpdateManager.registerListener(updateListener)
+            checkForUpdate()
+        }catch (e:Exception){
+            commonLog("update01:Update e1 ${e.message}")
+        }*/
 
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -132,7 +237,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             .addOnFailureListener(this) { e ->
-                Log.w(ContentValues.TAG, "getDynamicLink:onFailure", e)
+                Log.w(ContentValues.TAG, "getDynamicLink:onF2ailure", e)
             }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -197,6 +302,10 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        if(updateType==AppUpdateType.FLEXIBLE){
+            appUpdateManager.unregisterListener(installStateUpdatedListener)
+        }
+
     }
 
     fun checkLocationPermission(

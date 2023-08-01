@@ -54,7 +54,7 @@ fun LoginScreen (modifier: Modifier,onEvent:(LoginEvents)->Unit,authViewModel:Au
 
 
         Text(
-            text ="Agent login", style = TextStyle(
+            text ="Welcome", style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
@@ -62,7 +62,7 @@ fun LoginScreen (modifier: Modifier,onEvent:(LoginEvents)->Unit,authViewModel:Au
         ))
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text ="Enter your details to sign in \n" +
+            text ="Please enter your details to sign in \n" +
                     "into your account", style = TextStyle(
                 fontFamily = Lexend,
                 fontWeight = FontWeight.Normal,

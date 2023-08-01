@@ -637,7 +637,7 @@ class UserViewModel @Inject constructor(
 
                                 // Get new Instance ID token
                                 val newDeviceToken = task.result
-                                MyFirebaseMessaging.getInstance().updateToken(task.result)
+                                MyFirebaseMessaging.getInstance().updateToken(newDeviceToken)
                             })
 
 
