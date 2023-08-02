@@ -233,7 +233,7 @@ fun CameraView(modifier: Modifier,
     }
     // 3
     Column(
-        modifier
+        modifier.fillMaxSize()
 
             .background(Color.Black)
             .verticalScroll(rememberScrollState())

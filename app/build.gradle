@@ -23,7 +23,7 @@ android {
         applicationId "com.palkowski.friendupp"
         minSdk 28
         targetSdk 33
-        versionCode 18
+        versionCode 19
         versionName "1.0.6"
         testInstrumentationRunner = "com.palkowski.friendupp.CustomTestRunner"
 

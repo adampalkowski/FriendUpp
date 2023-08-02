@@ -77,13 +77,15 @@ class MainActivity : ComponentActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private val updateType=AppUpdateType.IMMEDIATE
     private val installStateUpdatedListener= InstallStateUpdatedListener { state->
+
         if (state.installStatus()==InstallStatus.DOWNLOADED) {
             Toast.makeText(applicationContext,"Download succesful. Restarting app",Toast.LENGTH_LONG).show()
+            lifecycleScope.launch {
+                delay(5.seconds)
+                appUpdateManager.completeUpdate()
+            }
         }
-        lifecycleScope.launch {
-            delay(5.seconds)
-            appUpdateManager.completeUpdate()
-        }
+
     }
     private fun checkForUpdates(){
         appUpdateManager.appUpdateInfo.addOnSuccessListener {
@@ -111,40 +113,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-/*
-    //.......................................................................
-        private lateinit var appUpdateManager: AppUpdateManager
 
-    private val updateAvailable = MutableLiveData<Boolean>().apply { value = false }
-    private var updateInfo: AppUpdateInfo? = null
-    private var updateListener = InstallStateUpdatedListener { state: InstallState ->
-        commonLog("update01:$state")
-        if (state.installStatus() == InstallStatus.DOWNLOADED) {
-            Log.d("UpdateManager,","insatlled")
-        }
-    }
-    private fun checkForUpdate() {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener {
-            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
-                it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                updateInfo = it
-                updateAvailable.value = true
-                commonLog("update01:Version code available ${it.availableVersionCode()}")
-                startForInAppUpdate(updateInfo)
-            } else {
-                updateAvailable.value = false
-                commonLog("update01:Update not available")
-            }
-        }
-    }
-    private fun startForInAppUpdate(it: AppUpdateInfo?) {
-        appUpdateManager.startUpdateFlowForResult(it!!, AppUpdateType.FLEXIBLE, this, 1101)
-    }
-
-    private fun commonLog(message :String) {
-        Log.d("tag001",message)
-    }
-*/
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -159,6 +128,7 @@ class MainActivity : ComponentActivity() {
         if(updateType==AppUpdateType.IMMEDIATE){
             appUpdateManager.appUpdateInfo.addOnSuccessListener { info->
                 if (info.updateAvailability()==UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS){
+                    Toast.makeText(this,"trigered in progres",Toast.LENGTH_SHORT).show()
                     appUpdateManager.startUpdateFlowForResult(
                         info,updateType,this,123
                     )
@@ -178,9 +148,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         appUpdateManager=AppUpdateManagerFactory.create(applicationContext)
         Toast.makeText(this,"Version 15",Toast.LENGTH_LONG).show()
-        if(updateType==AppUpdateType.FLEXIBLE){
-            appUpdateManager.registerListener(installStateUpdatedListener)
-        }
+         appUpdateManager.registerListener(installStateUpdatedListener)
         checkForUpdates()
         val extras = intent.extras
         if (extras != null) {
@@ -302,9 +270,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
-        if(updateType==AppUpdateType.FLEXIBLE){
             appUpdateManager.unregisterListener(installStateUpdatedListener)
-        }
 
     }
 

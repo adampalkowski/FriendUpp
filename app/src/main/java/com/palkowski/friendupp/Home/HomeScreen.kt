@@ -404,7 +404,6 @@ fun TopBar(
     Box(
         modifier
             .fillMaxWidth()
-            .background(SocialTheme.colors.uiBackground)
             .padding(vertical = 12.dp, horizontal = 24.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

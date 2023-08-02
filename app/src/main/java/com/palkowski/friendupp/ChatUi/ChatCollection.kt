@@ -57,7 +57,7 @@ fun ChatCollection(modifier: Modifier, chatEvent: (ChatCollectionEvents) -> Unit
     }
     val context = LocalContext.current
     val notificationOffIds= SharedPreferencesManager.getIds(context)
-    LazyColumn(modifier=modifier.background(SocialTheme.colors.uiBackground)){
+    LazyColumn(modifier=modifier){
         item {
             ScreenHeading(title = "Chats"){
                 Row(Modifier,verticalAlignment = Alignment.CenterVertically){
