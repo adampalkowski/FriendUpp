@@ -98,8 +98,10 @@ fun FilterList(
 
             }
         )
+        val hasExpandedTagsWithSubcategories = expandedTags.any { it.subCategories.isNotEmpty() }
+
         AnimatedVisibility(
-            visible = expandedTags.isNotEmpty(),
+            visible = hasExpandedTagsWithSubcategories,
             enter = slideInHorizontally(),
             exit = slideOutHorizontally()
         ) {
@@ -188,10 +190,11 @@ fun TagItem(title: String, icon: Int, onClick: () -> Unit,selected:Boolean) {
     var textColor = if (selected) Color.White else SocialTheme.colors.textPrimary.copy(0.7f)
     androidx.compose.material.Card(modifier = Modifier
         .wrapContentHeight()
-        .wrapContentWidth(), shape = RoundedCornerShape(24.dp), elevation=2.dp,
+        .wrapContentWidth(), shape = RoundedCornerShape(24.dp), elevation=0.dp,
         backgroundColor = color, contentColor = color, onClick = {
             onClick()
-        }) {
+        }, border = BorderStroke(1.dp,color=SocialTheme.colors.uiBorder)
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 8.dp)

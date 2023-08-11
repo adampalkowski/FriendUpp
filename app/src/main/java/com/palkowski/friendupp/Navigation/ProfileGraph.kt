@@ -147,7 +147,7 @@ fun NavGraphBuilder.profileGraph(
             val context = LocalContext.current
 
             CameraView(
-                modifier = modifier,
+                modifier = Modifier.fillMaxSize(),
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -499,9 +499,9 @@ fun NavGraphBuilder.profileGraph(
             Log.d("EDITPROFILEDEBUG", currentUser.value.toString())
             if (currentUser.value != null) {
                 val userState = rememberUserState(
-                    initialName = currentUser.value?.name!!,
+                    initialName = currentUser.value?.name?:"",
                     initialUsername = currentUser.value?.username!!,
-                    initialBio = currentUser.value?.biography!!,
+                    initialBio = currentUser.value?.biography?:"",
                     initialTags = currentUser.value?.tags!!,
                     initialImageUrl = currentUser.value?.pictureUrl!!
                 )

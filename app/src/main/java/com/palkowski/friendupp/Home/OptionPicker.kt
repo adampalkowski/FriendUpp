@@ -113,6 +113,7 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
 
                     }
                 }
+
             }
 
             when(activeUsersReponse){
@@ -161,7 +162,9 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                     }
                 }
             }
-
+            item {
+                Spacer(modifier = Modifier.width(12.dp))
+            }
         }
 
 

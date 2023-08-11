@@ -1,5 +1,6 @@
 package com.palkowski.friendupp.Navigation
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -114,6 +116,7 @@ fun NavGraphBuilder.settingsGraph(
                 mutableStateOf(false)
             }
             val context = LocalContext.current
+            val uriHandler = LocalUriHandler.current
 
             SettingsScreen(modifier = Modifier.safeDrawingPadding(), settingsEvents = { event ->
                 when (event) {
@@ -137,6 +140,9 @@ fun NavGraphBuilder.settingsGraph(
                     }
                     is SettingsEvents.Notifications -> {
                         navController.navigate("Settings/Notification")
+                    }
+                    is SettingsEvents.Rules -> {
+                        uriHandler.openUri("https://friendup.app")
                     }
                     is SettingsEvents.Support -> {
                         navController.navigate("Settings/Support")
@@ -332,6 +338,16 @@ fun NavGraphBuilder.settingsGraph(
                 PasswordScreen(onEvent = { event ->
                     when (event) {
                         is PasswordEvents.GoBack -> {
+                            navController.navigate("Settings")
+                        }
+                    }
+
+                })
+            }
+            "Rules" -> {
+                RulesScreen(onEvent = { event ->
+                    when (event) {
+                        is RulesEvents.GoBack -> {
                             navController.navigate("Settings")
                         }
                     }

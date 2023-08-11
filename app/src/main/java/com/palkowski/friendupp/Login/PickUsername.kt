@@ -46,7 +46,7 @@ fun PickUsernameScreen(userViewModel: UserViewModel?, authViewModel: AuthViewMod
         Column(modifier = Modifier.safeDrawingPadding()
             .fillMaxSize()
             .padding(24.dp)) {
-            Text(text= "Select your social username to help others identify you"
+            Text(text= "Enter your username to help others identify you"
                 , color = SocialTheme.colors.textPrimary, style = TextStyle(fontFamily = Lexend,
                     fontSize = 24 .sp,
                     fontWeight = FontWeight.Medium)

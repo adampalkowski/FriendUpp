@@ -101,8 +101,7 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     var progressBlocked by rememberSaveable {
         mutableStateOf(false)
     }
-    var hasAssignedTitle by remember { mutableStateOf(false) }
-    var hasAssignedDescription by remember { mutableStateOf(false) }
+
 
     BackHandler(true) {
         onEvent(CreateEvents.GoBack)
@@ -137,29 +136,35 @@ fun CreateScreen(modifier: Modifier, onEvent: (CreateEvents) -> Unit = {},
     }
 
     var isStartTimeInFuture = startTimeCheck.isAfter(now)
-    Log.d("DATEDEBUG", " start time in future" + isStartTimeInFuture.toString())
     if (!isStartTimeInFuture) {
         errorMessage = "Invalid time: Start time should take place in the future"
     }
+    LaunchedEffect(selectedOption.option){
+        if (selectedOption.option==Option.PUBLIC){
+            if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid||activityState.location==LatLng(0.0,0.0) ) {
+                Log.d("DATEDEBUG", " progres blocked")
+                Log.d("DATEDEBUG", " public")
+                progressBlocked = true
+            } else {
+                progressBlocked = false
+            }
+            if (activityState.location==LatLng(0.0,0.0) ){
+                errorMessage = "Pick location to create a public activity."
+            }
+        }else{
+            Log.d("DATEDEBUG", " friends")
+            if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState.isValid) {
+                progressBlocked = true
+            } else {
+                progressBlocked = false
+            }
 
-    if (selectedOption.option==Option.PUBLIC){
-        if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid||activityState.location==LatLng(0.0,0.0) ) {
-            Log.d("DATEDEBUG", " progres blocked")
-            progressBlocked = true
-        } else {
-            progressBlocked = false
         }
-        if (activityState.location==LatLng(0.0,0.0) ){
-            errorMessage = "Pick location to create a public activity."
+    }
+    LaunchedEffect(titleState.isValid ){
+        if(!titleState.isValid){
+            errorMessage="Please input the title."
         }
-    }else{
-        if (!isEndTimeAfterStartTime || !isStartTimeInFuture|| !titleState!!.isValid) {
-            Log.d("DATEDEBUG", " progres blocked")
-            progressBlocked = true
-        } else {
-            progressBlocked = false
-        }
-
     }
 
 

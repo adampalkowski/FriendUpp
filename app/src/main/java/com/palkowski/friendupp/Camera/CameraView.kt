@@ -50,6 +50,8 @@ import com.palkowski.friendupp.R
 import com.palkowski.friendupp.ui.theme.Lexend
 import com.palkowski.friendupp.ui.theme.SocialTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.palkowski.friendupp.ui.theme.SocialColors
+import com.palkowski.friendupp.ui.theme.Transparent
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -132,20 +134,22 @@ fun CameraView(modifier: Modifier,
     BackHandler(true) {
         onEvent(CameraEvent.GoBack)
     }
-
-
+    var darkTheme=SocialTheme.colors.isDark
     //set status bar TRANSPARENT
     val flash_on = remember { mutableStateOf(false) }
     val systemUiController = rememberSystemUiController()
     DisposableEffect(Unit) {
-        // Set the system bar colors to black when the composable is first displayed
-        systemUiController.setStatusBarColor(color = Color.Black)
-        systemUiController.setNavigationBarColor(color = Color.Black)
+        systemUiController.setSystemBarsColor(
+            color =  Transparent,
+            darkIcons = !darkTheme
+        )
 
         onDispose {
-            // Set the system bar colors back to default when the composable is removed
-            systemUiController.setStatusBarColor(color = Color.White)
-            systemUiController.setNavigationBarColor(color = Color.White)
+            systemUiController.setSystemBarsColor(
+                color =Transparent,
+                darkIcons = !darkTheme
+            )
+
         }
     }
     //lock screen orientation
@@ -233,10 +237,8 @@ fun CameraView(modifier: Modifier,
     }
     // 3
     Column(
-        modifier.fillMaxSize()
-
+        modifier
             .background(Color.Black)
-            .verticalScroll(rememberScrollState())
     ) {
         if (photoUri == null) {
             CameraTopBar(onEvent = { topbarevent ->

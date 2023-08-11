@@ -7,7 +7,7 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 
 typealias OneTapSignInResponse = OneTapResponse<BeginSignInResult>
-typealias SignInWithGoogleResponse = Response<Boolean>
+typealias SignInWithGoogleResponse = Response<FirebaseUser>?
 
 interface AuthRepository {
     val isUserAuthenticatedInFirebase : Boolean

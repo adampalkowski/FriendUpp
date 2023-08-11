@@ -355,6 +355,8 @@ fun ProfileDisplayContent(
 
 @Composable
 fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents) -> Unit,InviteCall: () -> Unit,user_id:String) {
+    Row(Modifier.padding(horizontal = 24.dp)) {
+
     when(userOption){
         UserOption.UNKNOWN->{
             ProfileOptionItem(R.drawable.ic_add,"Invite user", onClick = {
@@ -389,6 +391,7 @@ fun ProfileDisplayOptions(userOption: UserOption,onEvent: (ProfileDisplayEvents)
             ProfileOptionItem(R.drawable.ic_add,"Accept invite", onClick = {})
         }
 
+    }
     }
 
 

@@ -223,16 +223,7 @@ fun NavigationComponent(
             modifier = Modifier
                 .padding(paddingValues)
                 .background(SocialTheme.colors.uiBackground)
-                .fillMaxSize().drawBehind {
-
-                    drawLine(Color(0xffFFDB5A),cap= StrokeCap.Butt, start = Offset(x=-80.dp.toPx(),y=60.dp.toPx()), end = Offset(x=size.width-80.dp.toPx(),y=-80.dp.toPx()), strokeWidth = 60.dp.toPx())
-
-                    drawLine(Color(0xffFFDB5A),cap= StrokeCap.Butt, start = Offset(x=size.width-100.dp.toPx(),y=-20.dp.toPx()), end = Offset(x=size.width+80.dp.toPx(),y=120.dp.toPx()), strokeWidth = 48.dp.toPx())
-                    drawLine(Color(0xffBCABFF),cap= StrokeCap.Butt, start = Offset(x=-120.dp.toPx(),y=100.dp.toPx()), end = Offset(x=size.width,y=-40.dp.toPx()), strokeWidth = 48.dp.toPx())
-                    drawLine(Color(0xffBCABFF),cap= StrokeCap.Butt, start = Offset(x=size.width-120.dp.toPx(),y=-40.dp.toPx()), end = Offset(x=size.width+100.dp.toPx(),y=100.dp.toPx()), strokeWidth = 60.dp.toPx())
-
-
-                },
+                .fillMaxSize(),
         ) {
             BackHandler(onBack = {
                 if (scaffoldState.drawerState.isOpen) {

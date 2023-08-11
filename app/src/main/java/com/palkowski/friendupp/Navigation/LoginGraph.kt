@@ -69,7 +69,6 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                                         if(UserData.user!=null){
                                             groupInvitesViewModel.getGroupInvites(UserData.user!!.id)
                                             invitesViewModel.getInvites(UserData.user!!.id)
-
                                         }
                                        navController.navigate("Home")
                                     }
@@ -132,9 +131,6 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                 when(val oneTapSignInResponse = response) {
                     is OneTapResponse.Loading -> CircularProgressIndicator()
                     is OneTapResponse.Success -> oneTapSignInResponse.data?.let {
-                        Log.d("ONETAP","RESponse")
-                        Log.d("ONETAP",it.toString())
-                        Log.d("ONETAP",it.pendingIntent.toString())
                         LaunchedEffect(it) {
                             Log.d("ONETAP","launch")
                             launch(it)
@@ -417,7 +413,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
 
 
             Log.d(TAG,"TAG PICKER")
-            TagPickerScreen(modifier=Modifier, SetTags = {tags->
+            TagPickerScreen(modifier=Modifier.safeDrawingPadding(), SetTags = {tags->
                  userViewModel.setUserTags(authViewModel.currentUser!!.uid,tags)
 
             })
@@ -578,16 +574,18 @@ fun SignInWithGoogle(
     viewModel: AuthViewModel = hiltViewModel(),
     navigateToHomeScreen: (signedIn: Boolean) -> Unit
 ) {
-    when(val signInWithGoogleResponse = viewModel.signInWithGoogleResponse) {
+
+    var signInWithGoogleResponse = viewModel.signInWithGoogleResponse
+    Log.d("GOOGLESIGNIN",signInWithGoogleResponse.toString())
+    when(signInWithGoogleResponse) {
         is Response.Loading -> CircularProgressIndicator()
-        is  Response.Success -> signInWithGoogleResponse.data?.let { signedIn ->
-            LaunchedEffect(signedIn) {
-                navigateToHomeScreen(signedIn)
-            }
+        is  Response.Success -> signInWithGoogleResponse.data.let { signedIn ->
+                navigateToHomeScreen(true)
         }
         is  Response.Failure -> LaunchedEffect(Unit) {
             print(signInWithGoogleResponse.e)
         }
+        else->{}
     }
 }
 

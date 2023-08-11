@@ -34,6 +34,7 @@ sealed class SettingsEvents {
     object ChangePassword : SettingsEvents()
     object UpdateEmail : SettingsEvents()
     object Notifications : SettingsEvents()
+    object Rules : SettingsEvents()
     object LogOut : SettingsEvents()
     object DeleteAccount : SettingsEvents()
     object ChangeSearchRange : SettingsEvents()
@@ -165,6 +166,11 @@ fun SettingsScreen(modifier: Modifier, settingsEvents: (SettingsEvents) -> Unit)
                 label = "Notifications",
                 icon = R.drawable.ic_notify,
                 onClick = { settingsEvents(SettingsEvents.Notifications) })
+            SettingsItem(
+                label = "Rules and regulations",
+                icon = R.drawable.ic_law,
+                onClick = { settingsEvents(SettingsEvents.Rules) })
+
 
 
             SettingsLabel("Login")

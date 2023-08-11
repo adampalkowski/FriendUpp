@@ -506,10 +506,21 @@ fun NavGraphBuilder.mainGraph(
             val context = LocalContext.current
             var groupInvitesNumber = groupInvitesViewModel.getGroupInvites().size
             groupInvitesNumber += invitesViewModel.getCurrentInvitesList().size
+            var modifier = if(SocialTheme.colors.isDark){ Modifier
+                .fillMaxSize().drawBehind {
+                    drawLine(Color(0xff00454D),cap= StrokeCap.Butt, start = Offset(x=-80.dp.toPx(),y=60.dp.toPx()), end = Offset(x=size.width-80.dp.toPx(),y=-80.dp.toPx()), strokeWidth = 60.dp.toPx())
+                    drawLine(Color(0xff315CF2),cap= StrokeCap.Butt, start = Offset(x=-120.dp.toPx(),y=100.dp.toPx()), end = Offset(x=size.width,y=-40.dp.toPx()), strokeWidth = 48.dp.toPx())
+                }
+                .statusBarsPadding()}
+        else{
+                Modifier
+                .fillMaxSize().drawBehind {
+                    drawLine(Color(0xffFFDB5A),cap= StrokeCap.Butt, start = Offset(x=-80.dp.toPx(),y=60.dp.toPx()), end = Offset(x=size.width-80.dp.toPx(),y=-80.dp.toPx()), strokeWidth = 60.dp.toPx())
+                    drawLine(Color(0xffBCABFF),cap= StrokeCap.Butt, start = Offset(x=-120.dp.toPx(),y=100.dp.toPx()), end = Offset(x=size.width,y=-40.dp.toPx()), strokeWidth = 48.dp.toPx())
+                }
+                .statusBarsPadding()}
             HomeScreen(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
+                modifier =modifier ,
                 activityEvents = { event ->
                     handleActivityEvents(
                         event = event,

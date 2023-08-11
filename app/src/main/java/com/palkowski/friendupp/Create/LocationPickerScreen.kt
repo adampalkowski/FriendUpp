@@ -86,7 +86,7 @@ fun LocationPickerScreen(onEvent: (LocationPickerEvent) -> Unit, activityState: 
 
     val context= LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
 
         GoogleMap(
             Modifier.fillMaxSize(), cameraPositionState,

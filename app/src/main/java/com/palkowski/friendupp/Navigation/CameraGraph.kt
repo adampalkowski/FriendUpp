@@ -6,7 +6,9 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toFile
 import androidx.navigation.NavController
@@ -86,7 +88,7 @@ fun NavGraphBuilder.cameraGraph(navController: NavController, outputDirectory: F
 
 
             val context = LocalContext.current
-            CameraView(modifier=modifier,outputDirectory =outputDirectory , executor = executor, onImageCaptured = {uri->
+            CameraView(modifier= Modifier.fillMaxSize(),outputDirectory =outputDirectory , executor = executor, onImageCaptured = { uri->
                 photoUri= uri
 
                 /*todo handle the image uri*/

@@ -169,7 +169,8 @@ class AuthRepositoryImpl @Inject constructor(
             if (isNewUser) {
                 addUserToFirestore(null)
             }
-            Response.Success(true)
+
+            Response.Success(authResult.user!!)
         } catch (e: Exception) {
             Response.Failure(SocialException("firebaseSignInWithGoogle error",e))
         }

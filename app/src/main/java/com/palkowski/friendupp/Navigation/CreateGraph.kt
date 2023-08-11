@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -120,7 +121,7 @@ fun NavGraphBuilder.createGraph(
             }
 
             val context = LocalContext.current
-            CameraView(modifier=modifier,
+            CameraView(modifier= Modifier.fillMaxSize(),
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->

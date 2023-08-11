@@ -16,7 +16,7 @@ fun TagPickerScreen(modifier: Modifier,SetTags:(List<String>)->Unit){
     val tags = remember {
        mutableListOf<String>() // Initialize with your desired value
     }
-    Column() {
+    Column(modifier) {
         TagsSettings(
             tags = tags,
             onSelected = { tags.add(it) },

@@ -24,8 +24,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -211,7 +214,7 @@ fun HomeScreen(
             onOptionSelected = { option -> selectedOption.option = option },
             selectedOption = selectedOption.option,
             openDrawer = { onEvent(HomeEvents.OpenDrawer) },groupInvitesNumber=groupInvitesNumber)
-        Box(modifier.pullRefresh(pState)) {
+        Box(Modifier.pullRefresh(pState)) {
             Column() {
                 LazyColumn(
                     state = lazyListState

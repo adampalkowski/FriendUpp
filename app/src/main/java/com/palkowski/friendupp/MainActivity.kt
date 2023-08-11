@@ -147,7 +147,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appUpdateManager=AppUpdateManagerFactory.create(applicationContext)
-        Toast.makeText(this,"Version 15",Toast.LENGTH_LONG).show()
          appUpdateManager.registerListener(installStateUpdatedListener)
         checkForUpdates()
         val extras = intent.extras

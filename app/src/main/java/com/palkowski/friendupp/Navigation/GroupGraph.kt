@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -318,7 +319,7 @@ fun NavGraphBuilder.groupGraph(
 
             val context = LocalContext.current
             CameraView(
-                modifier = modifier,
+                modifier =  Modifier.fillMaxSize(),
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
@@ -332,7 +333,7 @@ fun NavGraphBuilder.groupGraph(
                                 photoUri!!.toFile().delete()
                             }
 
-                            navController.navigate("GroupsCreate")
+                            navController.popBackStack()
                         }
                         is CameraEvent.AcceptPhoto -> {
                             if (photoUri != null) {
@@ -447,7 +448,7 @@ fun NavGraphBuilder.groupGraph(
 
             val context = LocalContext.current
             CameraView(
-                modifier = modifier,
+                modifier =  Modifier.fillMaxSize(),
                 outputDirectory = outputDirectory,
                 executor = executor,
                 onImageCaptured = { uri ->
