@@ -458,7 +458,7 @@ fun NavGraphBuilder.loginGraph(navController: NavController,userViewModel:UserVi
                                 if (user!=null){
 
                                     if (user.tags.isEmpty()||user.tags.size<1){
-                                        navController.navigate("TagPicker")
+                                        navController.navigate("Home")
                                     }else{
                                         navController.navigate("Home")
 

@@ -32,7 +32,7 @@ import com.palkowski.friendupp.ui.theme.SocialTheme
 
 sealed class RegisterEvents{
     object GoBack:RegisterEvents()
-    class Register(val email:String,val fullname:String,val username:String,val password:String):RegisterEvents()
+    class Register(val email:String,val fullname:String,val password:String):RegisterEvents()
 }
 
 
@@ -52,9 +52,6 @@ fun RegisterScreen(modifier: Modifier,onEvent:(RegisterEvents)->Unit){
         mutableStateOf(NameState())
     }
 
-    val usernameState by rememberSaveable(stateSaver = UsernameStateSaver ) {
-        mutableStateOf(UsernameState())
-    }
 
     val passwordStateSaver = textFieldStateSaver(PasswordState())
     val passwordState by rememberSaveable(stateSaver = passwordStateSaver) {
@@ -118,16 +115,6 @@ fun RegisterScreen(modifier: Modifier,onEvent:(RegisterEvents)->Unit){
             }, label = "Full name", textState =nameState
         )
         Spacer(modifier = Modifier.height(8.dp))
-        NameEditText( modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-            focusRequester=focusRequester,
-            focus = false,
-            onFocusChange = { focusState ->
-
-            }, label = "Username", textState =usernameState
-        )
-        Spacer(modifier = Modifier.height(8.dp))
 
 
         PasswordEditText( modifier = Modifier
@@ -161,7 +148,7 @@ fun RegisterScreen(modifier: Modifier,onEvent:(RegisterEvents)->Unit){
             val password = passwordState.text
             val reEnterPassword = reEnterPasswordState.text
             if (password == reEnterPassword) {
-                onEvent(RegisterEvents.Register(emailState.text, nameState.text,usernameState.text,passwordState.text))
+                onEvent(RegisterEvents.Register(emailState.text, nameState.text,passwordState.text))
 
             } else {
                 passwordMatch=false

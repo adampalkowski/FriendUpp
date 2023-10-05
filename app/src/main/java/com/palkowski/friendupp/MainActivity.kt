@@ -176,7 +176,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        requestCameraPermission()
         /*try{
             //.......................................................................
             appUpdateManager = AppUpdateManagerFactory.create(this)
@@ -229,27 +228,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun requestCameraPermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                shouldShowCamera.value = true
-            }
-
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                android.Manifest.permission.CAMERA
-
-            ) -> {
-            }
-
-            else -> requestPermissionLauncher.launch(
-                android.Manifest.permission.CAMERA
-            )
-        }
-    }
 
     private fun handleImageCapture(uri: Uri) {
         shouldShowCamera.value = false

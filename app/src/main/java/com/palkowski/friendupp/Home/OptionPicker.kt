@@ -83,14 +83,6 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                 }
             }
 
-            item{
-                Spacer(
-                    modifier = Modifier
-                        .height(1.dp)
-                        .background(dividerColor)
-                )
-            }
-
             when(currentUserActiveUser){
                 is Response.Success->{
                     items(currentUserActiveUser.data){activeUser->
@@ -99,6 +91,7 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                             imageUrl =activeUser.participants_profile_pictures.get(activeUser.creator_id).toString(),
                             onClick = {onEvent(HomeEvents.OpenLiveUser(activeUser.creator_id))}, clickable = true
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
 
                     }
                 }
@@ -107,8 +100,8 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
                         CreateLive(
                             onClick = { onEvent(HomeEvents.CreateLive) },
                             imageUrl =  UserData.user!!.pictureUrl.toString()
-
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
 
 
                     }
@@ -161,9 +154,6 @@ fun OptionPicker(onEvent: (HomeEvents) -> Unit,    openFilter: () -> Unit,  onCl
 
                     }
                 }
-            }
-            item {
-                Spacer(modifier = Modifier.width(12.dp))
             }
         }
 

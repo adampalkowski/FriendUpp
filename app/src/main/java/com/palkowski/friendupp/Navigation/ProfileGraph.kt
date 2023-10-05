@@ -47,6 +47,7 @@ import com.google.firebase.dynamiclinks.ktx.androidParameters
 import com.google.firebase.dynamiclinks.ktx.dynamicLink
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
+import com.palkowski.friendupp.util.FriendUppLink
 import java.io.File
 import java.util.*
 import java.util.concurrent.Executor
@@ -367,8 +368,8 @@ fun NavGraphBuilder.profileGraph(
                             if (user != null) {
                                 val dynamicLink = Firebase.dynamicLinks.dynamicLink {
                                     link =
-                                        Uri.parse("https://link.friendup.app/" + "User" + "/" + user.id)
-                                    domainUriPrefix = "https://link.friendup.app/"
+                                        Uri.parse( FriendUppLink+ "User" + "/" + user.id)
+                                    domainUriPrefix =FriendUppLink
                                     // Open links with this app on Android
                                     androidParameters { }
                                 }

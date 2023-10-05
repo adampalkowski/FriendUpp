@@ -8,11 +8,13 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -41,9 +43,11 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.compose.rememberImagePainter
 import com.palkowski.friendupp.R
@@ -119,6 +123,7 @@ private fun requestGalleryPermission(
     }
 }
 
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CameraView(modifier: Modifier,
@@ -131,9 +136,47 @@ fun CameraView(modifier: Modifier,
 ) {
 
 
+    //request camera permission !!!
+    val context = LocalContext.current
+    var cameraPermissionSate by remember {
+        mutableStateOf(false)
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission Accepted: Do something
+            Log.d("ExampleScreen","PERMISSION GRANTED")
+            cameraPermissionSate=true
+
+        } else {
+            Log.d("ExampleScreen","PERMISSION DENIED")
+            cameraPermissionSate=false
+        }
+    }
+
+    when (ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.CAMERA
+    )) {
+        PERMISSION_GRANTED -> {
+            // Some work that requires permission
+            Log.d("ExampleScreen", "Code requires permission")
+        }
+        else -> {
+            // Asking for permission
+            SideEffect {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+
+            }
+        }
+    }
+
     BackHandler(true) {
         onEvent(CameraEvent.GoBack)
     }
+
     var darkTheme=SocialTheme.colors.isDark
     //set status bar TRANSPARENT
     val flash_on = remember { mutableStateOf(false) }
@@ -156,7 +199,6 @@ fun CameraView(modifier: Modifier,
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     // 1
 
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
     val preview = Preview.Builder().build()
@@ -240,6 +282,8 @@ fun CameraView(modifier: Modifier,
         modifier
             .background(Color.Black)
     ) {
+
+
         if (photoUri == null) {
             CameraTopBar(onEvent = { topbarevent ->
                 when (topbarevent) {
@@ -278,29 +322,42 @@ fun CameraView(modifier: Modifier,
                 ), photoUri = photoUri, onEvent = {})
 
         } else {
-            AndroidView(factory = { previewView },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .fillMaxHeight(fraction = 0.8f)
-                    .clip(
-                        RoundedCornerShape(24.dp)
-                    ),
-                update = {
-                    it.setOnTouchListener { _, event ->
-                        scaleGestureDetector.onTouchEvent(event)
-                        if (event.action == MotionEvent.ACTION_DOWN) {
-                            isIconVisible.value = true
-                            val factory = previewView.meteringPointFactory
-                            val point = factory.createPoint(event.x, event.y)
-                            val action = FocusMeteringAction.Builder(point!!).build()
+            if(cameraPermissionSate){
+                AndroidView(factory = { previewView },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .fillMaxHeight(fraction = 0.8f)
+                        .clip(
+                            RoundedCornerShape(24.dp)
+                        ),
+                    update = {
+                        it.setOnTouchListener { _, event ->
+                            scaleGestureDetector.onTouchEvent(event)
+                            if (event.action == MotionEvent.ACTION_DOWN) {
+                                isIconVisible.value = true
+                                val factory = previewView.meteringPointFactory
+                                val point = factory.createPoint(event.x, event.y)
+                                val action = FocusMeteringAction.Builder(point!!).build()
 
-                            cameraControl?.startFocusAndMetering(action)
+                                cameraControl?.startFocusAndMetering(action)
+                            }
+                            true
                         }
-                        true
                     }
+                )
+            }else{
+                Box(modifier = Modifier.background(color=Color.Black)
+                    .fillMaxWidth()
+                    .fillMaxHeight(fraction = 0.8f) .clip(
+                        RoundedCornerShape(24.dp)
+                    )){
+                    Text(text ="Camera permission is missing, please head to app's settings and allow camera acces in order to take pictures.", color = Color.White , modifier = Modifier.align(
+                        Alignment.Center), textAlign = TextAlign.Center)
                 }
-            )
+            }
+
+
 
         }
 

@@ -3,12 +3,16 @@ package com.palkowski.friendupp.Login
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -24,10 +28,12 @@ import com.palkowski.friendupp.ui.theme.SocialTheme
 @Composable
 fun DoubleButton(text:String,image:Int,textColor:Color,onClick:()->Unit){
     Box(
-        modifier = Modifier
-            .wrapContentWidth()
-            .padding(vertical = 8.dp)
-            .padding(horizontal = 12.dp).clickable(onClick=onClick)
+        modifier = Modifier.run {
+            wrapContentWidth()
+                .padding(vertical = 8.dp)
+                .padding(horizontal = 12.dp).clip(RoundedCornerShape(9.dp)).clickable(onClick=onClick,   indication = rememberRipple(color =Color.Gray),
+                    interactionSource =  remember { MutableInteractionSource() },)
+        }
     ) {
         Box(
             modifier = Modifier

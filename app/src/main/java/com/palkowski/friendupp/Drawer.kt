@@ -62,7 +62,7 @@ fun DrawerContent(onEvent: (DrawerEvents)->Unit,groupInvitesNumber:Int,invitesNu
         )
         Spacer(modifier = Modifier.height(24.dp))
         //DRAWER Content
-        SettingsItem(label = "Search", icon = R.drawable.ic_search, number = if(invitesNumber>0){invitesNumber}else{null}) {
+        SettingsItem(label = "Add friends", icon = R.drawable.ic_search, number = if(invitesNumber>0){invitesNumber}else{null}) {
             onEvent(DrawerEvents.GoToSearch)
         }
        /* SettingsItem(label = "Inbox", icon = R.drawable.ic_notify) {

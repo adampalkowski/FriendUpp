@@ -166,8 +166,10 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val authResult = auth.signInWithCredential(googleCredential).await()
             val isNewUser = authResult.additionalUserInfo?.isNewUser ?: false
+
+
             if (isNewUser) {
-                addUserToFirestore(null)
+                addUserToFirestore(authResult.user!!.displayName)
             }
 
             Response.Success(authResult.user!!)

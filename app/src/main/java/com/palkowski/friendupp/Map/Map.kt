@@ -149,8 +149,6 @@ fun MapScreen(
     Box(modifier = Modifier.consumeWindowInsets(WindowInsets.ime)) {
 
 
-
-
         var hideActivities by rememberSaveable {
             mutableStateOf(true)
         }
@@ -159,7 +157,7 @@ fun MapScreen(
 
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
-            sheetPeekHeight = 140.dp,
+            sheetPeekHeight = 150.dp,
             sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
             sheetBackgroundColor = Color.Transparent,
             sheetContentColor =Color.Transparent,
